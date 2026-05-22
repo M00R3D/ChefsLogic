@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <%- include("../partials/navbar", { activeTab }) %>
+
+      <main class="main-content">
+        <%- include("../partials/header", { pageTitle: "Recetas" }) %>
+
+        <section class="card">
+          <div class="actions">
+            <a class="btn btn-primary" href="/recipes/create">Nueva receta</a>
+          </div>
+
+          <% if (errorMessage) { %>
+            <p class="muted"><%= errorMessage %></p>
+          <% } %>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Titulo</th>
+                  <th>Region</th>
+                  <th>Dificultad</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (!recipes || recipes.length === 0) { %>
+                  <tr>
+                    <td colspan="5" class="muted">No hay recetas registradas aun.</td>
+                  </tr>
+                <% } %>
+
+                <% recipes.forEach((recipe) => { %>
+                  <tr>
+                    <td><strong><%= recipe.title || recipe.titulo || "Sin titulo" %></strong></td>
+                    <td><%= recipe.region ? recipe.region.name : "Sin region" %></td>
+                    <td><%= recipe.difficulty || recipe.dificultad || "media" %></td>
+                    <td><span class="chip"><%= recipe.status || recipe.estado || "borrador" %></span></td>
+                    <td>
+                      <div class="actions">
+                        <a class="btn btn-soft" href="/recipes/<%= recipe._id %>">Ver</a>
+                        <a class="btn btn-soft" href="/recipes/<%= recipe._id %>/edit">Editar</a>
+                        <button class="btn btn-danger" data-delete-recipe="<%= recipe._id %>">Eliminar</button>
+                      </div>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <%- include("../partials/footer") %>
+      </main>
+    </div>
+
+    <script src="/js/recipes.js"></script>
+  </body>
+</html>

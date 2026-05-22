@@ -1,0 +1,13 @@
+<aside class="sidebar">
+  <div class="brand">
+    <span class="brand-dot"></span>
+    <h1>Chef's Logic</h1>
+  </div>
+
+  <nav class="tab-nav" id="app-tabs">
+    <a class="tab-link <%= activeTab === 'inicio' ? 'is-active' : '' %>" href="/" data-tab="inicio">Inicio</a>
+    <a class="tab-link <%= activeTab === 'recetas' ? 'is-active' : '' %>" href="/recipes" data-tab="recetas">Recetas</a>
+    <a class="tab-link <%= activeTab === 'ingredientes' ? 'is-active' : '' %>" href="/ingredients" data-tab="ingredientes">Ingredientes</a>
+    <a class="tab-link <%= activeTab === 'recetarios' ? 'is-active' : '' %>" href="/cookbooks" data-tab="recetarios">Recetarios</a>
+  </nav>
+</aside>

@@ -5,8 +5,17 @@ const connectDB = require("./config/db");
 
 const PORT = process.env.PORT || 3000;
 
-connectDB();
+async function startServer() {
+  try {
+    await connectDB();
 
-app.listen(PORT, () => {
-  console.log(`Chef's Logic server running on http://localhost:${PORT}`);
-});
+    app.listen(PORT, () => {
+      console.log(`Chef's Logic server running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Server startup error:", error.message);
+    process.exit(1);
+  }
+}
+
+startServer();

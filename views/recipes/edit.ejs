@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <%- include("../partials/navbar", { activeTab }) %>
+
+      <main class="main-content">
+        <%- include("../partials/header", { pageTitle: "Editar receta" }) %>
+
+        <% if (errorMessage || !recipe) { %>
+          <section class="card">
+            <p class="muted"><%= errorMessage || "No se pudo cargar la receta." %></p>
+            <a class="btn btn-soft" href="/recipes">Volver</a>
+          </section>
+        <% } %>
+
+        <% if (recipe) { %>
+          <section class="card">
+            <form id="recipe-form" class="form-grid" action="/recipes/<%= recipe._id %>" method="POST">
+              <div class="form-grid cols-2">
+                <label>
+                  Titulo
+                  <input type="text" name="title" value="<%= recipe.title %>" required />
+                </label>
+                <label>
+                  Slug
+                  <input type="text" name="slug" value="<%= recipe.slug %>" />
+                </label>
+              </div>
+
+              <label>
+                Resumen
+                <textarea name="summary"><%= recipe.summary || "" %></textarea>
+              </label>
+
+              <div class="form-grid cols-2">
+                <label>
+                  Region
+                  <select name="region">
+                    <option value="">Sin region</option>
+                    <% regions.forEach((region) => { %>
+                      <option value="<%= region._id %>" <%= String(recipe.region) === String(region._id) ? "selected" : "" %>><%= region.name %></option>
+                    <% }); %>
+                  </select>
+                </label>
+                <label>
+                  Dificultad
+                  <select name="difficulty">
+                    <option value="facil" <%= recipe.difficulty === "facil" ? "selected" : "" %>>Facil</option>
+                    <option value="media" <%= recipe.difficulty === "media" ? "selected" : "" %>>Media</option>
+                    <option value="dificil" <%= recipe.difficulty === "dificil" ? "selected" : "" %>>Dificil</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="form-grid cols-2">
+                <label>
+                  Min. preparacion
+                  <input type="number" name="prepMinutes" min="0" value="<%= recipe.prepMinutes %>" />
+                </label>
+                <label>
+                  Min. coccion
+                  <input type="number" name="cookMinutes" min="0" value="<%= recipe.cookMinutes %>" />
+                </label>
+              </div>
+
+              <label>
+                Porciones
+                <input type="number" name="servings" min="1" value="<%= recipe.servings %>" />
+              </label>
+
+              <label>
+                Estado
+                <select name="status">
+                  <option value="borrador" <%= recipe.status === "borrador" ? "selected" : "" %>>Borrador</option>
+                  <option value="publicada" <%= recipe.status === "publicada" ? "selected" : "" %>>Publicada</option>
+                  <option value="archivada" <%= recipe.status === "archivada" ? "selected" : "" %>>Archivada</option>
+                </select>
+              </label>
+
+              <label>
+                Etiquetas (separadas por coma)
+                <input type="text" name="tags" value="<%= (recipe.tags || []).join(', ') %>" />
+              </label>
+
+              <label>
+                Ingredientes (uno por linea: nombre|cantidad|unidad|nota)
+                <textarea name="ingredientsData"><%= (recipe.ingredients || []).map((item) => `${item.ingredientName || ''}|${item.quantity || 0}|${item.unit || ''}|${item.notes || ''}`).join('\n') %></textarea>
+              </label>
+
+              <label>
+                Pasos (uno por linea)
+                <textarea name="stepsData"><%= (recipe.steps || []).map((step) => step.text).join('\n') %></textarea>
+              </label>
+
+              <div class="actions">
+                <button class="btn btn-primary" type="submit">Actualizar receta</button>
+                <a class="btn btn-soft" href="/recipes/<%= recipe._id %>">Cancelar</a>
+              </div>
+            </form>
+          </section>
+        <% } %>
+
+        <%- include("../partials/footer") %>
+      </main>
+    </div>
+
+    <script src="/js/forms.js"></script>
+  </body>
+</html>

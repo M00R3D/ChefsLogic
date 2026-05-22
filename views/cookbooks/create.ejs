@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <%- include("../partials/navbar", { activeTab }) %>
+
+      <main class="main-content">
+        <%- include("../partials/header", { pageTitle: "Nuevo recetario" }) %>
+
+        <section class="card">
+          <% if (errorMessage) { %>
+            <p class="muted"><%= errorMessage %></p>
+          <% } %>
+
+          <form class="form-grid" action="/cookbooks" method="POST">
+            <label>
+              Titulo
+              <input type="text" name="title" required />
+            </label>
+
+            <label>
+              Descripcion
+              <textarea name="description" placeholder="Describe el enfoque del recetario"></textarea>
+            </label>
+
+            <label>
+              URL de portada
+              <input type="url" name="coverImage" placeholder="https://..." />
+            </label>
+
+            <label>
+              Recetas (IDs separados por coma)
+              <input type="text" name="recipes" placeholder="6656..., 6657..." />
+            </label>
+
+            <label>
+              Etiquetas (separadas por coma)
+              <input type="text" name="tags" placeholder="antojitos, brunch" />
+            </label>
+
+            <label>
+              <input type="checkbox" name="isPublic" />
+              Publicar recetario
+            </label>
+
+            <div class="actions">
+              <button class="btn btn-primary" type="submit">Guardar recetario</button>
+              <a class="btn btn-soft" href="/cookbooks">Cancelar</a>
+            </div>
+          </form>
+        </section>
+
+        <%- include("../partials/footer") %>
+      </main>
+    </div>
+  </body>
+</html>

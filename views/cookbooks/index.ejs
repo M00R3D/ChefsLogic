@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <%- include("../partials/navbar", { activeTab }) %>
+
+      <main class="main-content">
+        <%- include("../partials/header", { pageTitle: "Recetarios" }) %>
+
+        <section class="card">
+          <div class="actions">
+            <a class="btn btn-primary" href="/cookbooks/create">Nuevo recetario</a>
+          </div>
+
+          <% if (errorMessage) { %>
+            <p class="muted"><%= errorMessage %></p>
+          <% } %>
+
+          <div class="grid">
+            <% if (!cookbooks || cookbooks.length === 0) { %>
+              <article class="card">
+                <p class="muted">No hay recetarios creados.</p>
+              </article>
+            <% } %>
+
+            <% cookbooks.forEach((cookbook) => { %>
+              <article class="card">
+                <h3><%= cookbook.title || cookbook.nombre || "Sin titulo" %></h3>
+                <p class="muted"><%= cookbook.description || cookbook.descripcion || "Sin descripcion." %></p>
+                <div class="actions">
+                  <span class="chip"><%= (cookbook.isPublic || cookbook.publico) ? "Publico" : "Privado" %></span>
+                  <span class="chip"><%= cookbook.recipes ? cookbook.recipes.length : (cookbook.recetas ? cookbook.recetas.length : 0) %> recetas</span>
+                </div>
+              </article>
+            <% }); %>
+          </div>
+        </section>
+
+        <%- include("../partials/footer") %>
+      </main>
+    </div>
+  </body>
+</html>

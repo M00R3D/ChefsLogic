@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <%- include("../partials/navbar", { activeTab }) %>
+
+      <main class="main-content">
+        <%- include("../partials/header", { pageTitle: "Nueva receta" }) %>
+
+        <section class="grid cols-2">
+          <article class="card">
+            <% if (errorMessage) { %>
+              <p class="muted"><%= errorMessage %></p>
+            <% } %>
+
+            <form id="recipe-form" class="form-grid" action="/recipes" method="POST">
+              <div class="form-grid cols-2">
+                <label>
+                  Titulo
+                  <input type="text" name="title" required />
+                </label>
+                <label>
+                  Slug (opcional)
+                  <input type="text" name="slug" placeholder="tacos-al-pastor" />
+                </label>
+              </div>
+
+              <label>
+                Resumen
+                <textarea name="summary" placeholder="Describe la receta"></textarea>
+              </label>
+
+              <div class="form-grid cols-2">
+                <label>
+                  Region
+                  <select name="region">
+                    <option value="">Sin region</option>
+                    <% regions.forEach((region) => { %>
+                      <option value="<%= region._id %>"><%= region.name %></option>
+                    <% }); %>
+                  </select>
+                </label>
+                <label>
+                  Dificultad
+                  <select name="difficulty">
+                    <option value="facil">Facil</option>
+                    <option value="media" selected>Media</option>
+                    <option value="dificil">Dificil</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="form-grid cols-2">
+                <label>
+                  Min. preparacion
+                  <input type="number" name="prepMinutes" min="0" value="10" />
+                </label>
+                <label>
+                  Min. coccion
+                  <input type="number" name="cookMinutes" min="0" value="20" />
+                </label>
+              </div>
+
+              <div class="form-grid cols-2">
+                <label>
+                  Porciones
+                  <input type="number" name="servings" min="1" value="2" />
+                </label>
+                <label>
+                  Estado
+                  <select name="status">
+                    <option value="borrador" selected>Borrador</option>
+                    <option value="publicada">Publicada</option>
+                    <option value="archivada">Archivada</option>
+                  </select>
+                </label>
+              </div>
+
+              <label>
+                Etiquetas (separadas por coma)
+                <input type="text" name="tags" placeholder="mexicana, antojitos, maiz" />
+              </label>
+
+              <label>
+                Ingredientes (uno por linea usando formato nombre|cantidad|unidad|nota)
+                <textarea name="ingredientsData" placeholder="Tortilla|8|pieza|de maiz"></textarea>
+              </label>
+
+              <label>
+                Pasos (uno por linea)
+                <textarea name="stepsData" placeholder="Calienta las tortillas"></textarea>
+              </label>
+
+              <div class="actions">
+                <button class="btn btn-primary" type="submit">Guardar receta</button>
+                <a class="btn btn-soft" href="/recipes">Cancelar</a>
+              </div>
+            </form>
+          </article>
+
+          <aside class="card">
+            <h3>Vista previa rapida</h3>
+            <div id="recipe-preview" class="muted"></div>
+            <p class="form-help">La previsualizacion se actualiza en tiempo real mientras escribes.</p>
+          </aside>
+        </section>
+
+        <%- include("../partials/footer") %>
+      </main>
+    </div>
+
+    <script src="/js/forms.js"></script>
+  </body>
+</html>

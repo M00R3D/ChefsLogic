@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <%- include("../partials/navbar", { activeTab }) %>
+
+      <main class="main-content">
+        <%- include("../partials/header", { pageTitle: "Ingredientes" }) %>
+
+        <section class="card">
+          <div class="actions">
+            <a class="btn btn-primary" href="/ingredients/create">Nuevo ingrediente</a>
+          </div>
+
+          <% if (errorMessage) { %>
+            <p class="muted"><%= errorMessage %></p>
+          <% } %>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Categoria</th>
+                  <th>Unidad</th>
+                  <th>Etiquetas</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (!ingredients || ingredients.length === 0) { %>
+                  <tr>
+                    <td colspan="4" class="muted">No hay ingredientes disponibles.</td>
+                  </tr>
+                <% } %>
+
+                <% ingredients.forEach((ingredient) => { %>
+                  <tr>
+                    <td><strong><%= ingredient.name || ingredient.nombre || "Sin nombre" %></strong></td>
+                    <td><%= ingredient.category || ingredient.categoria || "otro" %></td>
+                    <td><%= ingredient.defaultUnit || ingredient.unidad || "g" %></td>
+                    <td><%= (ingredient.tags || []).join(', ') || '-' %></td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <%- include("../partials/footer") %>
+      </main>
+    </div>
+  </body>
+</html>
