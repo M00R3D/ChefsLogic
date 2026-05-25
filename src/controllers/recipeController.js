@@ -1,6 +1,7 @@
 const Recipe = require("../models/Recipe");
 const Region = require("../models/Region");
 const User = require("../models/User");
+const Interaction = require("../models/Interaction");
 const mongoose = require("mongoose");
 const { sendSuccess, sendError } = require("../utils/apiResponse");
 
@@ -208,16 +209,44 @@ async function renderRecipesPage(req, res) {
 
 async function renderRecipeDetail(req, res) {
   try {
-    const recipe = await Recipe.findById(req.params.id)
-      .populate("region", "name")
-      .populate("ingredients.ingredient", "name")
-      .lean();
+    const [recipe, comments] = await Promise.all([
+      Recipe.findById(req.params.id)
+        .populate("region", "name")
+        .populate("ingredients.ingredient", "name")
+        .lean(),
+      Interaction.find({
+        recipe: req.params.id,
+        targetType: "recipe",
+        type: "comment"
+      })
+        .populate("user", "name")
+        .sort({ createdAt: -1 })
+        .lean()
+    ]);
+
+    let userHasLiked = false;
+    let userHasSaved = false;
+
+    if (req.session && req.session.userId && recipe) {
+      const currentUser = await User.findById(req.session.userId)
+        .select("likedRecipes savedRecipes")
+        .lean();
+
+      if (currentUser) {
+        const recipeIdText = String(recipe._id);
+        userHasLiked = (currentUser.likedRecipes || []).some((id) => String(id) === recipeIdText);
+        userHasSaved = (currentUser.savedRecipes || []).some((id) => String(id) === recipeIdText);
+      }
+    }
 
     if (!recipe) {
       return res.status(404).render("recipes/show", {
         pageTitle: "Chef's Logic | Receta no encontrada",
         activeTab: "recetas",
         recipe: null,
+        comments: [],
+        userHasLiked: false,
+        userHasSaved: false,
         errorMessage: "La receta no existe."
       });
     }
@@ -226,6 +255,9 @@ async function renderRecipeDetail(req, res) {
       pageTitle: `Chef's Logic | ${recipe.title}`,
       activeTab: "recetas",
       recipe,
+      comments,
+      userHasLiked,
+      userHasSaved,
       errorMessage: ""
     });
   } catch (error) {
@@ -233,6 +265,9 @@ async function renderRecipeDetail(req, res) {
       pageTitle: "Chef's Logic | Error",
       activeTab: "recetas",
       recipe: null,
+      comments: [],
+      userHasLiked: false,
+      userHasSaved: false,
       errorMessage: "No fue posible cargar la receta."
     });
   }
@@ -322,6 +357,11 @@ async function getRecipeById(req, res) {
 
 async function createRecipe(req, res) {
   try {
+    if (req.session && req.session.userId) {
+      req.body.userId = req.session.userId;
+      req.body.usuario_id = req.session.userId;
+    }
+
     const { payload, hasUser } = await mapRecipePayload(req.body);
 
     if (!payload.title) {
@@ -355,6 +395,11 @@ async function createRecipe(req, res) {
 
 async function updateRecipe(req, res) {
   try {
+    if (req.session && req.session.userId) {
+      req.body.userId = req.session.userId;
+      req.body.usuario_id = req.session.userId;
+    }
+
     const existingRecipe = await Recipe.findById(req.params.id).lean();
 
     if (!existingRecipe) {
@@ -401,6 +446,188 @@ async function deleteRecipe(req, res) {
   }
 }
 
+async function likeRecipe(req, res) {
+  try {
+    const recipeId = toObjectId(req.params.id);
+    const userId = toObjectId(req.session && req.session.userId);
+
+    if (!recipeId || !userId) {
+      return sendError(res, new Error("Solicitud invalida."), "Solicitud invalida.", 400);
+    }
+
+    const [recipe, user] = await Promise.all([
+      Recipe.findById(recipeId),
+      User.findById(userId).select("likedRecipes")
+    ]);
+
+    if (!recipe) {
+      return sendError(res, new Error("Receta no encontrada."), "Receta no encontrada.", 404);
+    }
+
+    if (!user) {
+      return sendError(res, new Error("Usuario no encontrado."), "Usuario no encontrado.", 404);
+    }
+
+    user.likedRecipes = Array.isArray(user.likedRecipes) ? user.likedRecipes : [];
+    const wasLiked = user.likedRecipes.some((id) => String(id) === String(recipeId));
+
+    if (wasLiked) {
+      user.likedRecipes = user.likedRecipes.filter((id) => String(id) !== String(recipeId));
+      await Interaction.deleteMany({ user: userId, recipe: recipeId, targetType: "recipe", type: "like" });
+    } else {
+      user.likedRecipes.push(recipeId);
+      await Interaction.create({
+        user: userId,
+        recipe: recipeId,
+        type: "like",
+        targetType: "recipe",
+        value: 1
+      });
+    }
+
+    await user.save();
+
+    const likeCount = await User.countDocuments({ likedRecipes: recipeId });
+
+    recipe.likeCount = likeCount;
+    recipe.likes = likeCount;
+    await recipe.save();
+
+    return sendSuccess(
+      res,
+      { liked: !wasLiked, likeCount },
+      !wasLiked ? "Receta marcada con like." : "Like removido correctamente."
+    );
+  } catch (error) {
+    return sendError(res, error, "No fue posible registrar el like.");
+  }
+}
+
+async function dislikeRecipe(req, res) {
+  try {
+    const recipeId = toObjectId(req.params.id);
+    const userId = toObjectId(req.session && req.session.userId);
+
+    if (!recipeId || !userId) {
+      return sendError(res, new Error("Solicitud invalida."), "Solicitud invalida.", 400);
+    }
+
+    const [recipe, user] = await Promise.all([
+      Recipe.findById(recipeId),
+      User.findById(userId).select("likedRecipes")
+    ]);
+
+    if (!recipe) {
+      return sendError(res, new Error("Receta no encontrada."), "Receta no encontrada.", 404);
+    }
+
+    if (!user) {
+      return sendError(res, new Error("Usuario no encontrado."), "Usuario no encontrado.", 404);
+    }
+
+    user.likedRecipes = Array.isArray(user.likedRecipes) ? user.likedRecipes : [];
+    user.likedRecipes = user.likedRecipes.filter((id) => String(id) !== String(recipeId));
+    await user.save();
+    await Interaction.deleteMany({ user: userId, recipe: recipeId, targetType: "recipe", type: "like" });
+
+    const likeCount = await User.countDocuments({ likedRecipes: recipeId });
+    recipe.likeCount = likeCount;
+    recipe.likes = likeCount;
+    await recipe.save();
+
+    return sendSuccess(res, { liked: false, likeCount }, "Dislike aplicado. Like removido.");
+  } catch (error) {
+    return sendError(res, error, "No fue posible aplicar dislike.");
+  }
+}
+
+async function saveRecipe(req, res) {
+  try {
+    const recipeId = toObjectId(req.params.id);
+    const userId = toObjectId(req.session && req.session.userId);
+
+    if (!recipeId || !userId) {
+      return sendError(res, new Error("Solicitud invalida."), "Solicitud invalida.", 400);
+    }
+
+    const [recipe, user] = await Promise.all([
+      Recipe.findById(recipeId).select("_id"),
+      User.findById(userId).select("savedRecipes")
+    ]);
+
+    if (!recipe) {
+      return sendError(res, new Error("Receta no encontrada."), "Receta no encontrada.", 404);
+    }
+
+    if (!user) {
+      return sendError(res, new Error("Usuario no encontrado."), "Usuario no encontrado.", 404);
+    }
+
+    user.savedRecipes = Array.isArray(user.savedRecipes) ? user.savedRecipes : [];
+    const wasSaved = user.savedRecipes.some((id) => String(id) === String(recipeId));
+
+    if (wasSaved) {
+      user.savedRecipes = user.savedRecipes.filter((id) => String(id) !== String(recipeId));
+      await Interaction.deleteMany({ user: userId, recipe: recipeId, targetType: "recipe", type: "save" });
+    } else {
+      user.savedRecipes.push(recipeId);
+      await Interaction.create({
+        user: userId,
+        recipe: recipeId,
+        type: "save",
+        targetType: "recipe",
+        value: 1
+      });
+    }
+
+    await user.save();
+
+    return sendSuccess(
+      res,
+      { saved: !wasSaved },
+      !wasSaved ? "Receta guardada correctamente." : "Receta removida de guardados."
+    );
+  } catch (error) {
+    return sendError(res, error, "No fue posible guardar la receta.");
+  }
+}
+
+async function addComment(req, res) {
+  try {
+    const recipeId = toObjectId(req.params.id);
+    const userId = toObjectId(req.session && req.session.userId);
+    const commentText = String(req.body.commentText || req.body.comment || req.body.text || "").trim();
+
+    if (!recipeId || !userId) {
+      return sendError(res, new Error("Solicitud invalida."), "Solicitud invalida.", 400);
+    }
+
+    if (!commentText) {
+      return sendError(res, new Error("El comentario no puede estar vacio."), "Escribe un comentario.", 400);
+    }
+
+    const recipe = await Recipe.findById(recipeId).select("_id title");
+    if (!recipe) {
+      return sendError(res, new Error("Receta no encontrada."), "Receta no encontrada.", 404);
+    }
+
+    const interaction = await Interaction.create({
+      user: userId,
+      recipe: recipeId,
+      type: "comment",
+      targetType: "recipe",
+      commentText,
+      value: 1
+    });
+
+    const populated = await Interaction.findById(interaction._id).populate("user", "name").lean();
+
+    return sendSuccess(res, populated, "Comentario publicado.", 201);
+  } catch (error) {
+    return sendError(res, error, "No fue posible publicar el comentario.");
+  }
+}
+
 module.exports = {
   renderRecipesPage,
   renderRecipeDetail,
@@ -410,5 +637,9 @@ module.exports = {
   getRecipeById,
   createRecipe,
   updateRecipe,
-  deleteRecipe
+  deleteRecipe,
+  likeRecipe,
+  dislikeRecipe,
+  saveRecipe,
+  addComment
 };

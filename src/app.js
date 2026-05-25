@@ -8,6 +8,11 @@ const recipeRoutes = require("./routes/recipeRoutes");
 const ingredientRoutes = require("./routes/ingredientRoutes");
 const cookbookRoutes = require("./routes/cookbookRoutes");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
+const session = require("express-session");
+const { MongoStore } = require("connect-mongo");
+const Region = require("./models/Region");
+const User = require("./models/User");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
@@ -18,36 +23,64 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "..", "public")));
 
-app.get("/", async (req, res) => {
-  let dashboardStats = {
-    recipes: 0,
-    ingredients: 0,
-    cookbooks: 0
-  };
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "chefslogic-secret-key-change-in-prod",
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/chefslogic",
+      touchAfter: 24 * 3600
+    }),
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    }
+  })
+);
 
-  try {
-    const [recipes, ingredients, cookbooks] = await Promise.all([
-      Recipe.countDocuments(),
-      Ingredient.countDocuments(),
-      Cookbook.countDocuments()
-    ]);
-
-    dashboardStats = {
-      recipes,
-      ingredients,
-      cookbooks
-    };
-  } catch (error) {
-    console.warn("No fue posible cargar metricas para el home:", error.message);
+app.use(async (req, res, next) => {
+  if (req.session && req.session.userId) {
+    try {
+      const user = await User.findById(req.session.userId)
+        .select("name email role savedRecipes likedRecipes")
+        .lean();
+      res.locals.currentUser = user || null;
+    } catch {
+      res.locals.currentUser = null;
+    }
+  } else {
+    res.locals.currentUser = null;
   }
+  next();
+});
 
-  res.render("index", {
-    appName: "Chef's Logic",
-    pageTitle: "Chef's Logic | Cocina Mexicana Inteligente",
-    activeTab: "inicio",
-    statusMessage: "Verificando estado de la API...",
-    dashboardStats
-  });
+app.use(authRoutes);
+
+app.get("/", async (req, res) => {
+  try {
+    const [recipes, regions] = await Promise.all([
+      Recipe.find({ status: "publicada" }).populate("region", "name").sort({ createdAt: -1 }).lean(),
+      Region.find().sort({ name: 1 }).lean()
+    ]);
+    return res.render("index", {
+      pageTitle: "Chef's Logic | Descubre Cocina Mexicana",
+      activeTab: "inicio",
+      recipes,
+      regions,
+      errorMessage: ""
+    });
+  } catch (error) {
+    console.warn("Home route error:", error.message);
+    return res.render("index", {
+      pageTitle: "Chef's Logic",
+      activeTab: "inicio",
+      recipes: [],
+      regions: [],
+      errorMessage: "No fue posible cargar las recetas."
+    });
+  }
 });
 
 app.get("/api/health", (req, res) => {

@@ -48,7 +48,13 @@ const userSchema = new mongoose.Schema(
         ref: "Recipe"
       }
     ],
-    isActive: {
+      likedRecipes: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Recipe"
+        }
+      ],
+      isActive: {
       type: Boolean,
       default: true
     }

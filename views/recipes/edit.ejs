@@ -11,7 +11,7 @@
       <%- include("../partials/navbar", { activeTab }) %>
 
       <main class="main-content">
-        <%- include("../partials/header", { pageTitle: "Editar receta" }) %>
+        <%- include("../partials/header", { pageTitle: "Edit Recipe" }) %>
 
         <% if (errorMessage || !recipe) { %>
           <section class="card">
@@ -21,7 +21,7 @@
         <% } %>
 
         <% if (recipe) { %>
-          <section class="card">
+          <section class="card reveal">
             <form id="recipe-form" class="form-grid" action="/recipes/<%= recipe._id %>" method="POST">
               <div class="form-grid cols-2">
                 <label>
@@ -37,6 +37,11 @@
               <label>
                 Resumen
                 <textarea name="summary"><%= recipe.summary || "" %></textarea>
+              </label>
+
+              <label>
+                URL de imagen principal
+                <input type="url" name="imageUrl" value="<%= recipe.imageUrl || '' %>" placeholder="https://..." />
               </label>
 
               <div class="form-grid cols-2">

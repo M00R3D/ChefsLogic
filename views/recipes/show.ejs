@@ -21,61 +21,120 @@
         <% } %>
 
         <% if (recipe) { %>
-          <section class="grid cols-2">
-            <article class="card">
-              <h3>Resumen</h3>
-              <p class="muted"><%= recipe.summary || "Sin resumen." %></p>
-              <div class="actions">
-                <span class="chip"><%= recipe.difficulty %></span>
-                <span class="chip"><%= recipe.status %></span>
-                <span class="chip"><%= recipe.servings %> porciones</span>
-              </div>
-            </article>
+          <% if (recipe.imageUrl) { %>
+            <img class="recipe-hero reveal" src="<%= recipe.imageUrl %>" alt="<%= recipe.title %>" />
+          <% } else { %>
+            <div class="recipe-hero-placeholder reveal">🍳</div>
+          <% } %>
 
-            <article class="card">
-              <h3>Tiempo</h3>
-              <p class="muted">Preparacion: <%= recipe.prepMinutes %> min</p>
-              <p class="muted">Coccion: <%= recipe.cookMinutes %> min</p>
-              <p class="muted">Region: <%= recipe.region ? recipe.region.name : "Sin region" %></p>
-            </article>
+          <section class="card reveal" style="margin-bottom:1.25rem;">
+            <h1 class="recipe-title"><%= recipe.title %></h1>
+            <p class="muted" style="margin-top:0;"><%= recipe.summary || "Sin resumen." %></p>
+
+            <div class="recipe-meta-row">
+              <span class="chip"><%= recipe.region ? recipe.region.name : "Sin region" %></span>
+              <span class="chip"><%= recipe.difficulty || "media" %></span>
+              <span class="chip"><%= recipe.servings || 1 %> porciones</span>
+              <span class="chip"><%= (recipe.prepMinutes || 0) + (recipe.cookMinutes || 0) %> min total</span>
+              <span class="status-badge <%= recipe.status || 'borrador' %>"><%= recipe.status || 'borrador' %></span>
+            </div>
+
+            <div class="interaction-bar">
+              <button class="interaction-btn <%= userHasLiked ? 'active' : '' %>" type="button" data-recipe-like="<%= recipe._id %>">
+                ❤ <span data-like-label><%= userHasLiked ? 'Te gusta' : 'Me gusta' %></span>
+                <strong data-like-count><%= recipe.likeCount || 0 %></strong>
+              </button>
+
+              <button class="interaction-btn" type="button" data-recipe-dislike="<%= recipe._id %>">
+                👎 Quitar like
+              </button>
+
+              <button class="interaction-btn <%= userHasSaved ? 'active' : '' %>" type="button" data-recipe-save="<%= recipe._id %>">
+                🔖 <span data-save-label><%= userHasSaved ? 'Guardada' : 'Guardar' %></span>
+              </button>
+
+              <% if (!(typeof currentUser !== 'undefined' && currentUser)) { %>
+                <a class="btn btn-ghost btn-sm" href="/login">Inicia sesion para interactuar</a>
+              <% } %>
+            </div>
+
+            <div class="actions">
+              <a class="btn btn-soft" href="/recipes">Volver</a>
+              <a class="btn btn-primary" href="/recipes/<%= recipe._id %>/edit">Editar receta</a>
+            </div>
           </section>
 
-          <section class="grid cols-2">
+          <section class="grid cols-2 reveal">
             <article class="card">
               <h3>Ingredientes</h3>
-              <ul class="list">
+              <ul class="ingredients-list">
                 <% if (!recipe.ingredients || recipe.ingredients.length === 0) { %>
                   <li class="muted">No hay ingredientes cargados.</li>
                 <% } %>
                 <% recipe.ingredients.forEach((item) => { %>
-                  <li>
-                    <strong><%= item.ingredientName || (item.ingredient ? item.ingredient.name : "Ingrediente") %></strong>
-                    <span class="muted"> - <%= item.quantity %> <%= item.unit %></span>
+                  <li class="ingredient-item">
+                    <span class="ingredient-dot"></span>
+                    <div>
+                      <strong><%= item.ingredientName || (item.ingredient ? item.ingredient.name : "Ingrediente") %></strong>
+                      <div class="muted"><%= item.quantity %> <%= item.unit %></div>
+                    </div>
                   </li>
                 <% }); %>
               </ul>
             </article>
 
             <article class="card">
-              <h3>Pasos</h3>
-              <ol class="list">
+              <h3>Preparacion</h3>
+              <ol class="steps-list">
                 <% if (!recipe.steps || recipe.steps.length === 0) { %>
                   <li class="muted">No hay pasos registrados.</li>
                 <% } %>
                 <% recipe.steps.forEach((step) => { %>
-                  <li>
-                    <strong>Paso <%= step.order %>:</strong>
-                    <span class="muted"> <%= step.text %></span>
+                  <li class="step-item">
+                    <div class="step-number"><%= step.order %></div>
+                    <div class="step-text"><%= step.text %></div>
                   </li>
                 <% }); %>
               </ol>
             </article>
           </section>
 
-          <section class="card">
-            <div class="actions">
-              <a class="btn btn-soft" href="/recipes">Volver</a>
-              <a class="btn btn-primary" href="/recipes/<%= recipe._id %>/edit">Editar receta</a>
+          <section class="card reveal" style="margin-top:1.25rem;">
+            <div class="section-heading" style="margin-bottom:0.8rem;">
+              <h2 style="font-size:1.2rem;">Comentarios</h2>
+            </div>
+
+            <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+              <form id="comment-form" class="form-grid" data-comment-form="<%= recipe._id %>">
+                <label>
+                  Comparte tu tip o experiencia
+                  <textarea name="commentText" placeholder="Ej: Lo hice con chile morita y quedo espectacular." required></textarea>
+                </label>
+                <div class="actions">
+                  <button class="btn btn-primary" type="submit">Publicar comentario</button>
+                </div>
+              </form>
+            <% } else { %>
+              <p class="muted">Inicia sesion para comentar.</p>
+            <% } %>
+
+            <div class="comment-list" id="comment-list">
+              <% if (!comments || comments.length === 0) { %>
+                <article class="comment-item">
+                  <p class="muted" style="margin:0;">Aun no hay comentarios. Se la primera persona en opinar.</p>
+                </article>
+              <% } %>
+
+              <% (comments || []).forEach((comment) => { %>
+                <article class="comment-item">
+                  <div class="comment-header">
+                    <div class="comment-avatar"><%= ((comment.user && comment.user.name) ? comment.user.name.charAt(0) : '?').toUpperCase() %></div>
+                    <span class="comment-author"><%= (comment.user && comment.user.name) ? comment.user.name : 'Usuario' %></span>
+                    <span class="comment-date"><%= new Date(comment.createdAt).toLocaleDateString('es-MX') %></span>
+                  </div>
+                  <p class="comment-text"><%= comment.commentText %></p>
+                </article>
+              <% }); %>
             </div>
           </section>
         <% } %>
@@ -83,5 +142,7 @@
         <%- include("../partials/footer") %>
       </main>
     </div>
+
+    <script src="/js/recipes.js"></script>
   </body>
 </html>

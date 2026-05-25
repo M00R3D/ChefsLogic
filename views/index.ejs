@@ -11,51 +11,100 @@
       <%- include("partials/navbar", { activeTab }) %>
 
       <main class="main-content">
-        <%- include("partials/header", { pageTitle: appName }) %>
-
-        <section class="card">
-          <h3>Plataforma culinaria mexicana</h3>
-          <p class="muted">
-            Base SSR profesional con arquitectura MVC para recetas, dashboards culinarios, recetarios e interacciones sociales.
+        <section class="explore-hero reveal">
+          <h1>Descubre Sabor de Origen</h1>
+          <p>
+            Un recetario vivo donde cada plato cuenta una historia. Filtra por region,
+            guarda favoritos y comparte tus propias recetas.
           </p>
-
-          <div class="actions">
-            <span class="chip">Node.js</span>
-            <span class="chip">Express</span>
-            <span class="chip">EJS SSR</span>
-            <span class="chip">MongoDB + Mongoose</span>
-            <span class="chip">Vanilla JS + fetch()</span>
+          <div class="actions" style="justify-content:center;">
+            <a class="btn btn-primary" href="/recipes">Ir al recetario</a>
+            <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+              <a class="btn btn-outline" href="/recipes/create">Publicar receta</a>
+            <% } else { %>
+              <a class="btn btn-outline" href="/register">Crear cuenta gratis</a>
+            <% } %>
           </div>
+        </section>
 
-          <div class="hero-kpi">
-            <article class="kpi">
-              <span class="muted">Modulos principales</span>
-              <strong id="kpi-recipes"><%= typeof dashboardStats !== "undefined" ? dashboardStats.recipes : 0 %></strong>
-              <span class="muted">Recetas</span>
-            </article>
-            <article class="kpi">
-              <span class="muted">Gestion de catalogo</span>
-              <strong id="kpi-ingredients"><%= typeof dashboardStats !== "undefined" ? dashboardStats.ingredients : 0 %></strong>
-              <span class="muted">Ingredientes</span>
-            </article>
-            <article class="kpi">
-              <span class="muted">Curacion social</span>
-              <strong id="kpi-cookbooks"><%= typeof dashboardStats !== "undefined" ? dashboardStats.cookbooks : 0 %></strong>
-              <span class="muted">Recetarios</span>
-            </article>
-          </div>
+        <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+          <section class="alert alert-warning"><%= errorMessage %></section>
+        <% } %>
 
-          <p class="muted" id="db-source" style="margin-top: 0.7rem;">
-            Fuente de datos: MongoDB (<%= typeof dashboardStats !== "undefined" ? "chefslogic" : "no disponible" %>)
-          </p>
+        <section class="filter-pills" id="region-pills">
+          <button class="pill active" type="button" data-region="all">Todas las regiones</button>
+          <% (typeof regions !== 'undefined' && Array.isArray(regions) ? regions : []).forEach((region) => { %>
+            <button class="pill" type="button" data-region="<%= String(region._id) %>"><%= region.name %></button>
+          <% }); %>
+        </section>
 
-          <div id="status" class="card" style="margin-top: 1rem;"><%= statusMessage %></div>
+        <section class="section-heading">
+          <h2>Recetas Publicadas</h2>
+          <a class="btn btn-ghost btn-sm" href="/recipes">Ver todo</a>
+        </section>
+
+        <section class="grid cols-3" id="recipes-grid">
+          <% if (typeof recipes === 'undefined' || !recipes || recipes.length === 0) { %>
+            <article class="card">
+              <p class="muted">Aun no hay recetas publicadas. Se la primera persona en compartir una.</p>
+            </article>
+          <% } %>
+
+          <% (typeof recipes !== 'undefined' && Array.isArray(recipes) ? recipes : []).forEach((recipe, index) => { %>
+            <article
+              class="recipe-card reveal"
+              data-region="<%= recipe.region ? String(recipe.region._id) : 'none' %>"
+              data-reveal-index="<%= index %>"
+            >
+              <button
+                class="recipe-card-save-btn <%= (typeof currentUser !== 'undefined' && currentUser && Array.isArray(currentUser.savedRecipes) && currentUser.savedRecipes.some((id) => String(id) === String(recipe._id))) ? 'saved' : '' %>"
+                type="button"
+                title="Guardar receta"
+                data-recipe-save="<%= recipe._id %>"
+              >
+                ❤
+              </button>
+
+              <% if (recipe.imageUrl) { %>
+                <img class="recipe-card-img" src="<%= recipe.imageUrl %>" alt="<%= recipe.title %>" loading="lazy" />
+              <% } else { %>
+                <div class="recipe-card-img-placeholder">🍲</div>
+              <% } %>
+
+              <div class="recipe-card-body">
+                <p class="recipe-card-meta"><%= recipe.region ? recipe.region.name : 'Sin region' %></p>
+                <h3 class="recipe-card-title"><a href="/recipes/<%= recipe._id %>"><%= recipe.title %></a></h3>
+                <div class="recipe-card-footer">
+                  <span>⏱ <%= recipe.prepMinutes + recipe.cookMinutes %> min</span>
+                  <span>❤ <%= recipe.likeCount || 0 %></span>
+                  <span>🍽 <%= recipe.servings || 1 %></span>
+                </div>
+              </div>
+            </article>
+          <% }); %>
         </section>
 
         <%- include("partials/footer") %>
       </main>
     </div>
 
-    <script src="/js/main.js"></script>
+    <script src="/js/recipes.js"></script>
+    <script>
+      const pills = document.querySelectorAll('#region-pills .pill');
+      const cards = document.querySelectorAll('#recipes-grid .recipe-card');
+
+      pills.forEach((pill) => {
+        pill.addEventListener('click', () => {
+          pills.forEach((item) => item.classList.remove('active'));
+          pill.classList.add('active');
+
+          const selected = pill.dataset.region;
+          cards.forEach((card) => {
+            const region = card.dataset.region;
+            card.style.display = selected === 'all' || region === selected ? '' : 'none';
+          });
+        });
+      });
+    </script>
   </body>
 </html>

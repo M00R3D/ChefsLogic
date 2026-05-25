@@ -11,53 +11,63 @@
       <%- include("../partials/navbar", { activeTab }) %>
 
       <main class="main-content">
-        <%- include("../partials/header", { pageTitle: "Recetas" }) %>
-
-        <section class="card">
+        <section class="section-heading">
+          <h2>My Recipe Book</h2>
           <div class="actions">
-            <a class="btn btn-primary" href="/recipes/create">Nueva receta</a>
+            <a class="btn btn-primary" href="/recipes/create">+ Nueva receta</a>
           </div>
+        </section>
 
-          <% if (errorMessage) { %>
-            <p class="muted"><%= errorMessage %></p>
+        <% if (errorMessage) { %>
+          <section class="alert alert-error"><%= errorMessage %></section>
+        <% } %>
+
+        <section class="card" style="margin-bottom:1.25rem;">
+          <p class="muted" style="margin:0;">
+            Una coleccion curada de tus recetas favoritas, experimentos culinarios y sabores heredados.
+          </p>
+        </section>
+
+        <section class="grid cols-3">
+          <% if (!recipes || recipes.length === 0) { %>
+            <article class="card">
+              <p class="muted">No hay recetas registradas aun.</p>
+            </article>
           <% } %>
 
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Titulo</th>
-                  <th>Region</th>
-                  <th>Dificultad</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% if (!recipes || recipes.length === 0) { %>
-                  <tr>
-                    <td colspan="5" class="muted">No hay recetas registradas aun.</td>
-                  </tr>
-                <% } %>
+          <% recipes.forEach((recipe, index) => { %>
+            <article class="recipe-card reveal" data-reveal-index="<%= index %>">
+              <% if (recipe.imageUrl) { %>
+                <img class="recipe-card-img" src="<%= recipe.imageUrl %>" alt="<%= recipe.title %>" loading="lazy" />
+              <% } else { %>
+                <div class="recipe-card-img-placeholder">📖</div>
+              <% } %>
 
-                <% recipes.forEach((recipe) => { %>
-                  <tr>
-                    <td><strong><%= recipe.title || recipe.titulo || "Sin titulo" %></strong></td>
-                    <td><%= recipe.region ? recipe.region.name : "Sin region" %></td>
-                    <td><%= recipe.difficulty || recipe.dificultad || "media" %></td>
-                    <td><span class="chip"><%= recipe.status || recipe.estado || "borrador" %></span></td>
-                    <td>
-                      <div class="actions">
-                        <a class="btn btn-soft" href="/recipes/<%= recipe._id %>">Ver</a>
-                        <a class="btn btn-soft" href="/recipes/<%= recipe._id %>/edit">Editar</a>
-                        <button class="btn btn-danger" data-delete-recipe="<%= recipe._id %>">Eliminar</button>
-                      </div>
-                    </td>
-                  </tr>
-                <% }); %>
-              </tbody>
-            </table>
-          </div>
+              <div class="recipe-card-body">
+                <p class="recipe-card-meta"><%= recipe.region ? recipe.region.name : 'Sin region' %></p>
+                <h3 class="recipe-card-title">
+                  <a href="/recipes/<%= recipe._id %>"><%= recipe.title || recipe.titulo || "Sin titulo" %></a>
+                </h3>
+
+                <div class="actions" style="margin-bottom:0.65rem;">
+                  <span class="status-badge <%= recipe.status || 'borrador' %>"><%= recipe.status || 'borrador' %></span>
+                  <span class="chip"><%= recipe.difficulty || recipe.dificultad || 'media' %></span>
+                </div>
+
+                <div class="recipe-card-footer" style="margin-bottom:0.75rem;">
+                  <span>⏱ <%= (recipe.prepMinutes || 0) + (recipe.cookMinutes || 0) %> min</span>
+                  <span>❤ <%= recipe.likeCount || 0 %></span>
+                  <span>🍽 <%= recipe.servings || 1 %></span>
+                </div>
+
+                <div class="actions">
+                  <a class="btn btn-soft btn-sm" href="/recipes/<%= recipe._id %>">Ver</a>
+                  <a class="btn btn-soft btn-sm" href="/recipes/<%= recipe._id %>/edit">Editar</a>
+                  <button class="btn btn-danger btn-sm" data-delete-recipe="<%= recipe._id %>">Eliminar</button>
+                </div>
+              </div>
+            </article>
+          <% }); %>
         </section>
 
         <%- include("../partials/footer") %>

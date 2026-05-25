@@ -7,10 +7,11 @@ function notFound(req, res) {
   }
 
   return res.status(404).render("index", {
-    appName: "Chef's Logic",
     pageTitle: "Chef's Logic | Pagina no encontrada",
     activeTab: "inicio",
-    statusMessage: "La pagina solicitada no existe."
+    recipes: [],
+    regions: [],
+    errorMessage: "La pagina solicitada no existe."
   });
 }
 
@@ -29,10 +30,11 @@ function errorHandler(err, req, res, next) {
   }
 
   return res.status(500).render("index", {
-    appName: "Chef's Logic",
     pageTitle: "Chef's Logic | Error",
     activeTab: "inicio",
-    statusMessage: "Ocurrio un error inesperado en el servidor."
+    recipes: [],
+    regions: [],
+    errorMessage: "Ocurrio un error inesperado en el servidor."
   });
 }
 

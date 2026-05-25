@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="auth-shell">
+      <div class="auth-card">
+        <p class="auth-brand">Chef's Logic</p>
+        <h2>Bienvenido de vuelta</h2>
+        <p class="auth-subtitle">Ingresa a tu cuenta para continuar</p>
+
+        <% if (errorMessage) { %>
+          <div class="alert alert-error"><%= errorMessage %></div>
+        <% } %>
+        <% if (successMessage) { %>
+          <div class="alert alert-success"><%= successMessage %></div>
+        <% } %>
+
+        <form class="form-grid" action="/login" method="POST">
+          <label>
+            Email
+            <input type="email" name="email" placeholder="chef@ejemplo.com" required autocomplete="email" />
+          </label>
+
+          <label>
+            Contraseña
+            <input type="password" name="password" placeholder="••••••••" required autocomplete="current-password" />
+          </label>
+
+          <button class="btn btn-primary" type="submit" style="width:100%;justify-content:center;margin-top:0.25rem;">
+            Ingresar
+          </button>
+        </form>
+
+        <p class="auth-footer">
+          ¿No tienes cuenta? <a href="/register">Regístrate gratis</a>
+        </p>
+      </div>
+    </div>
+
+    <div class="toast-root" id="toast-root"></div>
+    <script src="/js/app-ui.js"></script>
+  </body>
+</html>

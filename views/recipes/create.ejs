@@ -11,29 +11,42 @@
       <%- include("../partials/navbar", { activeTab }) %>
 
       <main class="main-content">
-        <%- include("../partials/header", { pageTitle: "Nueva receta" }) %>
+        <%- include("../partials/header", { pageTitle: "Create New Recipe" }) %>
+
+        <section class="create-steps card" style="margin-bottom:1rem;">
+          <div class="step-pill is-active"><span>1</span> Basicos</div>
+          <div class="step-line"></div>
+          <div class="step-pill"><span>2</span> Ingredientes</div>
+          <div class="step-line"></div>
+          <div class="step-pill"><span>3</span> Instrucciones</div>
+        </section>
 
         <section class="grid cols-2">
-          <article class="card">
+          <article class="card reveal">
             <% if (errorMessage) { %>
-              <p class="muted"><%= errorMessage %></p>
+              <div class="alert alert-error"><%= errorMessage %></div>
             <% } %>
 
             <form id="recipe-form" class="form-grid" action="/recipes" method="POST">
               <div class="form-grid cols-2">
                 <label>
                   Titulo
-                  <input type="text" name="title" required />
+                  <input type="text" name="title" required placeholder="Ej. Mole negro tradicional" />
                 </label>
                 <label>
                   Slug (opcional)
-                  <input type="text" name="slug" placeholder="tacos-al-pastor" />
+                  <input type="text" name="slug" placeholder="mole-negro-tradicional" />
                 </label>
               </div>
 
               <label>
                 Resumen
-                <textarea name="summary" placeholder="Describe la receta"></textarea>
+                <textarea name="summary" placeholder="Cuenta el origen o historia de tu receta"></textarea>
+              </label>
+
+              <label>
+                URL de imagen principal
+                <input type="url" name="imageUrl" placeholder="https://..." />
               </label>
 
               <div class="form-grid cols-2">
@@ -84,28 +97,28 @@
 
               <label>
                 Etiquetas (separadas por coma)
-                <input type="text" name="tags" placeholder="mexicana, antojitos, maiz" />
+                <input type="text" name="tags" placeholder="mexicana, fuego lento, tradicional" />
               </label>
 
               <label>
-                Ingredientes (uno por linea usando formato nombre|cantidad|unidad|nota)
-                <textarea name="ingredientsData" placeholder="Tortilla|8|pieza|de maiz"></textarea>
+                Ingredientes (uno por linea: nombre|cantidad|unidad|nota)
+                <textarea name="ingredientsData" placeholder="Chile ancho|4|pieza|sin semillas"></textarea>
               </label>
 
               <label>
                 Pasos (uno por linea)
-                <textarea name="stepsData" placeholder="Calienta las tortillas"></textarea>
+                <textarea name="stepsData" placeholder="Tuesta ligeramente los chiles"></textarea>
               </label>
 
               <div class="actions">
-                <button class="btn btn-primary" type="submit">Guardar receta</button>
+                <button class="btn btn-primary" type="submit">Publicar receta</button>
                 <a class="btn btn-soft" href="/recipes">Cancelar</a>
               </div>
             </form>
           </article>
 
-          <aside class="card">
-            <h3>Vista previa rapida</h3>
+          <aside class="card reveal">
+            <h3>Vista previa</h3>
             <div id="recipe-preview" class="muted"></div>
             <p class="form-help">La previsualizacion se actualiza en tiempo real mientras escribes.</p>
           </aside>

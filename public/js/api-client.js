@@ -22,7 +22,15 @@ const ChefApi = {
     getById: (id) => request(`/api/recipes/${id}`),
     create: (data) => request("/api/recipes", { method: "POST", body: JSON.stringify(data) }),
     update: (id, data) => request(`/api/recipes/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-    remove: (id) => request(`/api/recipes/${id}`, { method: "DELETE" })
+    remove: (id) => request(`/api/recipes/${id}`, { method: "DELETE" }),
+    like: (id) => request(`/api/recipes/${id}/like`, { method: "POST" }),
+    dislike: (id) => request(`/api/recipes/${id}/dislike`, { method: "POST" }),
+    save: (id) => request(`/api/recipes/${id}/save`, { method: "POST" }),
+    comment: (id, commentText) =>
+      request(`/api/recipes/${id}/comment`, {
+        method: "POST",
+        body: JSON.stringify({ commentText })
+      })
   },
   ingredients: {
     list: () => request("/api/ingredients"),
