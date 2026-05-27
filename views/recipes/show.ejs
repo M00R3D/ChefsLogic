@@ -21,8 +21,36 @@
         <% } %>
 
         <% if (recipe) { %>
-          <% if (recipe.imageUrl) { %>
-            <img class="recipe-hero reveal" src="<%= recipe.imageUrl %>" alt="<%= recipe.title %>" />
+          <% const imageCandidate = String(recipe.imageUrl || recipe.imagen_principal || '').trim(); %>
+          <% const canRenderImage = /^(https?:\/\/|\/|data:image\/)/i.test(imageCandidate); %>
+          <% const ingredientMeta = {
+            verdura: { emoji: '🥦', color: '#2e7d32', bg: '#e8f5e9' },
+            fruta: { emoji: '🍎', color: '#c62828', bg: '#ffebee' },
+            proteina: { emoji: '🥩', color: '#b71c1c', bg: '#fff3e0' },
+            grano: { emoji: '🌾', color: '#6d4c41', bg: '#efebe9' },
+            especia: { emoji: '🌶️', color: '#e65100', bg: '#fff8e1' },
+            lacteo: { emoji: '🧀', color: '#1565c0', bg: '#e3f2fd' },
+            otro: { emoji: '🧺', color: '#546e7a', bg: '#f5f5f5' }
+          }; %>
+          <% const tagEmoji = {
+            fresco: '🍃', dulce: '🍯', picante: '🌶️', ahumado: '🔥',
+            tradicional: '🏺', casero: '🏠', crujiente: '🥨', cremoso: '🥛',
+            saludable: '🥗', rapido: '⚡', vegano: '🌱', vegetariano: '🥬'
+          }; %>
+          <% const classifyStep = (text) => {
+            const t = String(text || '').toLowerCase();
+            if (/calentar|hervir|fre[ii]r|freir|tostar|hornear|dorar|asar|saltear|reducir|gratinar|flamear|sofreir|sellar|desglasar/.test(t)) return { icon: '🔥', type: 'heat' };
+            if (/enfriar|refrigerar|reposar|congelar|templar/.test(t)) return { icon: '❄️', type: 'cool' };
+            if (/picar|cortar|rebanar|pelar|lavar|limpiar|trozar|desvenar|deshuesar|juliana|cubos|rodaj|moler|triturar|procesar/.test(t)) return { icon: '🔪', type: 'cut' };
+            if (/sazonar|condimentar|sal y pimienta|agregar sal|comino|oregano|pimienta|rectificar|ajustar/.test(t)) return { icon: '🧂', type: 'season' };
+            if (/licuar|colar|batir|mezcl|integrar|incorporar|revolver|homogene|ligar/.test(t)) return { icon: '🌀', type: 'blend' };
+            if (/marinar|remojar|macerar|hidratar/.test(t)) return { icon: '💧', type: 'soak' };
+            if (/servir|decorar|emplatar|presentar|acompa|verter|espolvorear|terminar/.test(t)) return { icon: '🍽️', type: 'serve' };
+            return { icon: '👨‍🍳', type: 'def' };
+          }; %>
+
+          <% if (imageCandidate && canRenderImage) { %>
+            <img class="recipe-hero reveal" src="<%= imageCandidate %>" alt="<%= recipe.title %>" />
           <% } else { %>
             <div class="recipe-hero-placeholder reveal">🍳</div>
           <% } %>
@@ -38,6 +66,15 @@
               <span class="chip"><%= (recipe.prepMinutes || 0) + (recipe.cookMinutes || 0) %> min total</span>
               <span class="status-badge <%= recipe.status || 'borrador' %>"><%= recipe.status || 'borrador' %></span>
             </div>
+
+            <% if (Array.isArray(recipe.tags) && recipe.tags.length) { %>
+              <div class="recipe-tag-cloud">
+                <% recipe.tags.forEach((tag) => { %>
+                  <% const t = String(tag || '').toLowerCase(); %>
+                  <span class="recipe-tag-chip"><%= tagEmoji[t] || '🏷️' %> <%= tag %></span>
+                <% }); %>
+              </div>
+            <% } %>
 
             <div class="interaction-bar">
               <button class="interaction-btn <%= userHasLiked ? 'active' : '' %>" type="button" data-recipe-like="<%= recipe._id %>">
@@ -60,7 +97,9 @@
 
             <div class="actions">
               <a class="btn btn-soft" href="/recipes">Volver</a>
-              <a class="btn btn-primary" href="/recipes/<%= recipe._id %>/edit">Editar receta</a>
+              <% if (canEdit) { %>
+                <a class="btn btn-primary" href="/recipes/<%= recipe._id %>/edit">Editar receta</a>
+              <% } %>
             </div>
           </section>
 
@@ -72,8 +111,10 @@
                   <li class="muted">No hay ingredientes cargados.</li>
                 <% } %>
                 <% recipe.ingredients.forEach((item) => { %>
+                  <% const cat = String((item.ingredient && (item.ingredient.category || item.ingredient.categoria)) || 'otro').toLowerCase(); %>
+                  <% const meta = ingredientMeta[cat] || ingredientMeta.otro; %>
                   <li class="ingredient-item">
-                    <span class="ingredient-dot"></span>
+                    <span class="ingredient-dot cat-<%= cat %>"><%= meta.emoji %></span>
                     <div>
                       <strong><%= item.ingredientName || (item.ingredient ? item.ingredient.name : "Ingrediente") %></strong>
                       <div class="muted"><%= item.quantity %> <%= item.unit %></div>
@@ -85,13 +126,30 @@
 
             <article class="card">
               <h3>Preparacion</h3>
+              <div class="step-nodes-wrap recipe-detail-steps-nodes">
+                <div class="step-nodes">
+                  <% (recipe.steps || []).forEach((step, index) => { %>
+                    <% const c = classifyStep(step.text); %>
+                    <% const short = String(step.text || '').length > 30 ? String(step.text || '').slice(0, 27) + '…' : String(step.text || ''); %>
+                    <div class="step-node step-type-<%= c.type %>" title="<%= step.text %>">
+                      <span class="node-icon"><%= c.icon %></span>
+                      <span class="node-num"><%= index + 1 %></span>
+                      <span class="node-label"><%= short %></span>
+                    </div>
+                    <% if (index < (recipe.steps || []).length - 1) { %>
+                      <span class="step-node-arrow">→</span>
+                    <% } %>
+                  <% }); %>
+                </div>
+              </div>
               <ol class="steps-list">
                 <% if (!recipe.steps || recipe.steps.length === 0) { %>
                   <li class="muted">No hay pasos registrados.</li>
                 <% } %>
                 <% recipe.steps.forEach((step) => { %>
+                  <% const c = classifyStep(step.text); %>
                   <li class="step-item">
-                    <div class="step-number"><%= step.order %></div>
+                    <div class="step-number step-type-<%= c.type %>"><%= c.icon %></div>
                     <div class="step-text"><%= step.text %></div>
                   </li>
                 <% }); %>

@@ -1,5 +1,6 @@
 const Recipe = require("../models/Recipe");
 const Region = require("../models/Region");
+const Ingredient = require("../models/Ingredient");
 const User = require("../models/User");
 const Interaction = require("../models/Interaction");
 const mongoose = require("mongoose");
@@ -99,6 +100,21 @@ function toObjectId(value) {
   }
 
   return new mongoose.Types.ObjectId(normalized);
+}
+
+function canEditRecipeForUser(user, recipe) {
+  if (!user || !recipe) {
+    return false;
+  }
+
+  var role = String(user.role || user.rol || "usuario").toLowerCase();
+  if (role === "admin") {
+    return true;
+  }
+
+  var userId = String(user._id || user.id || "");
+  var ownerId = String(recipe.author || recipe.usuario_id || "");
+  return Boolean(userId && ownerId && userId === ownerId);
 }
 
 async function resolveUserId(body = {}, fallbackUserId = null) {
@@ -212,7 +228,7 @@ async function renderRecipeDetail(req, res) {
     const [recipe, comments] = await Promise.all([
       Recipe.findById(req.params.id)
         .populate("region", "name")
-        .populate("ingredients.ingredient", "name")
+        .populate("ingredients.ingredient", "name category categoria")
         .lean(),
       Interaction.find({
         recipe: req.params.id,
@@ -258,6 +274,7 @@ async function renderRecipeDetail(req, res) {
       comments,
       userHasLiked,
       userHasSaved,
+      canEdit: canEditRecipeForUser(res.locals.currentUser, recipe),
       errorMessage: ""
     });
   } catch (error) {
@@ -268,6 +285,7 @@ async function renderRecipeDetail(req, res) {
       comments: [],
       userHasLiked: false,
       userHasSaved: false,
+      canEdit: false,
       errorMessage: "No fue posible cargar la receta."
     });
   }
@@ -275,12 +293,16 @@ async function renderRecipeDetail(req, res) {
 
 async function renderCreateRecipePage(req, res) {
   try {
-    const regions = await Region.find().sort({ name: 1 }).lean();
+    const [regions, allIngredients] = await Promise.all([
+      Region.find().sort({ name: 1 }).lean(),
+      Ingredient.find().sort({ name: 1 }).lean()
+    ]);
 
     return res.render("recipes/create", {
       pageTitle: "Chef's Logic | Nueva receta",
       activeTab: "recetas",
       regions,
+      allIngredients,
       recipe: null,
       errorMessage: ""
     });
@@ -289,6 +311,7 @@ async function renderCreateRecipePage(req, res) {
       pageTitle: "Chef's Logic | Nueva receta",
       activeTab: "recetas",
       regions: [],
+      allIngredients: [],
       recipe: null,
       errorMessage: "No fue posible abrir el formulario."
     });
@@ -309,6 +332,16 @@ async function renderEditRecipePage(req, res) {
         regions,
         recipe: null,
         errorMessage: "La receta no existe."
+      });
+    }
+
+    if (!canEditRecipeForUser(res.locals.currentUser, recipe)) {
+      return res.status(403).render("recipes/edit", {
+        pageTitle: "Chef's Logic | Editar receta",
+        activeTab: "recetas",
+        regions,
+        recipe: null,
+        errorMessage: "No tienes permiso para editar esta receta."
       });
     }
 
@@ -395,15 +428,24 @@ async function createRecipe(req, res) {
 
 async function updateRecipe(req, res) {
   try {
-    if (req.session && req.session.userId) {
-      req.body.userId = req.session.userId;
-      req.body.usuario_id = req.session.userId;
-    }
-
     const existingRecipe = await Recipe.findById(req.params.id).lean();
 
     if (!existingRecipe) {
       return sendError(res, new Error("Receta no encontrada."), "Receta no encontrada.", 404);
+    }
+
+    if (!canEditRecipeForUser(res.locals.currentUser, existingRecipe)) {
+      if (req.accepts("html") && !req.path.startsWith("/api")) {
+        const regions = await Region.find().sort({ name: 1 }).lean();
+        return res.status(403).render("recipes/edit", {
+          pageTitle: "Chef's Logic | Editar receta",
+          activeTab: "recetas",
+          regions,
+          recipe: null,
+          errorMessage: "No tienes permiso para editar esta receta."
+        });
+      }
+      return sendError(res, new Error("Acceso denegado."), "No tienes permiso para editar esta receta.", 403);
     }
 
     const { payload, hasUser } = await mapRecipePayload(req.body, existingRecipe);
@@ -434,6 +476,16 @@ async function updateRecipe(req, res) {
 
 async function deleteRecipe(req, res) {
   try {
+    const existingRecipe = await Recipe.findById(req.params.id).lean();
+
+    if (!existingRecipe) {
+      return sendError(res, new Error("Receta no encontrada."), "Receta no encontrada.", 404);
+    }
+
+    if (!canEditRecipeForUser(res.locals.currentUser, existingRecipe)) {
+      return sendError(res, new Error("Acceso denegado."), "No tienes permiso para eliminar esta receta.", 403);
+    }
+
     const deletedRecipe = await Recipe.findByIdAndDelete(req.params.id);
 
     if (!deletedRecipe) {

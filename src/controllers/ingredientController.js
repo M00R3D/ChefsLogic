@@ -74,14 +74,61 @@ function getSeasonalityErrorMessage(invalidSeasonality) {
   return `Meses no validos en estacionalidad: ${invalidSeasonality.join(", ")}. Usa meses como: ${VALID_MONTHS.join(", ")}.`;
 }
 
+const PAGE_SIZE = 25;
+
+const ALL_CATEGORIES = [
+  "verdura", "fruta", "proteina", "grano", "especia", "lacteo",
+  "aceite", "condimento", "chile", "salsa", "bebida", "conserva", "hongo", "otro"
+];
+
 async function renderIngredientsPage(req, res) {
   try {
-    const ingredients = await Ingredient.find().sort({ name: 1 }).lean();
+    const page = Math.max(1, parseInt(req.query.page || "1", 10));
+    const search = String(req.query.q || "").trim();
+    const categoryFilter = String(req.query.category || "").trim().toLowerCase();
+    const tagFilter = String(req.query.tag || "").trim().toLowerCase();
+
+    const conditions = [];
+    if (search) {
+      conditions.push({ $or: [
+        { name: { $regex: search, $options: "i" } },
+        { nombre: { $regex: search, $options: "i" } }
+      ]});
+    }
+    if (categoryFilter && categoryFilter !== "all") {
+      conditions.push({ category: categoryFilter });
+    }
+    if (tagFilter) {
+      conditions.push({ tags: tagFilter });
+    }
+    const query = conditions.length ? { $and: conditions } : {};
+
+    const [ingredients, total, allTags, categoryCounts] = await Promise.all([
+      Ingredient.find(query).sort({ name: 1 }).skip((page - 1) * PAGE_SIZE).limit(PAGE_SIZE).lean(),
+      Ingredient.countDocuments(query),
+      Ingredient.distinct("tags"),
+      Ingredient.aggregate([
+        { $group: { _id: "$category", count: { $sum: 1 } } }
+      ])
+    ]);
+
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    const catCountMap = {};
+    categoryCounts.forEach((c) => { catCountMap[c._id || "otro"] = c.count; });
 
     return res.render("ingredients/index", {
       pageTitle: "Chef's Logic | Ingredientes",
       activeTab: "ingredientes",
       ingredients,
+      page,
+      totalPages,
+      total,
+      search,
+      categoryFilter,
+      tagFilter,
+      allTags: allTags.filter(Boolean).sort(),
+      allCategories: ALL_CATEGORIES,
+      catCountMap,
       errorMessage: ""
     });
   } catch (error) {
@@ -89,6 +136,15 @@ async function renderIngredientsPage(req, res) {
       pageTitle: "Chef's Logic | Ingredientes",
       activeTab: "ingredientes",
       ingredients: [],
+      page: 1,
+      totalPages: 1,
+      total: 0,
+      search: "",
+      categoryFilter: "",
+      tagFilter: "",
+      allTags: [],
+      allCategories: ALL_CATEGORIES,
+      catCountMap: {},
       errorMessage: "No fue posible cargar ingredientes."
     });
   }

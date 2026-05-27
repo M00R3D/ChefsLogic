@@ -13,44 +13,187 @@
       <main class="main-content">
         <%- include("../partials/header", { pageTitle: "Ingredientes" }) %>
 
-        <section class="card">
-          <div class="actions">
-            <a class="btn btn-primary" href="/ingredients/create">Nuevo ingrediente</a>
-          </div>
+        <%
+          const ING_META = {
+            verdura:    { emoji: '🥦', color: '#2e7d32', bg: '#e8f5e9', label: 'Verdura' },
+            fruta:      { emoji: '🍎', color: '#c62828', bg: '#ffebee', label: 'Fruta' },
+            proteina:   { emoji: '🥩', color: '#b71c1c', bg: '#fff3e0', label: 'Proteina' },
+            grano:      { emoji: '🌾', color: '#6d4c41', bg: '#efebe9', label: 'Grano' },
+            especia:    { emoji: '🌶️', color: '#e65100', bg: '#fff8e1', label: 'Especia' },
+            lacteo:     { emoji: '🧀', color: '#1565c0', bg: '#e3f2fd', label: 'Lacteo' },
+            aceite:     { emoji: '🫙', color: '#5c4a1e', bg: '#fef9e7', label: 'Aceite' },
+            condimento: { emoji: '🥫', color: '#7b341e', bg: '#fdf2e8', label: 'Condimento' },
+            chile:      { emoji: '🌶️', color: '#c0392b', bg: '#fdedec', label: 'Chile' },
+            salsa:      { emoji: '🍅', color: '#e74c3c', bg: '#fef5f5', label: 'Salsa' },
+            bebida:     { emoji: '🫗', color: '#2980b9', bg: '#eaf4fc', label: 'Bebida' },
+            conserva:   { emoji: '🥃', color: '#7d6608', bg: '#fdfce6', label: 'Conserva' },
+            hongo:      { emoji: '🍄', color: '#6e4b7b', bg: '#f4edf7', label: 'Hongo' },
+            otro:       { emoji: '🧺', color: '#546e7a', bg: '#f5f5f5', label: 'Otro' }
+          };
+          function getMeta(cat) { return ING_META[String(cat||'otro').toLowerCase()] || ING_META.otro; }
 
-          <% if (errorMessage) { %>
-            <p class="muted"><%= errorMessage %></p>
+          function buildQuery(overrides) {
+            const base = { q: search, category: categoryFilter, tag: tagFilter };
+            const merged = Object.assign({}, base, overrides);
+            const params = Object.entries(merged)
+              .filter(([,v]) => v && v !== '' && v !== 'all')
+              .map(([k,v]) => k + '=' + encodeURIComponent(v));
+            return params.length ? '?' + params.join('&') : '/ingredients';
+          }
+        %>
+
+        <% if (errorMessage) { %>
+          <section class="alert alert-error"><%= errorMessage %></section>
+        <% } %>
+
+        <!-- SEARCH + NEW -->
+        <section class="ing-index-topbar">
+          <form class="ing-search-form" action="/ingredients" method="GET">
+            <% if (categoryFilter && categoryFilter !== 'all') { %>
+              <input type="hidden" name="category" value="<%= categoryFilter %>" />
+            <% } %>
+            <% if (tagFilter) { %>
+              <input type="hidden" name="tag" value="<%= tagFilter %>" />
+            <% } %>
+            <input class="ing-index-search" type="text" name="q" value="<%= search %>" placeholder="Buscar ingrediente..." autocomplete="off" />
+            <button class="btn btn-soft btn-sm" type="submit">Buscar</button>
+            <% if (search || categoryFilter || tagFilter) { %>
+              <a class="btn btn-ghost btn-sm" href="/ingredients">Limpiar</a>
+            <% } %>
+          </form>
+          <a class="btn btn-primary" href="/ingredients/create">+ Nuevo ingrediente</a>
+        </section>
+
+        <!-- CATEGORY PILLS -->
+        <section class="ing-cat-filter-row">
+          <a class="ing-filter-pill <%= (!categoryFilter || categoryFilter === 'all') ? 'is-active' : '' %>"
+             href="<%= buildQuery({category: '', page: 1}) %>">
+            Todos <span class="ing-filter-count"><%= total %></span>
+          </a>
+          <% allCategories.forEach((cat) => { %>
+            <% const m = getMeta(cat); %>
+            <% const cnt = catCountMap[cat] || 0; %>
+            <% if (cnt > 0 || categoryFilter === cat) { %>
+              <a class="ing-filter-pill <%= categoryFilter === cat ? 'is-active' : '' %>"
+                 style="--pill-color:<%= m.color %>;--pill-bg:<%= m.bg %>"
+                 href="<%= buildQuery({category: cat, page: 1}) %>">
+                <%= m.emoji %> <%= m.label %> <span class="ing-filter-count"><%= cnt %></span>
+              </a>
+            <% } %>
+          <% }); %>
+        </section>
+
+        <!-- TAG FILTER STRIP -->
+        <% if (allTags && allTags.length) { %>
+          <section class="ing-tag-filter-row">
+            <span class="ing-tag-filter-label">Etiquetas:</span>
+            <% allTags.slice(0, 30).forEach((tag) => { %>
+              <a class="ing-filter-tag <%= tagFilter === tag ? 'is-active' : '' %>"
+                 href="<%= buildQuery({tag: tagFilter === tag ? '' : tag, page: 1}) %>">
+                <%= tag %>
+              </a>
+            <% }); %>
+          </section>
+        <% } %>
+
+        <!-- RESULTS META -->
+        <div class="ing-results-meta">
+          <span class="muted">
+            <%= total %> ingrediente<%= total !== 1 ? 's' : '' %>
+            <% if (search) { %> · "<%= search %>"<% } %>
+            <% if (categoryFilter && categoryFilter !== 'all') { %> · <%= getMeta(categoryFilter).label %><% } %>
+            <% if (tagFilter) { %> · etiqueta: <%= tagFilter %><% } %>
+            · página <%= page %> de <%= totalPages %>
+          </span>
+        </div>
+
+        <!-- INGREDIENT CARDS -->
+        <section class="grid cols-3 ing-cards-grid">
+          <% if (!ingredients || ingredients.length === 0) { %>
+            <article class="card" style="grid-column:1/-1;text-align:center;">
+              <p class="muted">No se encontraron ingredientes con esos filtros.</p>
+              <a class="btn btn-soft btn-sm" href="/ingredients">Ver todos</a>
+            </article>
           <% } %>
 
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Categoria</th>
-                  <th>Unidad</th>
-                  <th>Etiquetas</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% if (!ingredients || ingredients.length === 0) { %>
-                  <tr>
-                    <td colspan="4" class="muted">No hay ingredientes disponibles.</td>
-                  </tr>
-                <% } %>
+          <% ingredients.forEach((ing, idx) => { %>
+            <% const cat = String(ing.category || ing.categoria || 'otro').toLowerCase(); %>
+            <% const m = getMeta(cat); %>
+            <% const ni = ing.nutritionalInfo || {}; %>
+            <article class="ing-card-detail reveal" data-reveal-index="<%= idx %>"
+                     style="--cat-color:<%= m.color %>;--cat-bg:<%= m.bg %>">
+              <div class="ing-card-detail-header">
+                <span class="ing-card-detail-emoji"><%= m.emoji %></span>
+                <div class="ing-card-detail-info">
+                  <h3 class="ing-card-detail-name"><%= ing.name || ing.nombre || 'Sin nombre' %></h3>
+                  <span class="ing-cat-badge"><%= m.label %></span>
+                </div>
+                <span class="ing-unit-badge"><%= ing.defaultUnit || ing.unidad || 'g' %></span>
+              </div>
 
-                <% ingredients.forEach((ingredient) => { %>
-                  <tr>
-                    <td><strong><%= ingredient.name || ingredient.nombre || "Sin nombre" %></strong></td>
-                    <td><%= ingredient.category || ingredient.categoria || "otro" %></td>
-                    <td><%= ingredient.defaultUnit || ingredient.unidad || "g" %></td>
-                    <td><%= (ingredient.tags || []).join(', ') || '-' %></td>
-                  </tr>
-                <% }); %>
-              </tbody>
-            </table>
-          </div>
+              <% if ((ing.tags || []).length) { %>
+                <div class="ing-card-tags">
+                  <% (ing.tags || []).slice(0, 5).forEach((tag) => { %>
+                    <a class="ing-tag-chip <%= tagFilter === tag ? 'is-active' : '' %>"
+                       href="<%= buildQuery({tag: tagFilter === tag ? '' : tag, page: 1}) %>"><%= tag %></a>
+                  <% }); %>
+                </div>
+              <% } %>
+
+              <% if (ni.calories || ni.protein || ni.carbs || ni.fat) { %>
+                <div class="ing-nutrition-row">
+                  <% if (ni.calories) { %><span class="ing-nutr-chip">🔥 <%= ni.calories %> kcal</span><% } %>
+                  <% if (ni.protein) { %><span class="ing-nutr-chip">💪 <%= ni.protein %>g prot</span><% } %>
+                  <% if (ni.carbs) { %><span class="ing-nutr-chip">🌾 <%= ni.carbs %>g carb</span><% } %>
+                  <% if (ni.fat) { %><span class="ing-nutr-chip">🧈 <%= ni.fat %>g grasa</span><% } %>
+                </div>
+              <% } %>
+
+              <% if ((ing.seasonality || []).length) { %>
+                <div class="ing-season-row">
+                  <span class="ing-season-label">Temporada:</span>
+                  <% (ing.seasonality || []).forEach((m_) => { %>
+                    <span class="ing-season-chip"><%= m_ %></span>
+                  <% }); %>
+                </div>
+              <% } %>
+            </article>
+          <% }); %>
         </section>
+
+        <!-- PAGINATION -->
+        <% if (totalPages > 1) { %>
+          <nav class="ing-pagination">
+            <% if (page > 1) { %>
+              <a class="btn btn-soft btn-sm" href="<%= buildQuery({page: page - 1}) %>">← Anterior</a>
+            <% } else { %>
+              <span class="btn btn-soft btn-sm" style="opacity:0.4;cursor:default;">← Anterior</span>
+            <% } %>
+
+            <div class="ing-page-pills">
+              <% const rangeStart = Math.max(1, page - 2); %>
+              <% const rangeEnd   = Math.min(totalPages, page + 2); %>
+              <% if (rangeStart > 1) { %>
+                <a class="ing-page-pill" href="<%= buildQuery({page: 1}) %>">1</a>
+                <% if (rangeStart > 2) { %><span class="ing-page-pill muted">…</span><% } %>
+              <% } %>
+              <% for (let p = rangeStart; p <= rangeEnd; p++) { %>
+                <a class="ing-page-pill <%= p === page ? 'is-active' : '' %>"
+                   href="<%= buildQuery({page: p}) %>"><%= p %></a>
+              <% } %>
+              <% if (rangeEnd < totalPages) { %>
+                <% if (rangeEnd < totalPages - 1) { %><span class="ing-page-pill muted">…</span><% } %>
+                <a class="ing-page-pill" href="<%= buildQuery({page: totalPages}) %>"><%= totalPages %></a>
+              <% } %>
+            </div>
+
+            <% if (page < totalPages) { %>
+              <a class="btn btn-soft btn-sm" href="<%= buildQuery({page: page + 1}) %>">Siguiente →</a>
+            <% } else { %>
+              <span class="btn btn-soft btn-sm" style="opacity:0.4;cursor:default;">Siguiente →</span>
+            <% } %>
+          </nav>
+        <% } %>
 
         <%- include("../partials/footer") %>
       </main>

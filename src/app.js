@@ -1,5 +1,7 @@
 const path = require("path");
+const fs = require("fs");
 const express = require("express");
+const multer = require("multer");
 const mongoose = require("mongoose");
 const Recipe = require("./models/Recipe");
 const Ingredient = require("./models/Ingredient");
@@ -174,6 +176,36 @@ app.get("/api/dashboard-stats", async (req, res) => {
     });
   }
 });
+
+// ── Image upload endpoint ──────────────────────────────────────
+const uploadsDir = path.join(__dirname, "..", "public", "uploads");
+if (!fs.existsSync(uploadsDir)) { fs.mkdirSync(uploadsDir, { recursive: true }); }
+
+const imageStorage = multer.diskStorage({
+  destination: function (_req, _file, cb) { cb(null, uploadsDir); },
+  filename: function (_req, file, cb) {
+    const ext = path.extname(file.originalname).toLowerCase().replace(/[^.a-z0-9]/g, "");
+    cb(null, Date.now() + "-" + Math.floor(Math.random() * 1e6) + (ext || ".jpg"));
+  }
+});
+
+const imageUpload = multer({
+  storage: imageStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: function (_req, file, cb) {
+    const allowed = /^image\/(jpeg|jpg|png|webp|gif)$/;
+    if (allowed.test(file.mimetype)) { cb(null, true); }
+    else { cb(new Error("Solo se permiten imágenes (jpg, png, webp, gif).")); }
+  }
+});
+
+app.post("/api/upload/image", imageUpload.single("image"), function (req, res) {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: "No se recibio ningún archivo." });
+  }
+  return res.json({ success: true, url: "/uploads/" + req.file.filename });
+});
+// ───────────────────────────────────────────────────────────────
 
 app.use(recipeRoutes);
 app.use(ingredientRoutes);

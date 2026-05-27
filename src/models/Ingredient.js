@@ -43,12 +43,15 @@ const ingredientSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ["verdura", "fruta", "proteina", "grano", "especia", "lacteo", "otro"],
+      enum: [
+        "verdura", "fruta", "proteina", "grano", "especia", "lacteo",
+        "aceite", "condimento", "chile", "salsa", "bebida", "conserva", "hongo", "otro"
+      ],
       default: "otro"
     },
     defaultUnit: {
       type: String,
-      enum: ["g", "kg", "ml", "l", "pieza", "cdita", "cda", "taza"],
+      enum: ["g", "kg", "ml", "l", "pieza", "cdita", "cda", "taza", "manojo", "ramita", "lata", "botella", "sobre", "diente"],
       default: "g"
     },
     seasonality: [

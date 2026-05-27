@@ -13,79 +13,118 @@
       <main class="main-content">
         <%- include("../partials/header", { pageTitle: "Nuevo ingrediente" }) %>
 
+        <% if (errorMessage) { %>
+          <div class="alert alert-error"><%= errorMessage %></div>
+        <% } %>
+
         <section class="card">
-          <% if (errorMessage) { %>
-            <p class="muted"><%= errorMessage %></p>
-          <% } %>
+          <form class="form-grid" id="ingredient-form" action="/ingredients" method="POST">
 
-          <form class="form-grid" action="/ingredients" method="POST">
+            <!-- NOMBRE + CATEGORIA -->
             <div class="form-grid cols-2">
               <label>
-                Nombre
-                <input name="name" type="text" required />
+                Nombre del ingrediente
+                <input id="ing-name-input" name="name" type="text" required
+                       placeholder="Ej. Chile ancho, Epazote, Manteca..."
+                       autocomplete="off" />
               </label>
 
-              <label>
-                Categoria
-                <select name="category">
-                  <option value="verdura">Verdura</option>
-                  <option value="fruta">Fruta</option>
-                  <option value="proteina">Proteina</option>
-                  <option value="grano">Grano</option>
-                  <option value="especia">Especia</option>
-                  <option value="lacteo">Lacteo</option>
-                  <option value="otro" selected>Otro</option>
-                </select>
-              </label>
-            </div>
-
-            <div class="form-grid cols-2">
               <label>
                 Unidad por defecto
                 <select name="defaultUnit">
-                  <option value="g">g</option>
-                  <option value="kg">kg</option>
-                  <option value="ml">ml</option>
-                  <option value="l">l</option>
+                  <option value="g">g — gramos</option>
+                  <option value="kg">kg — kilogramos</option>
+                  <option value="ml">ml — mililitros</option>
+                  <option value="l">l — litros</option>
                   <option value="pieza">pieza</option>
-                  <option value="cdita">cdita</option>
-                  <option value="cda">cda</option>
+                  <option value="cdita">cdita — cucharadita</option>
+                  <option value="cda">cda — cucharada</option>
                   <option value="taza">taza</option>
+                  <option value="manojo">manojo</option>
+                  <option value="ramita">ramita</option>
+                  <option value="lata">lata</option>
+                  <option value="botella">botella</option>
+                  <option value="sobre">sobre</option>
+                  <option value="diente">diente</option>
                 </select>
               </label>
-
-              <label>
-                Estacionalidad (meses separados por coma)
-                <input name="seasonality" type="text" placeholder="enero, febrero" />
-              </label>
             </div>
 
-            <div class="form-grid cols-2">
-              <label>
-                Calorias
-                <input name="calories" type="number" min="0" step="0.01" />
-              </label>
-              <label>
-                Proteina
-                <input name="protein" type="number" min="0" step="0.01" />
-              </label>
+            <!-- CATEGORY SELECTOR (visual cards) -->
+            <div class="form-group">
+              <label class="form-label-text">Categoría</label>
+              <input type="hidden" name="category" id="category-hidden" value="otro" />
+              <div class="ing-cat-selector" id="ing-cat-selector">
+                <button type="button" class="ing-cat-option" data-cat="verdura"   style="--cc:#2e7d32;--cb:#e8f5e9">🥦 Verdura</button>
+                <button type="button" class="ing-cat-option" data-cat="fruta"     style="--cc:#c62828;--cb:#ffebee">🍎 Fruta</button>
+                <button type="button" class="ing-cat-option" data-cat="proteina"  style="--cc:#b71c1c;--cb:#fff3e0">🥩 Proteína</button>
+                <button type="button" class="ing-cat-option" data-cat="grano"     style="--cc:#6d4c41;--cb:#efebe9">🌾 Grano</button>
+                <button type="button" class="ing-cat-option" data-cat="especia"   style="--cc:#e65100;--cb:#fff8e1">✨ Especia</button>
+                <button type="button" class="ing-cat-option" data-cat="lacteo"    style="--cc:#1565c0;--cb:#e3f2fd">🧀 Lácteo</button>
+                <button type="button" class="ing-cat-option" data-cat="aceite"    style="--cc:#5c4a1e;--cb:#fef9e7">🫙 Aceite</button>
+                <button type="button" class="ing-cat-option" data-cat="condimento" style="--cc:#7b341e;--cb:#fdf2e8">🥫 Condimento</button>
+                <button type="button" class="ing-cat-option" data-cat="chile"     style="--cc:#c0392b;--cb:#fdedec">🌶️ Chile</button>
+                <button type="button" class="ing-cat-option" data-cat="salsa"     style="--cc:#e74c3c;--cb:#fef5f5">🍅 Salsa</button>
+                <button type="button" class="ing-cat-option" data-cat="bebida"    style="--cc:#2980b9;--cb:#eaf4fc">🫗 Bebida</button>
+                <button type="button" class="ing-cat-option" data-cat="conserva"  style="--cc:#7d6608;--cb:#fdfce6">🥃 Conserva</button>
+                <button type="button" class="ing-cat-option" data-cat="hongo"     style="--cc:#6e4b7b;--cb:#f4edf7">🍄 Hongo</button>
+                <button type="button" class="ing-cat-option is-selected" data-cat="otro" style="--cc:#546e7a;--cb:#f5f5f5">🧺 Otro</button>
+              </div>
             </div>
 
-            <div class="form-grid cols-2">
-              <label>
-                Carbohidratos
-                <input name="carbs" type="number" min="0" step="0.01" />
-              </label>
-              <label>
-                Grasas
-                <input name="fat" type="number" min="0" step="0.01" />
-              </label>
+            <!-- ETIQUETAS (tag builder con sugerencias de ingredientes) -->
+            <div class="form-group">
+              <label class="form-label-text">Etiquetas</label>
+              <input type="hidden" name="tags" id="ing-tags-hidden" value="" />
+              <div class="tag-builder" id="ing-tag-builder">
+                <div class="tag-list" id="ing-tag-list"></div>
+                <div class="tag-entry-row">
+                  <input class="tag-entry-input" id="ing-tag-input" type="text"
+                         placeholder="fresco, organico, picante…" autocomplete="off" />
+                  <button class="tag-add-btn" type="button" id="ing-tag-add">+</button>
+                </div>
+                <div class="tag-suggestions" id="ing-tag-suggestions"></div>
+              </div>
             </div>
 
+            <!-- ESTACIONALIDAD -->
             <label>
-              Etiquetas (separadas por coma)
-              <input name="tags" type="text" placeholder="fresco, local" />
+              Estacionalidad (meses separados por coma)
+              <input name="seasonality" type="text" placeholder="enero, febrero, marzo" />
             </label>
+
+            <!-- ACCESIBILIDAD -->
+            <label>
+              Accesibilidad / precio
+              <select name="accesibilidad">
+                <option value="economico">💚 Económico</option>
+                <option value="medio" selected>💛 Precio medio</option>
+                <option value="premium">🔴 Premium</option>
+              </select>
+            </label>
+
+            <!-- INFORMACIÓN NUTRICIONAL -->
+            <fieldset class="ing-nutrition-fieldset">
+              <legend>Información nutricional <span class="muted">(por 100 g / unidad)</span></legend>
+              <div class="form-grid cols-4">
+                <label>
+                  🔥 Calorías
+                  <input name="calories" type="number" min="0" step="0.01" placeholder="0" />
+                </label>
+                <label>
+                  💪 Proteína (g)
+                  <input name="protein" type="number" min="0" step="0.01" placeholder="0" />
+                </label>
+                <label>
+                  🌾 Carbohidratos (g)
+                  <input name="carbs" type="number" min="0" step="0.01" placeholder="0" />
+                </label>
+                <label>
+                  🧈 Grasas (g)
+                  <input name="fat" type="number" min="0" step="0.01" placeholder="0" />
+                </label>
+              </div>
+            </fieldset>
 
             <div class="actions">
               <button class="btn btn-primary" type="submit">Guardar ingrediente</button>
@@ -97,5 +136,104 @@
         <%- include("../partials/footer") %>
       </main>
     </div>
+
+    <!-- Sugerencias de etiquetas para ingredientes -->
+    <script id="tag-suggestions-data" type="application/json">
+    ["fresco","seco","local","organico","temporada","importado","procesado","natural",
+     "fermentado","ahumado","encurtido","congelado","enlatado","artesanal","premium",
+     "economico","picante","dulce","amargo","acido","salado","umami","crudo","cocido",
+     "tostado","molido","entero","maduro","verde","deshidratado","en_polvo","en_pasta",
+     "sin_gluten","vegano","sin_lactosa","integral","refinado","kasher","halal","sin_sal"]
+    </script>
+    <script src="/js/forms.js"></script>
+    <script>
+      // Category selector
+      (function() {
+        const selector = document.getElementById('ing-cat-selector');
+        const hidden   = document.getElementById('category-hidden');
+        if (!selector || !hidden) return;
+        selector.querySelectorAll('.ing-cat-option').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            selector.querySelectorAll('.ing-cat-option').forEach(function(b) { b.classList.remove('is-selected'); });
+            btn.classList.add('is-selected');
+            hidden.value = btn.dataset.cat;
+          });
+        });
+      })();
+
+      // Ingredient tag builder (uses buildIngredientTagBuilder from forms.js)
+      (function() {
+        // Read suggestions from embedded JSON
+        var suggestionsEl = document.getElementById('tag-suggestions-data');
+        var suggestions = [];
+        try { suggestions = JSON.parse(suggestionsEl ? suggestionsEl.textContent : '[]'); } catch(e) {}
+
+        var hidden   = document.getElementById('ing-tags-hidden');
+        var list     = document.getElementById('ing-tag-list');
+        var input    = document.getElementById('ing-tag-input');
+        var addBtn   = document.getElementById('ing-tag-add');
+        var sugsWrap = document.getElementById('ing-tag-suggestions');
+        if (!hidden || !list || !input || !addBtn) return;
+
+        var tags = [];
+
+        function renderTags() {
+          list.innerHTML = '';
+          tags.forEach(function(t, i) {
+            var chip = document.createElement('span');
+            chip.className = 'tag-chip';
+            chip.innerHTML = '<span>' + t + '</span><button type="button" class="tag-chip-x" data-i="' + i + '">×</button>';
+            list.appendChild(chip);
+          });
+          hidden.value = tags.join(',');
+        }
+
+        function addTag(val) {
+          var t = val.trim().toLowerCase().replace(/\s+/g, '_');
+          if (!t || tags.includes(t)) return;
+          tags.push(t);
+          renderTags();
+          input.value = '';
+          renderSugs('');
+        }
+
+        function renderSugs(q) {
+          sugsWrap.innerHTML = '';
+          if (!q && !document.activeElement === input) return;
+          var matches = suggestions.filter(function(s) {
+            return s.includes(q.toLowerCase()) && !tags.includes(s);
+          }).slice(0, 10);
+          matches.forEach(function(s) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'tag-suggestion-btn';
+            btn.textContent = s;
+            btn.addEventListener('click', function() { addTag(s); input.focus(); });
+            sugsWrap.appendChild(btn);
+          });
+          sugsWrap.style.display = matches.length ? 'flex' : 'none';
+        }
+
+        addBtn.addEventListener('click', function() { addTag(input.value); });
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') { e.preventDefault(); addTag(input.value); }
+          if (e.key === ',')     { e.preventDefault(); addTag(input.value); }
+        });
+        input.addEventListener('input', function() { renderSugs(input.value); });
+        input.addEventListener('focus', function() { renderSugs(input.value); });
+
+        list.addEventListener('click', function(e) {
+          var x = e.target.closest('.tag-chip-x');
+          if (x) { tags.splice(parseInt(x.dataset.i, 10), 1); renderTags(); }
+        });
+
+        // Show all suggestions on focus when empty
+        input.addEventListener('focus', function() {
+          if (!input.value) renderSugs('');
+        });
+
+        renderSugs('');
+      })();
+    </script>
   </body>
 </html>

@@ -44,10 +44,23 @@
                 <textarea name="summary" placeholder="Cuenta el origen o historia de tu receta"></textarea>
               </label>
 
-              <label>
-                URL de imagen principal
-                <input type="url" name="imageUrl" placeholder="https://..." />
-              </label>
+              <!-- IMAGE UPLOAD -->
+              <div class="image-upload-block">
+                <span class="form-label">Imagen principal</span>
+                <div class="image-drop-zone" id="image-drop-zone">
+                  <input type="file" id="image-file-input" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" />
+                  <div class="drop-zone-inner" id="drop-zone-inner">
+                    <span class="drop-icon">📷</span>
+                    <span class="drop-text">Arrastra aquí o <span class="drop-link" id="drop-link">selecciona archivo</span></span>
+                    <span class="drop-hint">JPG · PNG · WebP · máx 5 MB</span>
+                  </div>
+                  <img id="image-preview" class="image-preview-thumb" style="display:none" alt="Vista previa" />
+                </div>
+                <div class="image-url-row">
+                  <span class="form-help">O pega una URL:</span>
+                  <input type="url" name="imageUrl" id="image-url-input" placeholder="https://..." />
+                </div>
+              </div>
 
               <div class="form-grid cols-2">
                 <label>
@@ -100,15 +113,26 @@
                 <input type="text" name="tags" placeholder="mexicana, fuego lento, tradicional" />
               </label>
 
-              <label>
-                Ingredientes (uno por linea: nombre|cantidad|unidad|nota)
-                <textarea name="ingredientsData" placeholder="Chile ancho|4|pieza|sin semillas"></textarea>
-              </label>
+              <!-- INGREDIENT PICKER -->
+              <div class="ing-picker">
+                <span class="form-label">Ingredientes</span>
+                <div class="ing-cat-pills" id="ing-cat-pills"></div>
+                <input type="text" id="ing-search" class="ing-search" placeholder="Buscar ingrediente..." autocomplete="off" />
+                <div class="ing-catalog" id="ing-catalog"></div>
+                <div class="ing-selected" id="ing-selected"></div>
+                <textarea name="ingredientsData" id="ing-data" style="display:none"></textarea>
+              </div>
 
-              <label>
-                Pasos (uno por linea)
-                <textarea name="stepsData" placeholder="Tuesta ligeramente los chiles"></textarea>
-              </label>
+              <!-- STEP BUILDER -->
+              <div class="step-builder">
+                <span class="form-label">Pasos de preparacion</span>
+                <ol class="steps-list-builder" id="steps-list"></ol>
+                <div class="step-nodes-wrap" id="step-nodes-wrap"></div>
+                <button type="button" class="btn btn-soft btn-sm add-step-btn" id="add-step-btn">
+                  &#65291;&nbsp;Agregar paso
+                </button>
+                <textarea name="stepsData" id="steps-data" style="display:none"></textarea>
+              </div>
 
               <div class="actions">
                 <button class="btn btn-primary" type="submit">Publicar receta</button>
@@ -128,6 +152,7 @@
       </main>
     </div>
 
+    <script id="ingredients-data" type="application/json"><%- JSON.stringify(allIngredients || []) %></script>
     <script src="/js/forms.js"></script>
   </body>
 </html>
