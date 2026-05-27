@@ -1,6 +1,26 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 
+function normalizeEmail(rawEmail) {
+  return String(rawEmail || "")
+    .toLowerCase()
+    .trim();
+}
+
+async function validatePassword(user, password) {
+  const hash = String(user.passwordHash || "").trim();
+  if (hash) {
+    try {
+      return await bcrypt.compare(password, hash);
+    } catch {
+      return false;
+    }
+  }
+
+  const legacyPassword = String(user.password || "");
+  return legacyPassword ? legacyPassword === password : false;
+}
+
 function renderLoginPage(req, res) {
   if (req.session.userId) return res.redirect("/");
 
@@ -23,9 +43,7 @@ function renderLoginPage(req, res) {
 
 async function login(req, res) {
   try {
-    const email = String(req.body.email || "")
-      .toLowerCase()
-      .trim();
+    const email = normalizeEmail(req.body.email);
     const password = String(req.body.password || "");
 
     if (!email || !password) {
@@ -33,20 +51,33 @@ async function login(req, res) {
       return res.redirect("/login");
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      $or: [{ email }, { correo: email }]
+    });
     if (!user) {
       req.session.flashError = "Credenciales incorrectas.";
       return res.redirect("/login");
     }
 
-    const isValid = await bcrypt.compare(password, user.passwordHash);
+    const isValid = await validatePassword(user, password);
     if (!isValid) {
       req.session.flashError = "Credenciales incorrectas.";
       return res.redirect("/login");
     }
 
+    if (!user.passwordHash) {
+      user.passwordHash = await bcrypt.hash(password, 12);
+      if (!user.email && user.correo) {
+        user.email = normalizeEmail(user.correo);
+      }
+      if (!user.name && user.nombre) {
+        user.name = String(user.nombre).trim();
+      }
+      await user.save();
+    }
+
     req.session.userId = user._id.toString();
-    req.session.userName = user.name;
+    req.session.userName = user.name || user.nombre || "Chef";
 
     const returnTo = req.session.returnTo || "/";
     delete req.session.returnTo;
@@ -74,9 +105,7 @@ function renderRegisterPage(req, res) {
 async function register(req, res) {
   try {
     const name = String(req.body.name || "").trim();
-    const email = String(req.body.email || "")
-      .toLowerCase()
-      .trim();
+    const email = normalizeEmail(req.body.email);
     const password = String(req.body.password || "");
     const confirmPassword = String(req.body.confirmPassword || "");
 
@@ -95,7 +124,9 @@ async function register(req, res) {
       return res.redirect("/register");
     }
 
-    const existing = await User.findOne({ email });
+    const existing = await User.findOne({
+      $or: [{ email }, { correo: email }]
+    });
     if (existing) {
       req.session.flashError = "Ya existe una cuenta con ese email.";
       return res.redirect("/register");
@@ -103,7 +134,17 @@ async function register(req, res) {
 
     const passwordHash = await bcrypt.hash(password, 12);
 
-    const user = await User.create({ name, email, passwordHash });
+    const user = await User.create({
+      name,
+      email,
+      passwordHash,
+      nombre: name,
+      correo: email,
+      password,
+      avatar: "default.png",
+      fecha_registro: new Date(),
+      rol: "usuario"
+    });
 
     req.session.userId = user._id.toString();
     req.session.userName = user.name;

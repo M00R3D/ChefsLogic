@@ -2,6 +2,35 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
+    // Legacy fields required by existing MongoDB collection validator.
+    nombre: {
+      type: String,
+      trim: true,
+      default: ""
+    },
+    correo: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: ""
+    },
+    password: {
+      type: String,
+      default: ""
+    },
+    avatar: {
+      type: String,
+      default: "default.png"
+    },
+    fecha_registro: {
+      type: Date,
+      default: Date.now
+    },
+    rol: {
+      type: String,
+      enum: ["usuario", "chef", "admin"],
+      default: "usuario"
+    },
     name: {
       type: String,
       required: [true, "El nombre es obligatorio."],
