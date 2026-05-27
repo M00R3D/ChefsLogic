@@ -34,7 +34,7 @@
         <section class="filter-pills" id="region-pills">
           <button class="pill active" type="button" data-region="all">Todas las regiones</button>
           <% (typeof regions !== 'undefined' && Array.isArray(regions) ? regions : []).forEach((region) => { %>
-            <button class="pill" type="button" data-region="<%= String(region._id) %>"><%= region.name %></button>
+            <button class="pill" type="button" data-region="<%= String(region._id) %>"><%= region.name || region.nombre || 'Region' %></button>
           <% }); %>
         </section>
 
@@ -65,18 +65,30 @@
                 ❤
               </button>
 
-              <% if (recipe.imageUrl) { %>
-                <img class="recipe-card-img" src="<%= recipe.imageUrl %>" alt="<%= recipe.title %>" loading="lazy" />
+              <% const imageCandidate = String(recipe.imageUrl || recipe.imagen_principal || '').trim(); %>
+              <% const canRenderImage = /^(https?:\/\/|\/|data:image\/)/i.test(imageCandidate); %>
+              <% const recipeName = String(recipe.title || recipe.titulo || '').toLowerCase(); %>
+              <% const recipeTags = Array.isArray(recipe.tags) ? recipe.tags.join(' ').toLowerCase() : ''; %>
+              <% const placeholderEmoji = /\bsal\b/i.test(`${recipeName} ${recipeTags}`) ? '🌮🧂' : '🌮🦐'; %>
+              <% if (imageCandidate && canRenderImage) { %>
+                <img
+                  class="recipe-card-img"
+                  src="<%= imageCandidate %>"
+                  alt="<%= recipe.title || recipe.titulo || 'Sin titulo' %>"
+                  loading="lazy"
+                />
               <% } else { %>
-                <div class="recipe-card-img-placeholder">🍲</div>
+                <div class="recipe-card-img-placeholder"><%= placeholderEmoji %></div>
               <% } %>
 
               <div class="recipe-card-body">
-                <p class="recipe-card-meta"><%= recipe.region ? recipe.region.name : 'Sin region' %></p>
-                <h3 class="recipe-card-title"><a href="/recipes/<%= recipe._id %>"><%= recipe.title %></a></h3>
+                <p class="recipe-card-meta"><%= recipe.region ? (recipe.region.name || recipe.region.nombre || 'Sin region') : 'Sin region' %></p>
+                <h3 class="recipe-card-title">
+                  <a href="/recipes/<%= recipe._id %>"><%= recipe.title || recipe.titulo || 'Sin titulo' %></a>
+                </h3>
                 <div class="recipe-card-footer">
-                  <span>⏱ <%= recipe.prepMinutes + recipe.cookMinutes %> min</span>
-                  <span>❤ <%= recipe.likeCount || 0 %></span>
+                  <span>⏱ <%= (recipe.prepMinutes || recipe.tiempo_preparacion || 0) + (recipe.cookMinutes || 0) %> min</span>
+                  <span>❤ <%= (recipe.likeCount || recipe.likes || 0) %></span>
                   <span>🍽 <%= recipe.servings || 1 %></span>
                 </div>
               </div>

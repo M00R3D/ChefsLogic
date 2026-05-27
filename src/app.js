@@ -60,10 +60,16 @@ app.use(authRoutes);
 
 app.get("/", async (req, res) => {
   try {
-    const [recipes, regions] = await Promise.all([
-      Recipe.find({ status: "publicada" }).populate("region", "name").sort({ createdAt: -1 }).lean(),
-      Region.find().sort({ name: 1 }).lean()
-    ]);
+    const recipes = await Recipe.find().populate("region", "name nombre").sort({ createdAt: -1 }).lean();
+
+    let regions = [];
+    try {
+      regions = await Region.find().sort({ name: 1, nombre: 1 }).lean();
+    } catch (regionError) {
+      console.warn("Home regions load warning:", regionError.message);
+      regions = [];
+    }
+
     return res.render("index", {
       pageTitle: "Chef's Logic | Descubre Cocina Mexicana",
       activeTab: "inicio",
