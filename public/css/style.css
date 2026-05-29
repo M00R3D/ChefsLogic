@@ -267,6 +267,15 @@ a {
   box-shadow: var(--shadow);
 }
 
+.recipe-card-clickable {
+  cursor: pointer;
+}
+
+.recipe-card-clickable:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  outline-offset: 2px;
+}
+
 .recipe-card-img,
 .recipe-card-img-placeholder {
   width: 100%;

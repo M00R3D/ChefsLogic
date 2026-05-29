@@ -48,7 +48,14 @@
               const cardAccent = safeHexIdx || diffColIdx[String(recipe.difficulty||'media')] || '#546e7a';
               const cardEmoji = String(recipe.fallbackEmoji||'').trim() || '🍳';
             %>
-            <article class="recipe-card reveal" data-reveal-index="<%= index %>">
+            <article
+              class="recipe-card recipe-card-clickable reveal"
+              data-reveal-index="<%= index %>"
+              data-card-href="/recipes/<%= recipe._id %>"
+              role="link"
+              tabindex="0"
+              aria-label="Ver receta <%= recipe.title || recipe.titulo || 'Sin titulo' %>"
+            >
               <% if (imageCandidate && canRenderImage) { %>
                 <img class="recipe-card-img" src="<%= imageCandidate %>" alt="<%= recipe.title || recipe.titulo || 'Receta' %>" loading="lazy" />
               <% } else { %>

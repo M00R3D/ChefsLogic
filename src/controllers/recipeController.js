@@ -118,6 +118,65 @@ function canEditRecipeForUser(user, recipe) {
   return Boolean(userId && ownerId && userId === ownerId);
 }
 
+function mapModernToLegacyInteractionType(type) {
+  const key = String(type || "").toLowerCase();
+  const map = {
+    like: "like",
+    dislike: "dislike",
+    save: "favorito",
+    comment: "comentario",
+    view: "visualizacion"
+  };
+  return map[key] || key;
+}
+
+function buildRecipeInteractionFilter(userId, recipeId, type) {
+  const legacyType = mapModernToLegacyInteractionType(type);
+  return {
+    $or: [
+      {
+        user: userId,
+        recipe: recipeId,
+        targetType: "recipe",
+        type
+      },
+      {
+        usuario_id: userId,
+        receta_id: recipeId,
+        tipo: legacyType
+      },
+      {
+        usuario_id: userId,
+        receta_id: recipeId,
+        tipo: type
+      }
+    ]
+  };
+}
+
+function buildRecipeInteractionPayload(userId, recipeId, type, extra = {}) {
+  const commentText = String(extra.commentText || "").trim();
+  const legacyType = mapModernToLegacyInteractionType(type);
+
+  return {
+    // Legacy
+    tipo: legacyType,
+    fecha: new Date(),
+    dispositivo: "web",
+    comentario: commentText,
+    usuario_id: userId,
+    receta_id: recipeId,
+    // Modern
+    user: userId,
+    recipe: recipeId,
+    type,
+    targetType: "recipe",
+    value: Number(extra.value || 1),
+    commentText,
+    metadata: extra.metadata || {}
+  };
+}
+
 async function resolveUserId(body = {}, fallbackUserId = null) {
   const fromBody = toObjectId(body.usuario_id || body.userId || body.user || body.author);
   if (fromBody) {
@@ -229,17 +288,32 @@ async function renderRecipesPage(req, res) {
 
 async function renderRecipeDetail(req, res) {
   try {
+    const requestedRecipeId = toObjectId(req.params.id);
+
     const [recipe, comments] = await Promise.all([
       Recipe.findById(req.params.id)
         .populate("region", "name")
         .populate("ingredients.ingredient", "name category categoria")
         .lean(),
       Interaction.find({
-        recipe: req.params.id,
-        targetType: "recipe",
-        type: "comment"
+        $or: [
+          {
+            recipe: requestedRecipeId || req.params.id,
+            targetType: "recipe",
+            type: "comment"
+          },
+          {
+            receta_id: requestedRecipeId || req.params.id,
+            tipo: "comentario"
+          },
+          {
+            receta_id: requestedRecipeId || req.params.id,
+            tipo: "comment"
+          }
+        ]
       })
-        .populate("user", "name")
+        .populate("user", "name nombre")
+        .populate("usuario_id", "name nombre")
         .sort({ createdAt: -1 })
         .lean()
     ]);
@@ -275,7 +349,20 @@ async function renderRecipeDetail(req, res) {
       pageTitle: `Chef's Logic | ${recipe.title}`,
       activeTab: "recetas",
       recipe,
-      comments,
+      comments: (comments || []).map((entry) => {
+        const resolvedUser = entry.user || entry.usuario_id || null;
+        return {
+          ...entry,
+          commentText: entry.commentText || entry.comentario || "",
+          createdAt: entry.createdAt || entry.fecha || new Date().toISOString(),
+          user: resolvedUser
+            ? {
+                _id: resolvedUser._id,
+                name: resolvedUser.name || resolvedUser.nombre || "Usuario"
+              }
+            : { name: "Usuario" }
+        };
+      }),
       userHasLiked,
       userHasSaved,
       canEdit: canEditRecipeForUser(res.locals.currentUser, recipe),
@@ -529,16 +616,10 @@ async function likeRecipe(req, res) {
 
     if (wasLiked) {
       user.likedRecipes = user.likedRecipes.filter((id) => String(id) !== String(recipeId));
-      await Interaction.deleteMany({ user: userId, recipe: recipeId, targetType: "recipe", type: "like" });
+      await Interaction.deleteMany(buildRecipeInteractionFilter(userId, recipeId, "like"));
     } else {
       user.likedRecipes.push(recipeId);
-      await Interaction.create({
-        user: userId,
-        recipe: recipeId,
-        type: "like",
-        targetType: "recipe",
-        value: 1
-      });
+      await Interaction.create(buildRecipeInteractionPayload(userId, recipeId, "like", { value: 1 }));
     }
 
     await user.save();
@@ -555,6 +636,7 @@ async function likeRecipe(req, res) {
       !wasLiked ? "Receta marcada con like." : "Like removido correctamente."
     );
   } catch (error) {
+    console.error("Like interaction error:", error);
     return sendError(res, error, "No fue posible registrar el like.");
   }
 }
@@ -584,7 +666,7 @@ async function dislikeRecipe(req, res) {
     user.likedRecipes = Array.isArray(user.likedRecipes) ? user.likedRecipes : [];
     user.likedRecipes = user.likedRecipes.filter((id) => String(id) !== String(recipeId));
     await user.save();
-    await Interaction.deleteMany({ user: userId, recipe: recipeId, targetType: "recipe", type: "like" });
+    await Interaction.deleteMany(buildRecipeInteractionFilter(userId, recipeId, "like"));
 
     const likeCount = await User.countDocuments({ likedRecipes: recipeId });
     recipe.likeCount = likeCount;
@@ -593,6 +675,7 @@ async function dislikeRecipe(req, res) {
 
     return sendSuccess(res, { liked: false, likeCount }, "Dislike aplicado. Like removido.");
   } catch (error) {
+    console.error("Dislike interaction error:", error);
     return sendError(res, error, "No fue posible aplicar dislike.");
   }
 }
@@ -624,16 +707,10 @@ async function saveRecipe(req, res) {
 
     if (wasSaved) {
       user.savedRecipes = user.savedRecipes.filter((id) => String(id) !== String(recipeId));
-      await Interaction.deleteMany({ user: userId, recipe: recipeId, targetType: "recipe", type: "save" });
+      await Interaction.deleteMany(buildRecipeInteractionFilter(userId, recipeId, "save"));
     } else {
       user.savedRecipes.push(recipeId);
-      await Interaction.create({
-        user: userId,
-        recipe: recipeId,
-        type: "save",
-        targetType: "recipe",
-        value: 1
-      });
+      await Interaction.create(buildRecipeInteractionPayload(userId, recipeId, "save", { value: 1 }));
     }
 
     await user.save();
@@ -644,6 +721,7 @@ async function saveRecipe(req, res) {
       !wasSaved ? "Receta guardada correctamente." : "Receta removida de guardados."
     );
   } catch (error) {
+    console.error("Save interaction error:", error);
     return sendError(res, error, "No fue posible guardar la receta.");
   }
 }
@@ -667,19 +745,35 @@ async function addComment(req, res) {
       return sendError(res, new Error("Receta no encontrada."), "Receta no encontrada.", 404);
     }
 
-    const interaction = await Interaction.create({
-      user: userId,
-      recipe: recipeId,
-      type: "comment",
-      targetType: "recipe",
-      commentText,
-      value: 1
-    });
+    const interaction = await Interaction.create(
+      buildRecipeInteractionPayload(userId, recipeId, "comment", {
+        commentText,
+        value: 1
+      })
+    );
 
-    const populated = await Interaction.findById(interaction._id).populate("user", "name").lean();
+    const populated = await Interaction.findById(interaction._id)
+      .populate("user", "name nombre")
+      .populate("usuario_id", "name nombre")
+      .lean();
 
-    return sendSuccess(res, populated, "Comentario publicado.", 201);
+    const resolvedUser = populated && (populated.user || populated.usuario_id);
+
+    const normalized = {
+      ...populated,
+      commentText: (populated && (populated.commentText || populated.comentario)) || commentText,
+      createdAt: (populated && (populated.createdAt || populated.fecha)) || new Date().toISOString(),
+      user: resolvedUser
+        ? {
+            _id: resolvedUser._id,
+            name: resolvedUser.name || resolvedUser.nombre || "Usuario"
+          }
+        : { name: "Usuario" }
+    };
+
+    return sendSuccess(res, normalized, "Comentario publicado.", 201);
   } catch (error) {
+    console.error("Comment interaction error:", error);
     return sendError(res, error, "No fue posible publicar el comentario.");
   }
 }

@@ -40,6 +40,37 @@ document.querySelectorAll("[data-delete-recipe]").forEach((button) => {
   });
 });
 
+function bindClickableRecipeCards() {
+  const cards = document.querySelectorAll("[data-card-href]");
+  if (!cards.length) return;
+
+  const interactiveSelector = "a, button, input, textarea, select, label, form";
+
+  cards.forEach((card) => {
+    const href = card.dataset.cardHref;
+    if (!href) return;
+
+    card.addEventListener("click", (event) => {
+      if (event.target && event.target.closest(interactiveSelector)) {
+        return;
+      }
+      window.location.href = href;
+    });
+
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        if (event.target && event.target.closest(interactiveSelector)) {
+          return;
+        }
+        event.preventDefault();
+        window.location.href = href;
+      }
+    });
+  });
+}
+
+bindClickableRecipeCards();
+
 function getAuthRedirectUrl() {
   const currentPath = window.location.pathname || "/";
   return `/login?returnTo=${encodeURIComponent(currentPath)}`;
