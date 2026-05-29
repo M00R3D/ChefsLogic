@@ -268,19 +268,53 @@ async function mapRecipePayload(body = {}, fallbackRecipe = null) {
 
 async function renderRecipesPage(req, res) {
   try {
-    const recipes = await Recipe.find().populate("region", "name").sort({ createdAt: -1 }).lean();
+    const currentUser = res.locals.currentUser;
+    const currentUserId = currentUser ? String(currentUser._id) : null;
+
+    const allRecipes = await Recipe.find()
+      .populate("region", "name")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const myRecipes = currentUserId
+      ? allRecipes.filter((r) => String(r.author || r.usuario_id || "") === currentUserId)
+      : [];
+
+    const otherRecipes = currentUserId
+      ? allRecipes.filter((r) => String(r.author || r.usuario_id || "") !== currentUserId)
+      : allRecipes;
+
+    let savedRecipes = [];
+    if (currentUser) {
+      const userFull = await User.findById(currentUser._id)
+        .select("savedRecipes")
+        .populate({
+          path: "savedRecipes",
+          populate: { path: "region", select: "name" }
+        })
+        .lean();
+      savedRecipes = (userFull && Array.isArray(userFull.savedRecipes) ? userFull.savedRecipes : [])
+        .filter(Boolean);
+    }
+
+    // Set on res.locals so EJS can access them directly in the template
+    res.locals.myRecipes    = myRecipes;
+    res.locals.otherRecipes = otherRecipes;
+    res.locals.savedRecipes = savedRecipes;
 
     return res.render("recipes/index", {
       pageTitle: "Chef's Logic | Recetas",
       activeTab: "recetas",
-      recipes,
       errorMessage: ""
     });
   } catch (error) {
+    console.error("renderRecipesPage error:", error);
+    res.locals.myRecipes    = [];
+    res.locals.otherRecipes = [];
+    res.locals.savedRecipes = [];
     return res.status(500).render("recipes/index", {
       pageTitle: "Chef's Logic | Recetas",
       activeTab: "recetas",
-      recipes: [],
       errorMessage: "No fue posible cargar las recetas."
     });
   }
