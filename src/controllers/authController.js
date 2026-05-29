@@ -18,7 +18,20 @@ async function validatePassword(user, password) {
   }
 
   const legacyPassword = String(user.password || "");
-  return legacyPassword ? legacyPassword === password : false;
+  if (!legacyPassword) {
+    return false;
+  }
+
+  // Some legacy records stored bcrypt hash in `password`.
+  if (/^\$2[aby]\$\d{2}\$/.test(legacyPassword)) {
+    try {
+      return await bcrypt.compare(password, legacyPassword);
+    } catch {
+      return false;
+    }
+  }
+
+  return legacyPassword === password;
 }
 
 function renderLoginPage(req, res) {
@@ -140,7 +153,8 @@ async function register(req, res) {
       passwordHash,
       nombre: name,
       correo: email,
-      password,
+      // Keep legacy field populated but never store plain text passwords.
+      password: passwordHash,
       avatar: "default.png",
       fecha_registro: new Date(),
       rol: "usuario"
@@ -151,7 +165,24 @@ async function register(req, res) {
 
     return res.redirect("/");
   } catch (error) {
-    console.error("Register error:", error.message);
+    console.error("Register error:", error);
+
+    if (error && error.code === 11000) {
+      req.session.flashError = "Ya existe una cuenta con ese email.";
+      return res.redirect("/register");
+    }
+
+    if (error && error.name === "ValidationError") {
+      const messages = Object.values(error.errors || {})
+        .map((entry) => entry && entry.message)
+        .filter(Boolean);
+
+      req.session.flashError = messages.length
+        ? `No se pudo crear la cuenta: ${messages.join(" ")}`
+        : "No se pudo crear la cuenta por un error de validacion.";
+      return res.redirect("/register");
+    }
+
     req.session.flashError = "Error al crear la cuenta. Intenta de nuevo.";
     return res.redirect("/register");
   }

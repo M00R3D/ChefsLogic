@@ -227,6 +227,19 @@ const recipeSchema = new mongoose.Schema(
       type: Number,
       min: 0,
       default: 0
+    },
+    accentColor: {
+      type: String,
+      default: ""
+    },
+    fallbackEmoji: {
+      type: String,
+      default: ""
+    },
+    coverStyle: {
+      type: String,
+      enum: ["image", "gradient", "symbol", "plain"],
+      default: "plain"
     }
   },
   {

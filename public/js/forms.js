@@ -157,10 +157,19 @@ function classifyStep(text) {
 
 function updateStepNodes() {
   var wrap = document.getElementById("step-nodes-wrap");
+  var previewWrap = document.getElementById("step-nodes-preview-wrap");
+  var previewEl  = document.getElementById("step-nodes-preview");
   if (!wrap) return;
   var inputs = document.querySelectorAll(".step-row-input");
   var steps = Array.from(inputs).map(function (i) { return i.value.trim(); }).filter(Boolean);
-  if (!steps.length) { wrap.innerHTML = ""; return; }
+
+  // Horizontal nodes (in form builder)
+  if (!steps.length) {
+    wrap.innerHTML = "";
+    if (previewEl) previewEl.innerHTML = "";
+    if (previewWrap) previewWrap.style.display = "none";
+    return;
+  }
   var html = '<div class="step-nodes">';
   steps.forEach(function (text, idx) {
     var type = classifyStep(text);
@@ -176,6 +185,23 @@ function updateStepNodes() {
   });
   html += '</div>';
   wrap.innerHTML = html;
+
+  // Vertical preview (in aside)
+  if (previewEl && previewWrap) {
+    previewWrap.style.display = "";
+    var pvHtml = '<div class="step-nodes-vertical">';
+    steps.forEach(function (text, idx) {
+      var type = classifyStep(text);
+      var c = STEP_NODE_TYPES[type];
+      pvHtml += '<div class="step-node-v" style="--node-bg:' + c.bg + ';--node-border:' + c.border + ';--node-text:' + c.text + '">' +
+        '<span class="step-node-v-icon">' + c.icon + '</span>' +
+        '<span class="step-node-v-num">' + (idx + 1) + '</span>' +
+        '<span class="step-node-v-label">' + text + '</span></div>';
+      if (idx < steps.length - 1) pvHtml += '<div class="step-node-v-arrow">\u2193</div>';
+    });
+    pvHtml += '</div>';
+    previewEl.innerHTML = pvHtml;
+  }
 }
 
 function buildStepsBuilder() {

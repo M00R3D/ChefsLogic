@@ -1,3 +1,4 @@
+
 const Recipe = require("../models/Recipe");
 const Region = require("../models/Region");
 const Ingredient = require("../models/Ingredient");
@@ -190,7 +191,10 @@ async function mapRecipePayload(body = {}, fallbackRecipe = null) {
     tags,
     ingredients,
     steps,
-    author: resolvedUserId
+    author: resolvedUserId,
+    accentColor: String(body.accentColor || "").replace(/[^#a-zA-Z0-9]/g, "").slice(0, 20),
+    fallbackEmoji: String(body.fallbackEmoji || "").trim().slice(0, 8),
+    coverStyle: ["image", "gradient", "symbol", "plain"].includes(body.coverStyle) ? body.coverStyle : "plain"
   };
 
   if (legacyRegionId) {

@@ -80,20 +80,51 @@ async function mapCookbookPayload(body = {}, fallbackCookbook = null) {
       isPublic,
       recipes: recipeIds,
       owner: resolvedUserId,
-      tags
+      tags,
+      theme: String(body.theme || "otro").trim(),
+      accentColor: String(body.accentColor || "").replace(/[^#a-zA-Z0-9]/g, "").slice(0, 20),
+      coverEmoji: String(body.coverEmoji || "📖").trim().slice(0, 8)
     },
     hasUser: Boolean(resolvedUserId)
   };
 }
 
+const ALL_THEMES = ["mexicana","postres","bebidas","vegano","mariscos","antojitos","sopas","desayunos","carnes","internacional","otro"];
+const CB_PAGE_SIZE = 12;
+
 async function renderCookbooksPage(req, res) {
   try {
-    const cookbooks = await Cookbook.find().populate("recipes", "title").sort({ createdAt: -1 }).lean();
+    const page = Math.max(1, parseInt(req.query.page || "1", 10));
+    const themeFilter = String(req.query.theme || "").trim().toLowerCase();
+    const search = String(req.query.q || "").trim();
+
+    const conditions = [];
+    if (search) conditions.push({ $or: [{ title: { $regex: search, $options: "i" } }, { nombre: { $regex: search, $options: "i" } }] });
+    if (themeFilter && themeFilter !== "all") conditions.push({ theme: themeFilter });
+    const query = conditions.length ? { $and: conditions } : {};
+
+    const [cookbooks, total, themeCounts] = await Promise.all([
+      Cookbook.find(query).populate("recipes", "title").sort({ createdAt: -1 })
+        .skip((page - 1) * CB_PAGE_SIZE).limit(CB_PAGE_SIZE).lean(),
+      Cookbook.countDocuments(query),
+      Cookbook.aggregate([{ $group: { _id: "$theme", count: { $sum: 1 } } }])
+    ]);
+
+    const totalPages = Math.max(1, Math.ceil(total / CB_PAGE_SIZE));
+    const themeCountMap = {};
+    themeCounts.forEach((t) => { themeCountMap[t._id || "otro"] = t.count; });
 
     return res.render("cookbooks/index", {
       pageTitle: "Chef's Logic | Recetarios",
       activeTab: "recetarios",
       cookbooks,
+      page,
+      totalPages,
+      total,
+      themeFilter,
+      search,
+      allThemes: ALL_THEMES,
+      themeCountMap,
       errorMessage: ""
     });
   } catch (error) {
@@ -101,6 +132,9 @@ async function renderCookbooksPage(req, res) {
       pageTitle: "Chef's Logic | Recetarios",
       activeTab: "recetarios",
       cookbooks: [],
+      page: 1, totalPages: 1, total: 0,
+      themeFilter: "", search: "",
+      allThemes: ALL_THEMES, themeCountMap: {},
       errorMessage: "No fue posible cargar los recetarios."
     });
   }
@@ -108,19 +142,19 @@ async function renderCookbooksPage(req, res) {
 
 async function renderCreateCookbookPage(req, res) {
   try {
-    const recipes = await Recipe.find().select("title").sort({ title: 1 }).lean();
+    const allRecipes = await Recipe.find().select("title").sort({ title: 1 }).lean();
 
     return res.render("cookbooks/create", {
       pageTitle: "Chef's Logic | Nuevo recetario",
       activeTab: "recetarios",
-      recipes,
+      allRecipes,
       errorMessage: ""
     });
   } catch (error) {
     return res.status(500).render("cookbooks/create", {
       pageTitle: "Chef's Logic | Nuevo recetario",
       activeTab: "recetarios",
-      recipes: [],
+      allRecipes: [],
       errorMessage: "No fue posible abrir el formulario."
     });
   }

@@ -58,13 +58,52 @@
                 </div>
                 <div class="image-url-row">
                   <span class="form-help">O pega una URL:</span>
-                  <input type="url" name="imageUrl" id="image-url-input" placeholder="https://..." />
+                  <input type="text" name="imageUrl" id="image-url-input" placeholder="https://..." />
                 </div>
               </div>
 
+              <!-- PERSONALIZACIÓN VISUAL -->
+              <fieldset class="recipe-visual-fieldset">
+                <legend>Personalización visual <span class="muted">(para cuando no hay imagen)</span></legend>
+
+                <div class="form-group">
+                  <label class="form-label-text">Color de acento</label>
+                  <input type="hidden" name="accentColor" id="accent-color-hidden" value="" />
+                  <div class="color-palette" id="color-palette">
+                    <button type="button" class="color-swatch" data-color="#c0392b" style="--sw:#c0392b" title="Rojo chile"></button>
+                    <button type="button" class="color-swatch" data-color="#27ae60" style="--sw:#27ae60" title="Verde cilantro"></button>
+                    <button type="button" class="color-swatch" data-color="#f39c12" style="--sw:#f39c12" title="Amarillo maíz"></button>
+                    <button type="button" class="color-swatch" data-color="#e67e22" style="--sw:#e67e22" title="Naranja cempasúchil"></button>
+                    <button type="button" class="color-swatch" data-color="#8e44ad" style="--sw:#8e44ad" title="Morado jamaica"></button>
+                    <button type="button" class="color-swatch" data-color="#2980b9" style="--sw:#2980b9" title="Azul añil"></button>
+                    <button type="button" class="color-swatch" data-color="#6d4c41" style="--sw:#6d4c41" title="Café chocolate"></button>
+                    <button type="button" class="color-swatch" data-color="#546e7a" style="--sw:#546e7a" title="Gris pizarra"></button>
+                    <button type="button" class="color-swatch color-swatch-clear" data-color="" title="Sin color">✕</button>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label-text">Emoji de portada</label>
+                  <input type="hidden" name="fallbackEmoji" id="fallback-emoji-hidden" value="" />
+                  <div class="emoji-palette" id="emoji-palette">
+                    <% ["🍳","🌮","🥘","🍲","🌯","🫕","🥗","🍜","🫔","🌶️","🍅","🥑","🧆","🥩","🍱","🫙"].forEach(function(e){ %>
+                      <button type="button" class="emoji-swatch" data-emoji="<%= e %>"><%= e %></button>
+                    <% }) %>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label-text">Estilo de portada</label>
+                  <div class="cover-style-row">
+                    <label class="cover-style-opt"><input type="radio" name="coverStyle" value="image" checked /> 🖼️ Imagen</label>
+                    <label class="cover-style-opt"><input type="radio" name="coverStyle" value="gradient" /> 🎨 Gradiente</label>
+                    <label class="cover-style-opt"><input type="radio" name="coverStyle" value="symbol" /> 🏷️ Símbolo</label>
+                    <label class="cover-style-opt"><input type="radio" name="coverStyle" value="plain" /> ⬜ Plano</label>
+                  </div>
+                </div>
+              </fieldset>
+
               <div class="form-grid cols-2">
-                <label>
-                  Region
                   <select name="region">
                     <option value="">Sin region</option>
                     <% regions.forEach((region) => { %>
@@ -144,7 +183,11 @@
           <aside class="card reveal">
             <h3>Vista previa</h3>
             <div id="recipe-preview" class="muted"></div>
-            <p class="form-help">La previsualizacion se actualiza en tiempo real mientras escribes.</p>
+            <div id="step-nodes-preview-wrap" style="display:none;margin-top:1rem;">
+              <h4 style="margin-bottom:.5rem;font-size:.9rem;">Flujo de pasos</h4>
+              <div id="step-nodes-preview"></div>
+            </div>
+            <p class="form-help" style="margin-top:.75rem;">La previsualizacion se actualiza en tiempo real mientras escribes.</p>
           </aside>
         </section>
 
@@ -154,5 +197,37 @@
 
     <script id="ingredients-data" type="application/json"><%- JSON.stringify(allIngredients || []) %></script>
     <script src="/js/forms.js"></script>
+    <script>
+      // Color palette picker
+      (function() {
+        var palette = document.getElementById('color-palette');
+        var hidden  = document.getElementById('accent-color-hidden');
+        if (!palette || !hidden) return;
+        palette.querySelectorAll('.color-swatch').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            palette.querySelectorAll('.color-swatch').forEach(function(b){ b.classList.remove('is-selected'); });
+            btn.classList.add('is-selected');
+            hidden.value = btn.dataset.color || '';
+          });
+        });
+      })();
+      // Emoji palette picker
+      (function() {
+        var palette = document.getElementById('emoji-palette');
+        var hidden  = document.getElementById('fallback-emoji-hidden');
+        if (!palette || !hidden) return;
+        palette.querySelectorAll('.emoji-swatch').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            palette.querySelectorAll('.emoji-swatch').forEach(function(b){ b.classList.remove('is-selected'); });
+            if (hidden.value === btn.dataset.emoji) {
+              hidden.value = '';
+            } else {
+              btn.classList.add('is-selected');
+              hidden.value = btn.dataset.emoji;
+            }
+          });
+        });
+      })();
+    </script>
   </body>
 </html>

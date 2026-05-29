@@ -13,51 +13,344 @@
       <main class="main-content">
         <%- include("../partials/header", { pageTitle: "Nuevo recetario" }) %>
 
-        <section class="card">
-          <% if (errorMessage) { %>
-            <p class="muted"><%= errorMessage %></p>
-          <% } %>
+        <% if (errorMessage) { %>
+          <div class="alert alert-error"><%= errorMessage %></div>
+        <% } %>
 
-          <form class="form-grid" action="/cookbooks" method="POST">
-            <label>
-              Titulo
-              <input type="text" name="title" required />
-            </label>
+        <div class="create-layout">
+          <form class="card create-form" id="cb-create-form" action="/cookbooks" method="POST">
 
-            <label>
-              Descripcion
-              <textarea name="description" placeholder="Describe el enfoque del recetario"></textarea>
-            </label>
+            <!-- BÁSICOS -->
+            <fieldset class="recipe-visual-fieldset">
+              <legend>Datos generales</legend>
+              <div class="form-grid cols-1">
+                <label class="form-label-text">
+                  Título del recetario *
+                  <input type="text" name="title" id="cb-title-input" required placeholder="Mi recetario de tamales..." />
+                </label>
+                <label class="form-label-text">
+                  Descripción
+                  <textarea name="description" rows="2" placeholder="¿De qué trata este recetario?"></textarea>
+                </label>
+              </div>
+            </fieldset>
 
-            <label>
-              URL de portada
-              <input type="url" name="coverImage" placeholder="https://..." />
-            </label>
+            <!-- TEMA -->
+            <fieldset class="recipe-visual-fieldset">
+              <legend>Tema</legend>
+              <input type="hidden" name="theme" id="cb-theme-hidden" value="otro" />
+              <div class="cb-theme-selector" id="cb-theme-selector">
+                <%
+                  const THEMES_CREATE = [
+                    { value: 'mexicana',      emoji: '🇲🇽', label: 'Mexicana',       color: '#c0392b' },
+                    { value: 'postres',       emoji: '🍮', label: 'Postres',         color: '#d35400' },
+                    { value: 'bebidas',       emoji: '🍹', label: 'Bebidas',         color: '#2980b9' },
+                    { value: 'vegano',        emoji: '🌱', label: 'Vegano',          color: '#27ae60' },
+                    { value: 'mariscos',      emoji: '🦐', label: 'Mariscos',        color: '#1a6e8e' },
+                    { value: 'antojitos',     emoji: '🫔', label: 'Antojitos',       color: '#e67e22' },
+                    { value: 'sopas',         emoji: '🍲', label: 'Sopas',           color: '#8e44ad' },
+                    { value: 'desayunos',     emoji: '🍳', label: 'Desayunos',       color: '#f39c12' },
+                    { value: 'carnes',        emoji: '🥩', label: 'Carnes',          color: '#922b21' },
+                    { value: 'internacional', emoji: '🌍', label: 'Internacional',   color: '#2c3e50' },
+                    { value: 'otro',          emoji: '📖', label: 'Otro',            color: '#546e7a' }
+                  ];
+                %>
+                <% THEMES_CREATE.forEach(function(t) { %>
+                  <button type="button" class="cb-theme-btn" data-value="<%= t.value %>" style="--th-color:<%= t.color %>">
+                    <span class="cb-theme-btn-emoji"><%= t.emoji %></span>
+                    <span class="cb-theme-btn-label"><%= t.label %></span>
+                  </button>
+                <% }); %>
+              </div>
+            </fieldset>
 
-            <label>
-              Recetas (IDs separados por coma)
-              <input type="text" name="recipes" placeholder="6656..., 6657..." />
-            </label>
+            <!-- PERSONALIZACIÓN VISUAL -->
+            <fieldset class="recipe-visual-fieldset">
+              <legend>Color y emoji de portada</legend>
 
-            <label>
-              Etiquetas (separadas por coma)
-              <input type="text" name="tags" placeholder="antojitos, brunch" />
-            </label>
+              <div class="form-group">
+                <label class="form-label-text">Color de acento</label>
+                <input type="hidden" name="accentColor" id="cb-accent-hidden" value="" />
+                <div class="color-palette" id="cb-color-palette">
+                  <button type="button" class="color-swatch" data-color="#c0392b" style="--sw:#c0392b" title="Rojo chile"></button>
+                  <button type="button" class="color-swatch" data-color="#27ae60" style="--sw:#27ae60" title="Verde cilantro"></button>
+                  <button type="button" class="color-swatch" data-color="#f39c12" style="--sw:#f39c12" title="Amarillo maíz"></button>
+                  <button type="button" class="color-swatch" data-color="#e67e22" style="--sw:#e67e22" title="Naranja cempasúchil"></button>
+                  <button type="button" class="color-swatch" data-color="#8e44ad" style="--sw:#8e44ad" title="Morado jamaica"></button>
+                  <button type="button" class="color-swatch" data-color="#2980b9" style="--sw:#2980b9" title="Azul añil"></button>
+                  <button type="button" class="color-swatch" data-color="#6d4c41" style="--sw:#6d4c41" title="Café chocolate"></button>
+                  <button type="button" class="color-swatch" data-color="#546e7a" style="--sw:#546e7a" title="Gris pizarra"></button>
+                  <button type="button" class="color-swatch color-swatch-clear" data-color="" title="Sin color">✕</button>
+                </div>
+              </div>
 
-            <label>
-              <input type="checkbox" name="isPublic" />
-              Publicar recetario
-            </label>
+              <div class="form-group">
+                <label class="form-label-text">Emoji de portada</label>
+                <input type="hidden" name="coverEmoji" id="cb-emoji-hidden" value="📖" />
+                <div class="emoji-palette" id="cb-emoji-palette">
+                  <% ['📖','🍳','🌮','🥘','🍲','🌯','🫕','🥗','🍜','🫔','🌶️','🍅','🥑','🧆','🥩','🫙'].forEach(function(e){ %>
+                    <button type="button" class="emoji-swatch" data-emoji="<%= e %>"><%= e %></button>
+                  <% }) %>
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- PORTADA -->
+            <fieldset class="recipe-visual-fieldset">
+              <legend>Imagen de portada <span class="muted">(opcional)</span></legend>
+              <div id="cb-image-drop-zone" class="image-drop-zone">
+                <div id="cb-drop-zone-inner">
+                  <span>📂 Arrastra una imagen aquí</span>
+                  <span class="muted">o</span>
+                  <label class="btn btn-soft btn-sm">
+                    Elegir archivo
+                    <input type="file" id="cb-image-file-input" accept="image/*" style="display:none;" />
+                  </label>
+                </div>
+                <img id="cb-image-preview" class="image-preview" src="" alt="" style="display:none;" />
+              </div>
+              <div class="image-url-row">
+                <span class="form-help">O pega una URL:</span>
+                <input type="text" name="coverImage" id="cb-image-url-input" placeholder="https://..." />
+              </div>
+            </fieldset>
+
+            <!-- ETIQUETAS -->
+            <fieldset class="recipe-visual-fieldset">
+              <legend>Etiquetas</legend>
+              <input type="text" name="tags" id="cb-tags-input" placeholder="familiar, festivo..." />
+            </fieldset>
+
+            <!-- RECETAS -->
+            <fieldset class="recipe-visual-fieldset">
+              <legend>Recetas en este recetario</legend>
+              <input type="hidden" name="recipes" id="cb-recipes-data" value="" />
+              <div class="cb-recipe-search-bar">
+                <input type="text" id="cb-recipe-search" placeholder="Buscar receta por nombre..." autocomplete="off" />
+              </div>
+              <div id="cb-recipe-results" class="cb-recipe-results"></div>
+              <div id="cb-recipe-selected" class="cb-recipe-selected-list"></div>
+            </fieldset>
+
+            <!-- VISIBILIDAD -->
+            <div class="form-group">
+              <label class="cover-style-opt">
+                <input type="checkbox" name="isPublic" value="1" />
+                Recetario público (visible para todos)
+              </label>
+            </div>
 
             <div class="actions">
               <button class="btn btn-primary" type="submit">Guardar recetario</button>
               <a class="btn btn-soft" href="/cookbooks">Cancelar</a>
             </div>
           </form>
-        </section>
+
+          <!-- ASIDE preview -->
+          <aside class="card reveal">
+            <h3>Vista previa</h3>
+            <div id="cb-preview" class="cb-preview-card">
+              <div class="cb-preview-cover" id="cb-preview-cover">
+                <span id="cb-preview-emoji">📖</span>
+              </div>
+              <div class="cb-preview-body">
+                <div id="cb-preview-theme-badge" class="cb-theme-badge" style="--pill-color:#546e7a;--pill-bg:#f5f5f5;">📖 Otro</div>
+                <h4 id="cb-preview-title" class="muted">Título del recetario</h4>
+              </div>
+            </div>
+            <p class="form-help" style="margin-top:.75rem;">La previsualización se actualiza mientras escribes.</p>
+          </aside>
+        </div>
 
         <%- include("../partials/footer") %>
       </main>
     </div>
+
+    <script id="recipes-catalog" type="application/json"><%- JSON.stringify(allRecipes || []) %></script>
+    <script src="/js/forms.js"></script>
+    <script>
+    (function() {
+      var THEME_META_JS = {
+        mexicana:      { emoji: '🇲🇽', label: 'Mexicana',       color: '#c0392b', bg: '#fdedec' },
+        postres:       { emoji: '🍮', label: 'Postres',         color: '#d35400', bg: '#fef5e7' },
+        bebidas:       { emoji: '🍹', label: 'Bebidas',         color: '#2980b9', bg: '#eaf4fc' },
+        vegano:        { emoji: '🌱', label: 'Vegano',          color: '#27ae60', bg: '#e9f7ef' },
+        mariscos:      { emoji: '🦐', label: 'Mariscos',        color: '#1a6e8e', bg: '#e8f6f9' },
+        antojitos:     { emoji: '🫔', label: 'Antojitos',       color: '#e67e22', bg: '#fdf2e9' },
+        sopas:         { emoji: '🍲', label: 'Sopas',           color: '#8e44ad', bg: '#f5eef8' },
+        desayunos:     { emoji: '🍳', label: 'Desayunos',       color: '#f39c12', bg: '#fef9e7' },
+        carnes:        { emoji: '🥩', label: 'Carnes',          color: '#922b21', bg: '#fdedec' },
+        internacional: { emoji: '🌍', label: 'Internacional',   color: '#2c3e50', bg: '#f2f3f4' },
+        otro:          { emoji: '📖', label: 'Otro',            color: '#546e7a', bg: '#f5f5f5' }
+      };
+
+      // Theme selector
+      var themeSelector = document.getElementById('cb-theme-selector');
+      var themeHidden   = document.getElementById('cb-theme-hidden');
+      var previewBadge  = document.getElementById('cb-preview-theme-badge');
+      if (themeSelector && themeHidden) {
+        var defBtn = themeSelector.querySelector('[data-value="otro"]');
+        if (defBtn) defBtn.classList.add('is-selected');
+        themeSelector.querySelectorAll('.cb-theme-btn').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            themeSelector.querySelectorAll('.cb-theme-btn').forEach(function(b){ b.classList.remove('is-selected'); });
+            btn.classList.add('is-selected');
+            themeHidden.value = btn.dataset.value;
+            var tm = THEME_META_JS[btn.dataset.value] || THEME_META_JS.otro;
+            if (previewBadge) {
+              previewBadge.style.setProperty('--pill-color', tm.color);
+              previewBadge.style.setProperty('--pill-bg', tm.bg);
+              previewBadge.textContent = tm.emoji + ' ' + tm.label;
+            }
+          });
+        });
+      }
+
+      // Color palette
+      (function() {
+        var palette = document.getElementById('cb-color-palette');
+        var hidden  = document.getElementById('cb-accent-hidden');
+        var previewCover = document.getElementById('cb-preview-cover');
+        if (!palette || !hidden) return;
+        palette.querySelectorAll('.color-swatch').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            palette.querySelectorAll('.color-swatch').forEach(function(b){ b.classList.remove('is-selected'); });
+            btn.classList.add('is-selected');
+            hidden.value = btn.dataset.color || '';
+            if (previewCover && btn.dataset.color) previewCover.style.setProperty('--cb-accent', btn.dataset.color);
+          });
+        });
+      })();
+
+      // Emoji palette
+      (function() {
+        var palette = document.getElementById('cb-emoji-palette');
+        var hidden  = document.getElementById('cb-emoji-hidden');
+        var previewEmoji = document.getElementById('cb-preview-emoji');
+        if (!palette || !hidden) return;
+        var defE = palette.querySelector('[data-emoji="📖"]');
+        if (defE) defE.classList.add('is-selected');
+        palette.querySelectorAll('.emoji-swatch').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            palette.querySelectorAll('.emoji-swatch').forEach(function(b){ b.classList.remove('is-selected'); });
+            btn.classList.add('is-selected');
+            hidden.value = btn.dataset.emoji || '📖';
+            if (previewEmoji) previewEmoji.textContent = btn.dataset.emoji || '📖';
+          });
+        });
+      })();
+
+      // Title preview
+      var titleInput = document.getElementById('cb-title-input');
+      var previewTitle = document.getElementById('cb-preview-title');
+      if (titleInput && previewTitle) {
+        titleInput.addEventListener('input', function() {
+          previewTitle.textContent = titleInput.value || 'Título del recetario';
+          previewTitle.classList.toggle('muted', !titleInput.value);
+        });
+      }
+
+      // Image upload
+      (function() {
+        var dropZone  = document.getElementById('cb-image-drop-zone');
+        var fileInput = document.getElementById('cb-image-file-input');
+        var urlInput  = document.getElementById('cb-image-url-input');
+        var preview   = document.getElementById('cb-image-preview');
+        var inner     = document.getElementById('cb-drop-zone-inner');
+        if (!dropZone || !fileInput) return;
+        function showPreview(url) {
+          if (!url) return;
+          preview.src = url; preview.style.display = 'block';
+          if (inner) inner.style.display = 'none';
+        }
+        function uploadFile(file) {
+          var fd = new FormData(); fd.append('image', file);
+          fetch('/api/upload/image', { method: 'POST', body: fd })
+            .then(function(r){ return r.json(); })
+            .then(function(d){ if (d && d.url) { urlInput.value = d.url; showPreview(d.url); }});
+        }
+        fileInput.addEventListener('change', function(){ if (fileInput.files[0]) uploadFile(fileInput.files[0]); });
+        dropZone.addEventListener('dragover', function(e){ e.preventDefault(); dropZone.classList.add('is-dragover'); });
+        dropZone.addEventListener('dragleave', function(){ dropZone.classList.remove('is-dragover'); });
+        dropZone.addEventListener('drop', function(e){
+          e.preventDefault(); dropZone.classList.remove('is-dragover');
+          var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+          if (f) uploadFile(f);
+        });
+        if (urlInput) urlInput.addEventListener('change', function(){ if (urlInput.value) showPreview(urlInput.value); });
+      })();
+
+      // Tag builder
+      (function() {
+        var CB_TAG_SUGGESTIONS = ['familiar','tradicional','rapido','festivo','economico','gourmet','fusion',
+          'regional','saludable','comfort','temporada','compartir','principiantes','expertos','vegano',
+          'sin-gluten','especial','fin-de-semana','diario','herencia','clasico','picante','dulce'];
+        var input = document.getElementById('cb-tags-input');
+        if (input && typeof buildTagBuilder === 'function') buildTagBuilder(input, CB_TAG_SUGGESTIONS);
+      })();
+
+      // Recipe picker
+      (function() {
+        var searchInput = document.getElementById('cb-recipe-search');
+        var resultsDiv  = document.getElementById('cb-recipe-results');
+        var selectedDiv = document.getElementById('cb-recipe-selected');
+        var hiddenInput = document.getElementById('cb-recipes-data');
+        if (!searchInput) return;
+        var allRecipes = [];
+        try { allRecipes = JSON.parse(document.getElementById('recipes-catalog').textContent || '[]'); } catch(e) {}
+        var selected = [];
+
+        function renderSelected() {
+          if (!selectedDiv || !hiddenInput) return;
+          hiddenInput.value = selected.map(function(r){ return r._id; }).join(',');
+          if (!selected.length) {
+            selectedDiv.innerHTML = '<p class="muted" style="font-size:.85rem;">Ninguna receta añadida.</p>';
+            return;
+          }
+          selectedDiv.innerHTML = selected.map(function(r) {
+            return '<div class="cb-picked-recipe"><span>' + (r.title || 'Receta') + '</span>' +
+              '<button type="button" class="btn btn-ghost btn-sm" data-rid="' + r._id + '">✕</button></div>';
+          }).join('');
+          selectedDiv.querySelectorAll('button').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+              selected = selected.filter(function(r){ return r._id !== btn.dataset.rid; });
+              renderSelected();
+            });
+          });
+        }
+
+        function renderResults(list) {
+          if (!resultsDiv) return;
+          if (!list.length) { resultsDiv.innerHTML = '<p class="muted" style="font-size:.85rem;padding:.4rem 0;">Sin resultados.</p>'; return; }
+          resultsDiv.innerHTML = list.slice(0, 10).map(function(r) {
+            var added = selected.some(function(s){ return s._id === String(r._id); });
+            return '<div class="cb-result-item' + (added ? ' is-added' : '') + '" data-rid="' + String(r._id) + '" data-title="' + (r.title||'').replace(/"/g,'&quot;') + '">' +
+              '<span>' + (r.title || 'Receta') + '</span>' +
+              '<button type="button" class="btn btn-soft btn-sm">' + (added ? '✓ Añadida' : '+ Añadir') + '</button></div>';
+          }).join('');
+          resultsDiv.querySelectorAll('.cb-result-item:not(.is-added)').forEach(function(row) {
+            row.querySelector('button').addEventListener('click', function() {
+              selected.push({ _id: row.dataset.rid, title: row.dataset.title });
+              renderSelected();
+              var q = searchInput.value.trim().toLowerCase();
+              renderResults(allRecipes.filter(function(r){ return r.title && r.title.toLowerCase().includes(q); }));
+            });
+          });
+        }
+
+        var timer;
+        searchInput.addEventListener('input', function() {
+          clearTimeout(timer);
+          timer = setTimeout(function() {
+            var q = searchInput.value.trim().toLowerCase();
+            if (!q) { resultsDiv.innerHTML = ''; return; }
+            renderResults(allRecipes.filter(function(r){ return r.title && r.title.toLowerCase().includes(q); }));
+          }, 250);
+        });
+
+        renderSelected();
+      })();
+    })();
+    </script>
   </body>
 </html>

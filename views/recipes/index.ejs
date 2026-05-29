@@ -42,11 +42,19 @@
             <% const ownerId = String(recipe.author || recipe.usuario_id || ''); %>
             <% const isAdmin = typeof currentUser !== 'undefined' && currentUser && String(currentUser.role || '').toLowerCase() === 'admin'; %>
             <% const canEditRecipe = Boolean(currentUser && (isAdmin || (currentId && ownerId && currentId === ownerId))); %>
+            <%
+              const safeHexIdx = /^#[0-9a-fA-F]{3,6}$/.test(String(recipe.accentColor||'')) ? recipe.accentColor : '';
+              const diffColIdx = { facil: '#27ae60', media: '#e67e22', dificil: '#c0392b' };
+              const cardAccent = safeHexIdx || diffColIdx[String(recipe.difficulty||'media')] || '#546e7a';
+              const cardEmoji = String(recipe.fallbackEmoji||'').trim() || '🍳';
+            %>
             <article class="recipe-card reveal" data-reveal-index="<%= index %>">
               <% if (imageCandidate && canRenderImage) { %>
                 <img class="recipe-card-img" src="<%= imageCandidate %>" alt="<%= recipe.title || recipe.titulo || 'Receta' %>" loading="lazy" />
               <% } else { %>
-                <div class="recipe-card-img-placeholder">📖</div>
+                <div class="recipe-card-img-accent" style="--card-accent:<%= cardAccent %>">
+                  <span class="recipe-card-img-emoji"><%= cardEmoji %></span>
+                </div>
               <% } %>
 
               <div class="recipe-card-body">

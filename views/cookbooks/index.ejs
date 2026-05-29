@@ -13,34 +13,157 @@
       <main class="main-content">
         <%- include("../partials/header", { pageTitle: "Recetarios" }) %>
 
-        <section class="card">
-          <div class="actions">
-            <a class="btn btn-primary" href="/cookbooks/create">Nuevo recetario</a>
-          </div>
+        <%
+          const THEME_META = {
+            mexicana:      { emoji: '🇲🇽', color: '#c0392b', bg: '#fdedec', label: 'Mexicana' },
+            postres:       { emoji: '🍮', color: '#d35400', bg: '#fef5e7', label: 'Postres' },
+            bebidas:       { emoji: '🍹', color: '#2980b9', bg: '#eaf4fc', label: 'Bebidas' },
+            vegano:        { emoji: '🌱', color: '#27ae60', bg: '#e9f7ef', label: 'Vegano' },
+            mariscos:      { emoji: '🦐', color: '#1a6e8e', bg: '#e8f6f9', label: 'Mariscos' },
+            antojitos:     { emoji: '🫔', color: '#e67e22', bg: '#fdf2e9', label: 'Antojitos' },
+            sopas:         { emoji: '🍲', color: '#8e44ad', bg: '#f5eef8', label: 'Sopas' },
+            desayunos:     { emoji: '🍳', color: '#f39c12', bg: '#fef9e7', label: 'Desayunos' },
+            carnes:        { emoji: '🥩', color: '#922b21', bg: '#fdedec', label: 'Carnes' },
+            internacional: { emoji: '🌍', color: '#2c3e50', bg: '#f2f3f4', label: 'Internacional' },
+            otro:          { emoji: '📖', color: '#546e7a', bg: '#f5f5f5', label: 'Otro' }
+          };
+          function getTheme(t) { return THEME_META[String(t||'otro').toLowerCase()] || THEME_META.otro; }
+          function buildCbQuery(overrides) {
+            const base = { q: search, theme: themeFilter, page: page };
+            const merged = Object.assign({}, base, overrides);
+            const params = Object.entries(merged).filter(([,v]) => v && v !== '' && v !== 'all' && v !== 1)
+              .map(([k,v]) => k + '=' + encodeURIComponent(v));
+            return params.length ? '/cookbooks?' + params.join('&') : '/cookbooks';
+          }
+        %>
 
-          <% if (errorMessage) { %>
-            <p class="muted"><%= errorMessage %></p>
+        <% if (errorMessage) { %>
+          <div class="alert alert-error"><%= errorMessage %></div>
+        <% } %>
+
+        <!-- TOPBAR -->
+        <section class="ing-index-topbar">
+          <form class="ing-search-form" action="/cookbooks" method="GET">
+            <% if (themeFilter && themeFilter !== 'all') { %>
+              <input type="hidden" name="theme" value="<%= themeFilter %>" />
+            <% } %>
+            <input class="ing-index-search" type="text" name="q" value="<%= search %>" placeholder="Buscar recetario..." autocomplete="off" />
+            <button class="btn btn-soft btn-sm" type="submit">Buscar</button>
+            <% if (search || themeFilter) { %>
+              <a class="btn btn-ghost btn-sm" href="/cookbooks">Limpiar</a>
+            <% } %>
+          </form>
+          <a class="btn btn-primary" href="/cookbooks/create">+ Nuevo recetario</a>
+        </section>
+
+        <!-- THEME FILTER PILLS -->
+        <section class="ing-cat-filter-row">
+          <a class="ing-filter-pill <%= (!themeFilter || themeFilter === 'all') ? 'is-active' : '' %>"
+             href="/cookbooks<%= search ? '?q=' + encodeURIComponent(search) : '' %>">
+            Todos <span class="ing-filter-count"><%= total %></span>
+          </a>
+          <% allThemes.forEach((theme) => { %>
+            <% const tm = getTheme(theme); %>
+            <% const cnt = themeCountMap[theme] || 0; %>
+            <% if (cnt > 0 || themeFilter === theme) { %>
+              <a class="ing-filter-pill <%= themeFilter === theme ? 'is-active' : '' %>"
+                 style="--pill-color:<%= tm.color %>;--pill-bg:<%= tm.bg %>"
+                 href="<%= buildCbQuery({theme: theme, page: 1}) %>">
+                <%= tm.emoji %> <%= tm.label %> <span class="ing-filter-count"><%= cnt %></span>
+              </a>
+            <% } %>
+          <% }); %>
+        </section>
+
+        <!-- META -->
+        <div class="ing-results-meta">
+          <span class="muted"><%= total %> recetario<%= total !== 1 ? 's' : '' %>
+            <% if (search) { %> · "<%= search %>"<% } %>
+            <% if (themeFilter && themeFilter !== 'all') { %> · <%= getTheme(themeFilter).label %><% } %>
+            · página <%= page %> de <%= totalPages %>
+          </span>
+        </div>
+
+        <!-- COOKBOOK CARDS -->
+        <section class="grid cols-3 cb-cards-grid">
+          <% if (!cookbooks || cookbooks.length === 0) { %>
+            <article class="card" style="grid-column:1/-1;text-align:center;">
+              <p class="muted">No se encontraron recetarios.</p>
+              <a class="btn btn-soft btn-sm" href="/cookbooks">Ver todos</a>
+            </article>
           <% } %>
 
-          <div class="grid">
-            <% if (!cookbooks || cookbooks.length === 0) { %>
-              <article class="card">
-                <p class="muted">No hay recetarios creados.</p>
-              </article>
-            <% } %>
-
-            <% cookbooks.forEach((cookbook) => { %>
-              <article class="card">
-                <h3><%= cookbook.title || cookbook.nombre || "Sin titulo" %></h3>
-                <p class="muted"><%= cookbook.description || cookbook.descripcion || "Sin descripcion." %></p>
-                <div class="actions">
-                  <span class="chip"><%= (cookbook.isPublic || cookbook.publico) ? "Publico" : "Privado" %></span>
-                  <span class="chip"><%= cookbook.recipes ? cookbook.recipes.length : (cookbook.recetas ? cookbook.recetas.length : 0) %> recetas</span>
+          <% cookbooks.forEach((cb, idx) => { %>
+            <%
+              const cbThemeMeta = getTheme(cb.theme || 'otro');
+              const cbImg = String(cb.coverImage || '').trim();
+              const cbCanImg = /^(https?:\/\/|\/|data:image\/)/.test(cbImg);
+              const cbSafeHex = /^#[0-9a-fA-F]{3,6}$/.test(String(cb.accentColor||'')) ? cb.accentColor : '';
+              const cbAccent = cbSafeHex || cbThemeMeta.color;
+              const cbEmoji = String(cb.coverEmoji || cbThemeMeta.emoji).trim();
+              const cbRecipeCount = (cb.recipes || cb.recetas || []).length;
+            %>
+            <article class="cb-card reveal" data-reveal-index="<%= idx %>" style="--cb-accent:<%= cbAccent %>">
+              <div class="cb-card-cover">
+                <% if (cbImg && cbCanImg) { %>
+                  <img class="cb-card-cover-img" src="<%= cbImg %>" alt="<%= cb.title || cb.nombre %>" loading="lazy" />
+                  <div class="cb-card-cover-overlay"></div>
+                <% } else { %>
+                  <div class="cb-card-cover-placeholder"></div>
+                <% } %>
+                <span class="cb-card-emoji"><%= cbEmoji %></span>
+                <div class="cb-card-cover-badges">
+                  <span class="cb-theme-badge" style="--pill-color:<%= cbThemeMeta.color %>;--pill-bg:<%= cbThemeMeta.bg %>">
+                    <%= cbThemeMeta.emoji %> <%= cbThemeMeta.label %>
+                  </span>
+                  <span class="cb-public-badge <%= (cb.isPublic || cb.publico) ? 'is-public' : 'is-private' %>">
+                    <%= (cb.isPublic || cb.publico) ? '🌐 Público' : '🔒 Privado' %>
+                  </span>
                 </div>
-              </article>
-            <% }); %>
-          </div>
+              </div>
+              <div class="cb-card-body">
+                <h3 class="cb-card-title"><%= cb.title || cb.nombre || 'Sin título' %></h3>
+                <% if (cb.description || cb.descripcion) { %>
+                  <p class="muted cb-card-desc"><%= String(cb.description || cb.descripcion || '').slice(0, 100) %><%= (cb.description || cb.descripcion || '').length > 100 ? '…' : '' %></p>
+                <% } %>
+                <% if ((cb.tags || []).length) { %>
+                  <div class="ing-card-tags" style="margin-top:.4rem;">
+                    <% (cb.tags || []).slice(0, 5).forEach((tag) => { %>
+                      <span class="ing-tag-chip"><%= tag %></span>
+                    <% }); %>
+                  </div>
+                <% } %>
+                <div class="cb-card-footer">
+                  <span class="muted">📋 <%= cbRecipeCount %> receta<%= cbRecipeCount !== 1 ? 's' : '' %></span>
+                </div>
+              </div>
+            </article>
+          <% }); %>
         </section>
+
+        <!-- PAGINATION -->
+        <% if (totalPages > 1) { %>
+          <nav class="ing-pagination">
+            <% if (page > 1) { %>
+              <a class="btn btn-soft btn-sm" href="<%= buildCbQuery({page: page - 1}) %>">← Anterior</a>
+            <% } else { %>
+              <span class="btn btn-soft btn-sm" style="opacity:0.4;cursor:default;">← Anterior</span>
+            <% } %>
+            <div class="ing-page-pills">
+              <% const rs = Math.max(1, page - 2); const re = Math.min(totalPages, page + 2); %>
+              <% if (rs > 1) { %><a class="ing-page-pill" href="<%= buildCbQuery({page:1}) %>">1</a><% if (rs > 2) { %><span class="ing-page-pill muted">…</span><% } %><% } %>
+              <% for (let p = rs; p <= re; p++) { %>
+                <a class="ing-page-pill <%= p === page ? 'is-active' : '' %>" href="<%= buildCbQuery({page:p}) %>"><%= p %></a>
+              <% } %>
+              <% if (re < totalPages) { %><% if (re < totalPages - 1) { %><span class="ing-page-pill muted">…</span><% } %><a class="ing-page-pill" href="<%= buildCbQuery({page:totalPages}) %>"><%= totalPages %></a><% } %>
+            </div>
+            <% if (page < totalPages) { %>
+              <a class="btn btn-soft btn-sm" href="<%= buildCbQuery({page: page + 1}) %>">Siguiente →</a>
+            <% } else { %>
+              <span class="btn btn-soft btn-sm" style="opacity:0.4;cursor:default;">Siguiente →</span>
+            <% } %>
+          </nav>
+        <% } %>
 
         <%- include("../partials/footer") %>
       </main>

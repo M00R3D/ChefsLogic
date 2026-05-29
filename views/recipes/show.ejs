@@ -23,6 +23,16 @@
         <% if (recipe) { %>
           <% const imageCandidate = String(recipe.imageUrl || recipe.imagen_principal || '').trim(); %>
           <% const canRenderImage = /^(https?:\/\/|\/|data:image\/)/i.test(imageCandidate); %>
+          <%
+            const safeHex = /^#[0-9a-fA-F]{3,6}$/.test(String(recipe.accentColor||'')) ? recipe.accentColor : '';
+            const diffColorMap = { facil: '#27ae60', media: '#e67e22', dificil: '#c0392b' };
+            const heroAccent = safeHex || diffColorMap[String(recipe.difficulty||'media')] || '#546e7a';
+            const heroEmoji = String(recipe.fallbackEmoji || '').trim() || (function(){
+              const t = String((recipe.tags||[])[0]||'').toLowerCase();
+              const em = { mexicana:'🌮', picante:'🌶️', vegano:'🌱', mariscos:'🦐', dulce:'🍯', sopa:'🍲', caldo:'🫕', tamal:'🫔', mole:'🏺', chili:'🌶️' };
+              return em[t] || '🍳';
+            })();
+          %>
           <% const ingredientMeta = {
             verdura: { emoji: '🥦', color: '#2e7d32', bg: '#e8f5e9' },
             fruta: { emoji: '🍎', color: '#c62828', bg: '#ffebee' },
@@ -52,7 +62,10 @@
           <% if (imageCandidate && canRenderImage) { %>
             <img class="recipe-hero reveal" src="<%= imageCandidate %>" alt="<%= recipe.title %>" />
           <% } else { %>
-            <div class="recipe-hero-placeholder reveal">🍳</div>
+            <div class="recipe-hero-accent reveal" style="--hero-bg:<%= heroAccent %>">
+              <span class="recipe-hero-emoji"><%= heroEmoji %></span>
+              <span class="recipe-hero-title"><%= recipe.title %></span>
+            </div>
           <% } %>
 
           <section class="card reveal" style="margin-bottom:1.25rem;">
@@ -126,34 +139,24 @@
 
             <article class="card">
               <h3>Preparacion</h3>
-              <div class="step-nodes-wrap recipe-detail-steps-nodes">
-                <div class="step-nodes">
-                  <% (recipe.steps || []).forEach((step, index) => { %>
-                    <% const c = classifyStep(step.text); %>
-                    <% const short = String(step.text || '').length > 30 ? String(step.text || '').slice(0, 27) + '…' : String(step.text || ''); %>
-                    <div class="step-node step-type-<%= c.type %>" title="<%= step.text %>">
-                      <span class="node-icon"><%= c.icon %></span>
-                      <span class="node-num"><%= index + 1 %></span>
-                      <span class="node-label"><%= short %></span>
-                    </div>
-                    <% if (index < (recipe.steps || []).length - 1) { %>
-                      <span class="step-node-arrow">→</span>
-                    <% } %>
-                  <% }); %>
-                </div>
-              </div>
-              <ol class="steps-list">
-                <% if (!recipe.steps || recipe.steps.length === 0) { %>
-                  <li class="muted">No hay pasos registrados.</li>
-                <% } %>
-                <% recipe.steps.forEach((step) => { %>
+              <div class="step-nodes-vertical">
+                <% (recipe.steps || []).forEach((step, index) => { %>
                   <% const c = classifyStep(step.text); %>
-                  <li class="step-item">
-                    <div class="step-number step-type-<%= c.type %>"><%= c.icon %></div>
-                    <div class="step-text"><%= step.text %></div>
-                  </li>
+                  <div class="step-node-v step-type-<%= c.type %>">
+                    <div class="step-node-v-head">
+                      <span class="step-node-v-icon"><%= c.icon %></span>
+                      <span class="step-node-v-num"><%= index + 1 %></span>
+                      <span class="step-node-v-label"><%= step.text %></span>
+                    </div>
+                  </div>
+                  <% if (index < (recipe.steps || []).length - 1) { %>
+                    <div class="step-node-v-arrow">↓</div>
+                  <% } %>
                 <% }); %>
-              </ol>
+                <% if (!recipe.steps || !recipe.steps.length) { %>
+                  <p class="muted">No hay pasos registrados.</p>
+                <% } %>
+              </div>
             </article>
           </section>
 

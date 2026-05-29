@@ -70,7 +70,20 @@ const cookbookSchema = new mongoose.Schema(
         trim: true,
         lowercase: true
       }
-    ]
+    ],
+    theme: {
+      type: String,
+      enum: ["mexicana","postres","bebidas","vegano","mariscos","antojitos","sopas","desayunos","carnes","internacional","otro"],
+      default: "otro"
+    },
+    accentColor: {
+      type: String,
+      default: ""
+    },
+    coverEmoji: {
+      type: String,
+      default: "📖"
+    }
   },
   {
     timestamps: true,
