@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <%- include("../partials/navbar", { activeTab }) %>
+
+      <main class="main-content">
+        <%- include("../partials/header", { pageTitle: "Editar recetario" }) %>
+
+        <% if (errorMessage || !cookbook) { %>
+          <section class="card">
+            <p class="muted"><%= errorMessage || "No se pudo cargar el recetario." %></p>
+            <a class="btn btn-soft" href="/cookbooks">Volver</a>
+          </section>
+        <% } %>
+
+        <% if (cookbook) { %>
+          <% const selectedRecipeIds = (cookbook.recipes || cookbook.recetas || []).map((r) => String(r)); %>
+          <section class="card reveal">
+            <form class="form-grid" action="/cookbooks/<%= cookbook._id %>" method="POST">
+              <div class="form-grid cols-2">
+                <label>
+                  Título *
+                  <input type="text" name="title" required value="<%= cookbook.title || cookbook.nombre || '' %>" />
+                </label>
+                <label>
+                  Tema
+                  <select name="theme">
+                    <% ['mexicana','postres','bebidas','vegano','mariscos','antojitos','sopas','desayunos','carnes','internacional','otro'].forEach((th) => { %>
+                      <option value="<%= th %>" <%= (cookbook.theme || 'otro') === th ? 'selected' : '' %>><%= th %></option>
+                    <% }); %>
+                  </select>
+                </label>
+              </div>
+
+              <label>
+                Descripción
+                <textarea name="description" rows="3"><%= cookbook.description || cookbook.descripcion || '' %></textarea>
+              </label>
+
+              <div class="form-grid cols-2">
+                <label>
+                  URL portada
+                  <input type="url" name="coverImage" value="<%= cookbook.coverImage || '' %>" />
+                </label>
+                <label>
+                  Color de acento
+                  <input type="text" name="accentColor" value="<%= cookbook.accentColor || '' %>" placeholder="#c0392b" />
+                </label>
+              </div>
+
+              <div class="form-grid cols-2">
+                <label>
+                  Emoji portada
+                  <input type="text" name="coverEmoji" value="<%= cookbook.coverEmoji || '📖' %>" maxlength="8" />
+                </label>
+                <label class="cover-style-opt" style="margin-top:1.75rem;">
+                  <input type="checkbox" name="isPublic" value="true" <%= (cookbook.isPublic || cookbook.publico) ? 'checked' : '' %> />
+                  Recetario público
+                </label>
+              </div>
+
+              <label>
+                Tags (separadas por coma)
+                <input type="text" name="tags" value="<%= (cookbook.tags || []).join(', ') %>" />
+              </label>
+
+              <fieldset class="recipe-visual-fieldset">
+                <legend>Recetas del recetario</legend>
+                <% if (!allRecipes || !allRecipes.length) { %>
+                  <p class="muted">No hay recetas disponibles para agregar.</p>
+                <% } else { %>
+                  <div class="grid cols-3" style="gap:.6rem;">
+                    <% allRecipes.forEach((r) => { const rid = String(r._id); %>
+                      <label class="cover-style-opt" style="display:flex;gap:.45rem;align-items:center;">
+                        <input type="checkbox" name="recipes" value="<%= rid %>" <%= selectedRecipeIds.includes(rid) ? 'checked' : '' %> />
+                        <span><%= r.title || 'Sin título' %></span>
+                      </label>
+                    <% }); %>
+                  </div>
+                <% } %>
+              </fieldset>
+
+              <div class="actions">
+                <button class="btn btn-primary" type="submit">Guardar cambios</button>
+                <a class="btn btn-soft" href="/cookbooks/<%= cookbook._id %>">Cancelar</a>
+              </div>
+            </form>
+          </section>
+        <% } %>
+
+        <%- include("../partials/footer") %>
+      </main>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <%- include("../partials/navbar", { activeTab }) %>
+
+      <main class="main-content">
+        <%- include("../partials/header", { pageTitle: cookbook ? (cookbook.title || cookbook.nombre || 'Recetario') : 'Recetario' }) %>
+
+        <% if (errorMessage) { %>
+          <section class="card">
+            <p class="muted"><%= errorMessage %></p>
+            <a class="btn btn-soft" href="/cookbooks">Volver</a>
+          </section>
+        <% } %>
+
+        <% if (cookbook) { %>
+          <section class="card" style="margin-bottom:1rem;">
+            <div class="actions" style="justify-content:space-between;align-items:flex-start;">
+              <div>
+                <h2 style="margin:0;"><%= cookbook.title || cookbook.nombre || 'Sin título' %></h2>
+                <% if (cookbook.description || cookbook.descripcion) { %>
+                  <p class="muted" style="margin-top:.45rem;"><%= cookbook.description || cookbook.descripcion %></p>
+                <% } %>
+              </div>
+              <div class="actions">
+                <% if (canManage) { %>
+                  <a class="btn btn-soft btn-sm" href="/cookbooks/<%= cookbook._id %>/edit">Editar</a>
+                  <form action="/cookbooks/<%= cookbook._id %>/delete" method="POST" style="margin:0;" onsubmit="return confirm('¿Eliminar este recetario?');">
+                    <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
+                  </form>
+                <% } %>
+                <a class="btn btn-ghost btn-sm" href="/cookbooks">Volver</a>
+              </div>
+            </div>
+
+            <div class="actions" style="margin-top:.75rem;">
+              <span class="chip"><%= cookbook.theme || 'otro' %></span>
+              <span class="chip"><%= (cookbook.isPublic || cookbook.publico) ? 'Público' : 'Privado' %></span>
+              <span class="chip">📋 <%= (cookbook.recipes || cookbook.recetas || []).length %> recetas</span>
+            </div>
+          </section>
+
+          <section class="card">
+            <h3 style="margin-top:0;">Recetas incluidas</h3>
+            <% const recipes = Array.isArray(cookbook.recipes) ? cookbook.recipes : []; %>
+            <% if (!recipes.length) { %>
+              <p class="muted">Este recetario aún no tiene recetas.</p>
+            <% } else { %>
+              <section class="grid cols-3">
+                <% recipes.forEach((recipe) => { %>
+                  <article class="card">
+                    <h4 style="margin-top:0;"><%= recipe.title || 'Sin título' %></h4>
+                    <% if (recipe.summary) { %>
+                      <p class="muted"><%= String(recipe.summary).slice(0, 120) %><%= String(recipe.summary).length > 120 ? '…' : '' %></p>
+                    <% } %>
+                    <div class="actions">
+                      <a class="btn btn-soft btn-sm" href="/recipes/<%= recipe._id %>">Ver receta</a>
+                    </div>
+                  </article>
+                <% }); %>
+              </section>
+            <% } %>
+          </section>
+        <% } %>
+
+        <%- include("../partials/footer") %>
+      </main>
+    </div>
+  </body>
+</html>

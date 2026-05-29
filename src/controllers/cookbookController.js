@@ -32,6 +32,22 @@ async function resolveUserId(body = {}, fallbackUserId = null) {
   return firstUser ? firstUser._id : null;
 }
 
+function canManageCookbook(user, cookbook) {
+  if (!user || !cookbook) return false;
+  const role = String(user.role || user.rol || "usuario").toLowerCase();
+  if (role === "admin") return true;
+
+  const userId = String(user._id || user.id || "");
+  const ownerId = String(
+    (cookbook.owner && cookbook.owner._id) ||
+    cookbook.owner ||
+    (cookbook.usuario_id && cookbook.usuario_id._id) ||
+    cookbook.usuario_id ||
+    ""
+  );
+  return Boolean(userId && ownerId && userId === ownerId);
+}
+
 function parseRecipeIds(rawRecipes) {
   const values = Array.isArray(rawRecipes)
     ? rawRecipes
@@ -54,12 +70,18 @@ async function mapCookbookPayload(body = {}, fallbackCookbook = null) {
   const recipeIds = parseRecipeIds(body.recipes || body.recetas);
   const title = String(body.title || body.nombre || "").trim();
   const description = String(body.description || body.descripcion || "").trim();
+  const isPublicRaw = String(body.isPublic ?? body.publico ?? "").toLowerCase().trim();
   const isPublic =
     body.isPublic === true ||
     body.isPublic === "true" ||
+    body.isPublic === 1 ||
+    body.isPublic === "1" ||
     body.isPublic === "on" ||
     body.publico === true ||
-    body.publico === "true";
+    body.publico === "true" ||
+    body.publico === 1 ||
+    body.publico === "1" ||
+    isPublicRaw === "on";
   const resolvedUserId = await resolveUserId(body, fallbackCookbook && fallbackCookbook.usuario_id);
 
   return {
@@ -185,7 +207,10 @@ async function getCookbookById(req, res) {
 
 async function createCookbook(req, res) {
   try {
-    const { payload, hasUser } = await mapCookbookPayload(req.body);
+    const { payload, hasUser } = await mapCookbookPayload(req.body, {
+      usuario_id: req.session && req.session.userId ? req.session.userId : null,
+      owner: req.session && req.session.userId ? req.session.userId : null
+    });
 
     if (!payload.title) {
       return sendError(res, new Error("El titulo es obligatorio."), "El titulo es obligatorio.", 400);
@@ -236,6 +261,10 @@ async function updateCookbook(req, res) {
       runValidators: true
     });
 
+    if (req.accepts("html") && !req.path.startsWith("/api")) {
+      return res.redirect(`/cookbooks/${req.params.id}`);
+    }
+
     return sendSuccess(res, updated, "Recetario actualizado correctamente.");
   } catch (error) {
     return sendError(res, error, "No fue posible actualizar el recetario.");
@@ -250,15 +279,139 @@ async function deleteCookbook(req, res) {
       return sendError(res, new Error("Recetario no encontrado."), "Recetario no encontrado.", 404);
     }
 
+    if (req.accepts("html") && !req.path.startsWith("/api")) {
+      return res.redirect("/cookbooks");
+    }
+
     return sendSuccess(res, { id: req.params.id }, "Recetario eliminado correctamente.");
   } catch (error) {
     return sendError(res, error, "No fue posible eliminar el recetario.");
   }
 }
 
+async function renderCookbookDetail(req, res) {
+  try {
+    const cookbook = await Cookbook.findById(req.params.id)
+      .populate("recipes", "title slug summary imageUrl imagen_principal")
+      .populate("owner", "name nombre")
+      .lean();
+
+    if (!cookbook) {
+      return res.status(404).render("cookbooks/show", {
+        pageTitle: "Chef's Logic | Recetario",
+        activeTab: "recetarios",
+        cookbook: null,
+        canManage: false,
+        errorMessage: "Recetario no encontrado."
+      });
+    }
+
+    return res.render("cookbooks/show", {
+      pageTitle: `Chef's Logic | ${cookbook.title || cookbook.nombre || "Recetario"}`,
+      activeTab: "recetarios",
+      cookbook,
+      canManage: canManageCookbook(res.locals.currentUser, cookbook),
+      errorMessage: ""
+    });
+  } catch (error) {
+    return res.status(500).render("cookbooks/show", {
+      pageTitle: "Chef's Logic | Recetario",
+      activeTab: "recetarios",
+      cookbook: null,
+      canManage: false,
+      errorMessage: "No fue posible cargar el recetario."
+    });
+  }
+}
+
+async function renderEditCookbookPage(req, res) {
+  try {
+    const [cookbook, allRecipes] = await Promise.all([
+      Cookbook.findById(req.params.id).lean(),
+      Recipe.find().select("title").sort({ title: 1 }).lean()
+    ]);
+
+    if (!cookbook) {
+      return res.status(404).render("cookbooks/edit", {
+        pageTitle: "Chef's Logic | Editar recetario",
+        activeTab: "recetarios",
+        cookbook: null,
+        allRecipes: [],
+        errorMessage: "Recetario no encontrado."
+      });
+    }
+
+    if (!canManageCookbook(res.locals.currentUser, cookbook)) {
+      return res.status(403).render("cookbooks/edit", {
+        pageTitle: "Chef's Logic | Editar recetario",
+        activeTab: "recetarios",
+        cookbook,
+        allRecipes: [],
+        errorMessage: "No tienes permiso para editar este recetario."
+      });
+    }
+
+    return res.render("cookbooks/edit", {
+      pageTitle: "Chef's Logic | Editar recetario",
+      activeTab: "recetarios",
+      cookbook,
+      allRecipes,
+      errorMessage: ""
+    });
+  } catch (error) {
+    return res.status(500).render("cookbooks/edit", {
+      pageTitle: "Chef's Logic | Editar recetario",
+      activeTab: "recetarios",
+      cookbook: null,
+      allRecipes: [],
+      errorMessage: "No fue posible cargar el formulario de edición."
+    });
+  }
+}
+
+async function updateCookbookFromForm(req, res) {
+  try {
+    const existingCookbook = await Cookbook.findById(req.params.id).lean();
+
+    if (!existingCookbook) {
+      return res.status(404).redirect("/cookbooks");
+    }
+
+    if (!canManageCookbook(res.locals.currentUser, existingCookbook)) {
+      return res.status(403).redirect(`/cookbooks/${req.params.id}`);
+    }
+
+    return updateCookbook(req, res);
+  } catch (error) {
+    return res.status(500).redirect(`/cookbooks/${req.params.id}`);
+  }
+}
+
+async function deleteCookbookFromForm(req, res) {
+  try {
+    const existingCookbook = await Cookbook.findById(req.params.id).lean();
+
+    if (!existingCookbook) {
+      return res.status(404).redirect("/cookbooks");
+    }
+
+    if (!canManageCookbook(res.locals.currentUser, existingCookbook)) {
+      return res.status(403).redirect(`/cookbooks/${req.params.id}`);
+    }
+
+    return deleteCookbook(req, res);
+  } catch (error) {
+    return res.status(500).redirect(`/cookbooks/${req.params.id}`);
+  }
+}
+
 module.exports = {
   renderCookbooksPage,
   renderCreateCookbookPage,
+  renderCookbookDetail,
+  renderEditCookbookPage,
+  updateCookbookFromForm,
+  deleteCookbookFromForm,
   getAllCookbooks,
   getCookbookById,
   createCookbook,
