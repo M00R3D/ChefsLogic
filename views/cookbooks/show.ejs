@@ -11,6 +11,50 @@
       <%- include("../partials/navbar", { activeTab }) %>
 
       <main class="main-content">
+        <%
+          const DETAIL_THEME_META = {
+            mexicana:      { emoji: '🇲🇽', color: '#c0392b', bg: '#fdedec', label: 'Mexicana' },
+            postres:       { emoji: '🍮', color: '#d35400', bg: '#fef5e7', label: 'Postres' },
+            bebidas:       { emoji: '🍹', color: '#2980b9', bg: '#eaf4fc', label: 'Bebidas' },
+            vegano:        { emoji: '🌱', color: '#27ae60', bg: '#e9f7ef', label: 'Vegano' },
+            mariscos:      { emoji: '🦐', color: '#1a6e8e', bg: '#e8f6f9', label: 'Mariscos' },
+            antojitos:     { emoji: '🫔', color: '#e67e22', bg: '#fdf2e9', label: 'Antojitos' },
+            sopas:         { emoji: '🍲', color: '#8e44ad', bg: '#f5eef8', label: 'Sopas' },
+            desayunos:     { emoji: '🍳', color: '#f39c12', bg: '#fef9e7', label: 'Desayunos' },
+            carnes:        { emoji: '🥩', color: '#922b21', bg: '#fdedec', label: 'Carnes' },
+            internacional: { emoji: '🌍', color: '#2c3e50', bg: '#f2f3f4', label: 'Internacional' },
+            otro:          { emoji: '📖', color: '#546e7a', bg: '#f5f5f5', label: 'Otro' }
+          };
+          function detailTheme(theme) {
+            return DETAIL_THEME_META[String(theme || 'otro').toLowerCase()] || DETAIL_THEME_META.otro;
+          }
+          function cookbookSymbol(cb) {
+            const manual = String(cb.coverEmoji || '').trim();
+            if (manual) return manual;
+            const text = `${cb.title || cb.nombre || ''} ${(cb.tags || []).join(' ')}`.toLowerCase();
+            if (/taco|taquer|pastor|barbacoa|cochinita|quesabirria/.test(text)) return '🌮';
+            if (/sopa|caldo|consome|menudo|pozole/.test(text)) return '🍲';
+            if (/postre|dulce|pastel|flan|gelatina|pay|pan/.test(text)) return '🍮';
+            if (/desayuno|huevo|hotcake|chilaquil|avena/.test(text)) return '🍳';
+            if (/bebida|cafe|atole|chocolate|agua|coctel|licuado/.test(text)) return '🍹';
+            if (/marisco|camaron|atun|pescado|ceviche/.test(text)) return '🦐';
+            if (/ensalada|veg|verdura|tofu|plant|fit/.test(text)) return '🌱';
+            if (/carne|res|cerdo|pollo|asado|costilla/.test(text)) return '🥩';
+            if (/antojito|tamal|gordita|sopes|tlayuda|flauta/.test(text)) return '🫔';
+            return detailTheme(cb.theme).emoji;
+          }
+          function recipeSymbol(recipe) {
+            const text = `${recipe.title || ''} ${recipe.summary || ''}`.toLowerCase();
+            if (/taco|taquer|pastor|barbacoa|cochinita/.test(text)) return '🌮';
+            if (/sopa|caldo|consome|menudo|pozole/.test(text)) return '🍲';
+            if (/postre|dulce|pastel|flan|gelatina/.test(text)) return '🍮';
+            if (/desayuno|huevo|hotcake|chilaquil/.test(text)) return '🍳';
+            if (/marisco|camaron|atun|pescado|ceviche/.test(text)) return '🦐';
+            if (/carne|res|cerdo|pollo|asado|costilla/.test(text)) return '🥩';
+            return '🍽️';
+          }
+        %>
+
         <%- include("../partials/header", { pageTitle: cookbook ? (cookbook.title || cookbook.nombre || 'Recetario') : 'Recetario' }) %>
 
         <% if (errorMessage) { %>
@@ -21,14 +65,41 @@
         <% } %>
 
         <% if (cookbook) { %>
-          <section class="card" style="margin-bottom:1rem;">
-            <div class="actions" style="justify-content:space-between;align-items:flex-start;">
-              <div>
-                <h2 style="margin:0;"><%= cookbook.title || cookbook.nombre || 'Sin título' %></h2>
-                <% if (cookbook.description || cookbook.descripcion) { %>
-                  <p class="muted" style="margin-top:.45rem;"><%= cookbook.description || cookbook.descripcion %></p>
-                <% } %>
+          <% const tMeta = detailTheme(cookbook.theme); %>
+          <% const img = String(cookbook.coverImage || '').trim(); %>
+          <% const canImg = /^(https?:\/\/|\/|data:image\/)/i.test(img); %>
+          <% const hex = /^#[0-9a-fA-F]{3,6}$/.test(String(cookbook.accentColor || '')) ? cookbook.accentColor : ''; %>
+          <% const accent = hex || tMeta.color; %>
+          <% const symbol = cookbookSymbol(cookbook); %>
+
+          <section class="cookbook-hero reveal" style="--cb-accent:<%= accent %>">
+            <% if (img && canImg) { %>
+              <img class="cookbook-hero-img" src="<%= img %>" alt="<%= cookbook.title || cookbook.nombre || 'Recetario' %>" />
+              <div class="cookbook-hero-overlay"></div>
+            <% } else { %>
+              <div class="cookbook-hero-fill"></div>
+            <% } %>
+            <div class="cookbook-hero-content">
+              <span class="cookbook-hero-symbol"><%= symbol %></span>
+              <h1 class="cookbook-hero-title"><%= cookbook.title || cookbook.nombre || 'Sin título' %></h1>
+              <% if (cookbook.description || cookbook.descripcion) { %>
+                <p class="cookbook-hero-desc"><%= cookbook.description || cookbook.descripcion %></p>
+              <% } %>
+
+              <div class="actions" style="margin-top:.55rem;">
+                <span class="cb-theme-badge" style="--pill-color:<%= tMeta.color %>;--pill-bg:<%= tMeta.bg %>">
+                  <%= tMeta.emoji %> <%= tMeta.label %>
+                </span>
+                <span class="cb-public-badge <%= (cookbook.isPublic || cookbook.publico) ? 'is-public' : 'is-private' %>">
+                  <%= (cookbook.isPublic || cookbook.publico) ? '🌐 Público' : '🔒 Privado' %>
+                </span>
+                <span class="chip">📋 <%= (cookbook.recipes || cookbook.recetas || []).length %> recetas</span>
               </div>
+            </div>
+          </section>
+
+          <section class="card" style="margin:1rem 0;">
+            <div class="actions" style="justify-content:space-between;align-items:center;">
               <div class="actions">
                 <% if (canManage) { %>
                   <a class="btn btn-soft btn-sm" href="/cookbooks/<%= cookbook._id %>/edit">Editar</a>
@@ -38,12 +109,6 @@
                 <% } %>
                 <a class="btn btn-ghost btn-sm" href="/cookbooks">Volver</a>
               </div>
-            </div>
-
-            <div class="actions" style="margin-top:.75rem;">
-              <span class="chip"><%= cookbook.theme || 'otro' %></span>
-              <span class="chip"><%= (cookbook.isPublic || cookbook.publico) ? 'Público' : 'Privado' %></span>
-              <span class="chip">📋 <%= (cookbook.recipes || cookbook.recetas || []).length %> recetas</span>
             </div>
           </section>
 
@@ -55,13 +120,24 @@
             <% } else { %>
               <section class="grid cols-3">
                 <% recipes.forEach((recipe) => { %>
-                  <article class="card">
-                    <h4 style="margin-top:0;"><%= recipe.title || 'Sin título' %></h4>
+                  <% const rImg = String(recipe.imageUrl || recipe.imagen_principal || '').trim(); %>
+                  <% const rCanImg = /^(https?:\/\/|\/|data:image\/)/i.test(rImg); %>
+                  <% const rSymbol = recipeSymbol(recipe); %>
+                  <article class="recipe-card">
+                    <% if (rImg && rCanImg) { %>
+                      <img class="recipe-card-img" src="<%= rImg %>" alt="<%= recipe.title || 'Receta' %>" loading="lazy" />
+                    <% } else { %>
+                      <div class="recipe-card-img-placeholder"><%= rSymbol %></div>
+                    <% } %>
+
+                    <div class="recipe-card-body">
+                      <h4 class="recipe-card-title" style="font-size:1.2rem;"><%= recipe.title || 'Sin título' %></h4>
                     <% if (recipe.summary) { %>
                       <p class="muted"><%= String(recipe.summary).slice(0, 120) %><%= String(recipe.summary).length > 120 ? '…' : '' %></p>
                     <% } %>
                     <div class="actions">
                       <a class="btn btn-soft btn-sm" href="/recipes/<%= recipe._id %>">Ver receta</a>
+                    </div>
                     </div>
                   </article>
                 <% }); %>

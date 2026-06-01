@@ -37,6 +37,10 @@ const regionSchema = new mongoose.Schema(
     icon: {
       type: String,
       default: "map-pin"
+    },
+    states: {
+      type: [String],
+      default: []
     }
   },
   {

@@ -71,21 +71,43 @@ app.use(authRoutes);
 
 app.get("/", async (req, res) => {
   try {
-    const recipes = await Recipe.find().populate("region", "name nombre").sort({ createdAt: -1 }).lean();
+    const [
+      recipesResult,
+      regionsResult,
+      cookbooksResult,
+      ingredientsResult,
+      recipeCountResult,
+      ingredientCountResult,
+      cookbookCountResult
+    ] = await Promise.allSettled([
+      Recipe.find().populate("region", "name nombre").sort({ createdAt: -1 }).limit(9).lean(),
+      Region.find().sort({ name: 1, nombre: 1 }).lean(),
+      Cookbook.find().sort({ createdAt: -1 }).limit(6).select("title nombre theme accentColor coverEmoji coverImage recipes recetas tags isPublic publico").lean(),
+      Ingredient.find().sort({ createdAt: -1 }).limit(8).select("name nombre category categoria defaultUnit unidad").lean(),
+      Recipe.countDocuments(),
+      Ingredient.countDocuments(),
+      Cookbook.countDocuments()
+    ]);
 
-    let regions = [];
-    try {
-      regions = await Region.find().sort({ name: 1, nombre: 1 }).lean();
-    } catch (regionError) {
-      console.warn("Home regions load warning:", regionError.message);
-      regions = [];
-    }
+    const recipes = recipesResult.status === "fulfilled" ? recipesResult.value : [];
+    const regions = regionsResult.status === "fulfilled" ? regionsResult.value : [];
+    const featuredCookbooks = cookbooksResult.status === "fulfilled" ? cookbooksResult.value : [];
+    const recentIngredients = ingredientsResult.status === "fulfilled" ? ingredientsResult.value : [];
+
+    const stats = {
+      recipes: recipeCountResult.status === "fulfilled" ? recipeCountResult.value : recipes.length,
+      ingredients: ingredientCountResult.status === "fulfilled" ? ingredientCountResult.value : recentIngredients.length,
+      cookbooks: cookbookCountResult.status === "fulfilled" ? cookbookCountResult.value : featuredCookbooks.length
+    };
 
     return res.render("index", {
       pageTitle: "Chef's Logic | Descubre Cocina Mexicana",
       activeTab: "inicio",
       recipes,
       regions,
+      featuredCookbooks,
+      recentIngredients,
+      stats,
       errorMessage: ""
     });
   } catch (error) {
@@ -95,6 +117,9 @@ app.get("/", async (req, res) => {
       activeTab: "inicio",
       recipes: [],
       regions: [],
+      featuredCookbooks: [],
+      recentIngredients: [],
+      stats: { recipes: 0, ingredients: 0, cookbooks: 0 },
       errorMessage: "No fue posible cargar las recetas."
     });
   }

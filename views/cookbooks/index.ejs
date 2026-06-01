@@ -28,6 +28,21 @@
             otro:          { emoji: '📖', color: '#546e7a', bg: '#f5f5f5', label: 'Otro' }
           };
           function getTheme(t) { return THEME_META[String(t||'otro').toLowerCase()] || THEME_META.otro; }
+          function cookbookSymbol(cb) {
+            const manual = String(cb.coverEmoji || '').trim();
+            if (manual) return manual;
+            const text = `${cb.title || cb.nombre || ''} ${(cb.tags || []).join(' ')}`.toLowerCase();
+            if (/taco|taquer|pastor|barbacoa|cochinita|quesabirria/.test(text)) return '🌮';
+            if (/sopa|caldo|consome|menudo|pozole/.test(text)) return '🍲';
+            if (/postre|dulce|pastel|flan|gelatina|pay|pan/.test(text)) return '🍮';
+            if (/desayuno|huevo|hotcake|chilaquil|avena/.test(text)) return '🍳';
+            if (/bebida|cafe|atole|chocolate|agua|coctel|licuado/.test(text)) return '🍹';
+            if (/marisco|camaron|atun|pescado|ceviche/.test(text)) return '🦐';
+            if (/ensalada|veg|verdura|tofu|plant|fit/.test(text)) return '🌱';
+            if (/carne|res|cerdo|pollo|asado|costilla/.test(text)) return '🥩';
+            if (/antojito|tamal|gordita|sopes|tlayuda|flauta/.test(text)) return '🫔';
+            return getTheme(cb.theme).emoji;
+          }
           function buildCbQuery(overrides) {
             const base = { q: search, theme: themeFilter, page: page };
             const merged = Object.assign({}, base, overrides);
@@ -100,7 +115,7 @@
               const cbCanImg = /^(https?:\/\/|\/|data:image\/)/.test(cbImg);
               const cbSafeHex = /^#[0-9a-fA-F]{3,6}$/.test(String(cb.accentColor||'')) ? cb.accentColor : '';
               const cbAccent = cbSafeHex || cbThemeMeta.color;
-              const cbEmoji = String(cb.coverEmoji || cbThemeMeta.emoji).trim();
+              const cbEmoji = cookbookSymbol(cb);
               const cbRecipeCount = (cb.recipes || cb.recetas || []).length;
               const currentUserId = (typeof currentUser !== 'undefined' && currentUser) ? String(currentUser._id) : '';
               const ownerId = String((cb.owner && cb.owner._id) || cb.owner || (cb.usuario_id && cb.usuario_id._id) || cb.usuario_id || '');
