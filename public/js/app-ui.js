@@ -31,9 +31,21 @@ function setRevealDelays() {
   });
 }
 
+function setupBackButtons() {
+  document.querySelectorAll("[data-back-home]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      if (window.history.length > 1) {
+        event.preventDefault();
+        window.history.back();
+      }
+    });
+  });
+}
+
 window.ChefUI = {
   showToast
 };
 
 activateTabs();
 setRevealDelays();
+setupBackButtons();
