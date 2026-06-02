@@ -31,6 +31,7 @@
                 <input id="ing-name-input" name="name" type="text" required
                        placeholder="Ej. Chile ancho, Epazote, Manteca..."
                        autocomplete="off" />
+                <span class="form-help" id="ing-name-feedback"></span>
               </label>
 
               <label>
@@ -92,10 +93,25 @@
             </div>
 
             <!-- ESTACIONALIDAD -->
-            <label>
-              Estacionalidad (meses separados por coma)
-              <input name="seasonality" type="text" placeholder="enero, febrero, marzo" />
-            </label>
+            <div class="form-group">
+              <label class="form-label-text">Estacionalidad *</label>
+              <input type="hidden" name="seasonality" id="seasonality-hidden" value="" />
+              <div class="ing-month-grid" id="ing-month-grid">
+                <button type="button" class="ing-month-btn" data-month="enero">Ene</button>
+                <button type="button" class="ing-month-btn" data-month="febrero">Feb</button>
+                <button type="button" class="ing-month-btn" data-month="marzo">Mar</button>
+                <button type="button" class="ing-month-btn" data-month="abril">Abr</button>
+                <button type="button" class="ing-month-btn" data-month="mayo">May</button>
+                <button type="button" class="ing-month-btn" data-month="junio">Jun</button>
+                <button type="button" class="ing-month-btn" data-month="julio">Jul</button>
+                <button type="button" class="ing-month-btn" data-month="agosto">Ago</button>
+                <button type="button" class="ing-month-btn" data-month="septiembre">Sep</button>
+                <button type="button" class="ing-month-btn" data-month="octubre">Oct</button>
+                <button type="button" class="ing-month-btn" data-month="noviembre">Nov</button>
+                <button type="button" class="ing-month-btn" data-month="diciembre">Dic</button>
+              </div>
+              <span class="form-help" id="ing-seasonality-feedback">Selecciona al menos un mes.</span>
+            </div>
 
             <!-- ACCESIBILIDAD -->
             <label>

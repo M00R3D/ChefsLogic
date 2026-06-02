@@ -1940,6 +1940,44 @@ th {
   color: var(--text);
 }
 
+.ing-month-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .4rem;
+}
+
+.ing-month-btn {
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text-soft);
+  border-radius: 10px;
+  padding: .4rem .2rem;
+  font-size: .78rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: all .16s ease;
+}
+
+.ing-month-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.ing-month-btn.is-selected {
+  border-color: var(--accent);
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--brand));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+@media (max-width: 640px) {
+  .ing-month-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .alert { padding: .75rem 1rem; border-radius: 8px; margin-bottom: .75rem; font-size: .9rem; }
 .alert-error { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
 

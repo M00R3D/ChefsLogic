@@ -97,6 +97,18 @@ function toObjectIdString(value) {
   return String(value || "").trim();
 }
 
+function escapeRegex(value) {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function renderCreateIngredientWithError(res, message, statusCode) {
+  return res.status(statusCode || 400).render("ingredients/create", {
+    pageTitle: "Chef's Logic | Nuevo ingrediente",
+    activeTab: "ingredientes",
+    errorMessage: message || "No fue posible crear el ingrediente."
+  });
+}
+
 function getOwnPendingFilter(user) {
   const userId = toObjectIdString(user && user._id);
   if (!userId) {
@@ -232,6 +244,34 @@ async function getIngredientById(req, res) {
   }
 }
 
+async function checkIngredientNameAvailability(req, res) {
+  try {
+    const rawName = String(req.query.name || "").trim();
+    if (!rawName) {
+      return sendError(res, new Error("El nombre es obligatorio."), "Debes enviar un nombre de ingrediente.", 400);
+    }
+
+    const exactName = new RegExp(`^${escapeRegex(rawName)}$`, "i");
+    const exists = await Ingredient.exists({
+      $or: [
+        { name: exactName },
+        { nombre: exactName }
+      ]
+    });
+
+    return sendSuccess(
+      res,
+      {
+        name: rawName,
+        available: !Boolean(exists)
+      },
+      "Disponibilidad de nombre obtenida correctamente."
+    );
+  } catch (error) {
+    return sendError(res, error, "No fue posible validar la disponibilidad del nombre.");
+  }
+}
+
 async function createIngredient(req, res) {
   try {
     const currentUser = res.locals.currentUser;
@@ -240,11 +280,17 @@ async function createIngredient(req, res) {
     const { payload, invalidSeasonality } = mapIngredientPayload(req.body);
 
     if (!payload.name) {
+      if (req.accepts("html") && !req.path.startsWith("/api")) {
+        return renderCreateIngredientWithError(res, "El nombre del ingrediente es obligatorio.", 400);
+      }
       return sendError(res, new Error("El nombre es obligatorio."), "El nombre es obligatorio.", 400);
     }
 
     if (invalidSeasonality.length > 0) {
       const message = getSeasonalityErrorMessage(invalidSeasonality);
+      if (req.accepts("html") && !req.path.startsWith("/api")) {
+        return renderCreateIngredientWithError(res, message, 400);
+      }
       return sendError(res, new Error(message), message, 400);
     }
 
@@ -268,7 +314,14 @@ async function createIngredient(req, res) {
     return sendSuccess(res, ingredient, message, 201);
   } catch (error) {
     if (error && error.code === 11000) {
+      if (req.accepts("html") && !req.path.startsWith("/api")) {
+        return renderCreateIngredientWithError(res, "Ya existe un ingrediente con ese nombre. Prueba otro nombre.", 409);
+      }
       return sendError(res, new Error("Ya existe un ingrediente con ese nombre."), "Ingrediente duplicado.", 409);
+    }
+
+    if (req.accepts("html") && !req.path.startsWith("/api")) {
+      return renderCreateIngredientWithError(res, "No fue posible crear el ingrediente. Revisa los datos e intenta de nuevo.", 500);
     }
 
     return sendError(res, error, "No fue posible crear el ingrediente.");
@@ -450,6 +503,7 @@ module.exports = {
   renderCreateIngredientPage,
   getAllIngredients,
   getIngredientById,
+  checkIngredientNameAvailability,
   createIngredient,
   updateIngredient,
   deleteIngredient,

@@ -760,6 +760,10 @@ var TAG_SUGGESTIONS = [
 ];
 
 function buildTagBuilder() {
+  if (document.getElementById("ing-tag-builder")) {
+    return;
+  }
+
   var hiddenInput = document.querySelector("input[name='tags']");
   if (!hiddenInput) {
     return;
@@ -1077,6 +1081,180 @@ function buildRecipeCreateValidation() {
   });
 }
 
+function buildIngredientCreateValidation() {
+  var form = document.getElementById("ingredient-form");
+  if (!form) {
+    return;
+  }
+
+  var action = String(form.getAttribute("action") || "").trim();
+  if (action !== "/ingredients") {
+    return;
+  }
+
+  var nameInput = document.getElementById("ing-name-input");
+  var nameFeedback = document.getElementById("ing-name-feedback");
+  var seasonalityHidden = document.getElementById("seasonality-hidden");
+  var seasonalityFeedback = document.getElementById("ing-seasonality-feedback");
+  var monthButtons = form.querySelectorAll(".ing-month-btn[data-month]");
+
+  if (!nameInput || !seasonalityHidden || !monthButtons.length) {
+    return;
+  }
+
+  var nameCheckToken = 0;
+  var nameCheckTimer = null;
+  var lastCheckedName = "";
+  var lastAvailable = false;
+  var selectedMonths = new Set();
+
+  function setNameFeedback(message, isError) {
+    if (!nameFeedback) {
+      return;
+    }
+    nameFeedback.textContent = message || "";
+    nameFeedback.style.color = isError ? "#c62828" : "";
+  }
+
+  function setSeasonalityFeedback(message, isError) {
+    if (!seasonalityFeedback) {
+      return;
+    }
+    seasonalityFeedback.textContent = message || "";
+    seasonalityFeedback.style.color = isError ? "#c62828" : "";
+  }
+
+  function syncSeasonalityHidden() {
+    seasonalityHidden.value = Array.from(selectedMonths).join(", ");
+    if (selectedMonths.size > 0) {
+      setSeasonalityFeedback("", false);
+    }
+  }
+
+  function toggleMonth(month) {
+    if (!month) {
+      return;
+    }
+    if (selectedMonths.has(month)) {
+      selectedMonths.delete(month);
+    } else {
+      selectedMonths.add(month);
+    }
+    monthButtons.forEach(function (btn) {
+      btn.classList.toggle("is-selected", selectedMonths.has(btn.dataset.month));
+    });
+    syncSeasonalityHidden();
+  }
+
+  function normalizeName(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  async function checkNameAvailability() {
+    var rawName = String(nameInput.value || "").trim();
+    var normalized = normalizeName(rawName);
+
+    if (!normalized) {
+      nameInput.setCustomValidity("El nombre del ingrediente es obligatorio.");
+      setNameFeedback("", false);
+      return false;
+    }
+
+    if (normalized.length < 2) {
+      nameInput.setCustomValidity("El nombre debe tener al menos 2 caracteres.");
+      setNameFeedback("", false);
+      return false;
+    }
+
+    if (normalized === lastCheckedName) {
+      nameInput.setCustomValidity(lastAvailable ? "" : "Ya existe un ingrediente con ese nombre.");
+      setNameFeedback(lastAvailable ? "Nombre disponible" : "Ese nombre ya existe, elige otro", !lastAvailable);
+      return lastAvailable;
+    }
+
+    var currentToken = ++nameCheckToken;
+    setNameFeedback("", false);
+
+    try {
+      var response = await fetch("/api/ingredients/name-availability?name=" + encodeURIComponent(rawName));
+      var payload = await response.json();
+
+      if (currentToken !== nameCheckToken) {
+        return false;
+      }
+
+      if (!response.ok || !payload || !payload.success || !payload.data) {
+        throw new Error((payload && payload.message) || "No fue posible validar el nombre.");
+      }
+
+      var available = Boolean(payload.data.available);
+      lastCheckedName = normalized;
+      lastAvailable = available;
+      nameInput.setCustomValidity(available ? "" : "Ya existe un ingrediente con ese nombre.");
+      setNameFeedback(available ? "Nombre disponible" : "Ese nombre ya existe, elige otro", !available);
+      return available;
+    } catch (error) {
+      nameInput.setCustomValidity("No fue posible validar el nombre en este momento.");
+      setNameFeedback("", false);
+      return false;
+    }
+  }
+
+  function scheduleNameCheck() {
+    if (nameCheckTimer) {
+      clearTimeout(nameCheckTimer);
+    }
+    nameCheckTimer = setTimeout(function () {
+      checkNameAvailability();
+    }, 250);
+  }
+
+  monthButtons.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      toggleMonth(btn.dataset.month);
+    });
+  });
+
+  nameInput.addEventListener("input", function () {
+    nameInput.setCustomValidity("");
+    lastCheckedName = "";
+    lastAvailable = false;
+    scheduleNameCheck();
+  });
+
+  form.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    var rawName = String(nameInput.value || "").trim();
+    if (!rawName) {
+      nameInput.setCustomValidity("El nombre del ingrediente es obligatorio.");
+      nameInput.reportValidity();
+      return;
+    }
+
+    if (selectedMonths.size === 0) {
+      setSeasonalityFeedback("Selecciona al menos un mes.", true);
+      if (window.ChefUI && typeof window.ChefUI.showToast === "function") {
+        window.ChefUI.showToast("Selecciona al menos un mes de estacionalidad.", "error");
+      }
+      return;
+    }
+
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    var available = await checkNameAvailability();
+    if (!available) {
+      nameInput.reportValidity();
+      return;
+    }
+
+    form.submit();
+  });
+}
+
 // ──────────────────────────────────────────
 // INIT
 // ──────────────────────────────────────────
@@ -1086,3 +1264,4 @@ buildIngredientPicker();
 buildImageUpload();
 buildTagBuilder();
 buildRecipeCreateValidation();
+buildIngredientCreateValidation();

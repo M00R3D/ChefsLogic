@@ -13,6 +13,7 @@ router.post("/ingredients/:id/reject", requireAuth, requireAdmin, ingredientCont
 router.post("/ingredients/:id/delete", requireAuth, requireAdmin, ingredientController.deleteIngredient);
 
 router.get("/api/ingredients", ingredientController.getAllIngredients);
+router.get("/api/ingredients/name-availability", ingredientController.checkIngredientNameAvailability);
 router.get("/api/ingredients/:id", ingredientController.getIngredientById);
 router.post("/api/ingredients", requireAuth, ingredientController.createIngredient);
 router.put("/api/ingredients/:id", requireAuth, requireAdmin, ingredientController.updateIngredient);
