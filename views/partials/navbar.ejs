@@ -1,7 +1,12 @@
 <nav class="topnav">
   <a class="brand" href="/">Chef's Logic</a>
 
-  <div class="nav-links">
+  <button class="nav-toggle" aria-expanded="false" aria-controls="primary-navigation">
+    <span class="hamburger" aria-hidden="true"></span>
+    <span class="sr-only">Abrir menú</span>
+  </button>
+
+  <div class="nav-links" id="primary-navigation" role="navigation">
     <a class="nav-link <%= activeTab === 'inicio' ? 'is-active' : '' %>" href="/">Explorar</a>
     <a class="nav-link <%= activeTab === 'recetas' ? 'is-active' : '' %>" href="/recipes">Recetario</a>
     <a class="nav-link <%= activeTab === 'ingredientes' ? 'is-active' : '' %>" href="/ingredients">Ingredientes</a>
@@ -23,3 +28,5 @@
     <% } %>
   </div>
 </nav>
+
+<script src="/js/navbar.js" defer></script>
