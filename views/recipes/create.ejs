@@ -31,11 +31,13 @@
               <div class="form-grid cols-2">
                 <label>
                   Titulo
-                  <input type="text" name="title" required placeholder="Ej. Mole negro tradicional" />
+                  <input type="text" name="title" required minlength="3" maxlength="140" placeholder="Ej. Mole negro tradicional" />
                 </label>
                 <label>
-                  Slug (opcional)
-                  <input type="text" name="slug" placeholder="mole-negro-tradicional" />
+                  Slug:
+                  <input type="hidden" name="slug" id="slug-hidden" />
+                  <div class="form-help" id="slug-preview" style="font-weight:600;">-</div>
+                  <span class="form-help" id="slug-feedback"></span>
                 </label>
               </div>
 
@@ -104,6 +106,8 @@
               </fieldset>
 
               <div class="form-grid cols-2">
+                <label>
+                  Region
                   <select name="region">
                     <option value="">Sin region</option>
                     <% regions.forEach((region) => { %>

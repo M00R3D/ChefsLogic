@@ -889,6 +889,194 @@ function buildTagBuilder() {
   renderSuggestions();
 }
 
+function slugifyForForm(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function buildRecipeCreateValidation() {
+  var form = document.getElementById("recipe-form");
+  if (!form) {
+    return;
+  }
+
+  var action = String(form.getAttribute("action") || "").trim();
+  if (action !== "/recipes") {
+    return;
+  }
+
+  var titleInput = form.querySelector("input[name='title']");
+  var slugInput = document.getElementById("slug-hidden") || form.querySelector("input[name='slug']");
+  var slugPreview = document.getElementById("slug-preview");
+  var summaryInput = form.querySelector("textarea[name='summary']");
+  var ingredientsData = document.getElementById("ing-data");
+  var stepsData = document.getElementById("steps-data");
+  var slugFeedback = document.getElementById("slug-feedback");
+
+  if (!titleInput || !slugInput) {
+    return;
+  }
+
+  var submitInProgress = false;
+  var slugCheckToken = 0;
+  var lastCheckedSlug = "";
+  var lastAvailable = false;
+  var slugCheckTimer = null;
+
+  function notify(message, type) {
+    if (window.ChefUI && typeof window.ChefUI.showToast === "function") {
+      window.ChefUI.showToast(message, type || "error");
+      return;
+    }
+    alert(message);
+  }
+
+  function setSlugFeedback(message, isError) {
+    if (!slugFeedback) {
+      return;
+    }
+    slugFeedback.textContent = message;
+    slugFeedback.style.color = isError ? "#c62828" : "";
+  }
+
+  function autoSlugFromTitle() {
+    var generated = slugifyForForm(titleInput.value);
+    slugInput.value = generated;
+    slugInput.setCustomValidity("");
+    lastCheckedSlug = "";
+    lastAvailable = false;
+    if (slugPreview) {
+      slugPreview.textContent = generated || "-";
+    }
+    if (!generated) {
+      setSlugFeedback("", false);
+    }
+  }
+
+  async function checkSlugAvailability() {
+    var slug = slugifyForForm(slugInput.value);
+    slugInput.value = slug;
+
+    if (!slug || slug.length < 3) {
+      slugInput.setCustomValidity("El slug debe tener al menos 3 caracteres.");
+      setSlugFeedback("", false);
+      return false;
+    }
+
+    if (!/^[a-z0-9-]+$/.test(slug)) {
+      slugInput.setCustomValidity("El slug solo permite letras minusculas, numeros y guiones.");
+      setSlugFeedback("", false);
+      return false;
+    }
+
+    if (slug === lastCheckedSlug) {
+      slugInput.setCustomValidity(lastAvailable ? "" : "Este slug ya esta en uso.");
+      setSlugFeedback(lastAvailable ? "Nombre disponible" : "Ese nombre ya existe, ponle otro nombre a la receta", !lastAvailable);
+      return lastAvailable;
+    }
+
+    var currentToken = ++slugCheckToken;
+    setSlugFeedback("", false);
+
+    try {
+      var response = await fetch("/api/recipes/slug-availability?slug=" + encodeURIComponent(slug));
+      var payload = await response.json();
+
+      if (currentToken !== slugCheckToken) {
+        return false;
+      }
+
+      if (!response.ok || !payload || !payload.success || !payload.data) {
+        throw new Error((payload && payload.message) || "No fue posible validar el slug.");
+      }
+
+      var available = Boolean(payload.data.available);
+      lastCheckedSlug = slug;
+      lastAvailable = available;
+      slugInput.setCustomValidity(available ? "" : "Este slug ya esta en uso.");
+      setSlugFeedback(available ? "Nombre disponible" : "Ese nombre ya existe, ponle otro nombre a la receta", !available);
+      return available;
+    } catch (error) {
+      slugInput.setCustomValidity("No fue posible validar el slug en este momento.");
+      setSlugFeedback("", false);
+      return false;
+    }
+  }
+
+  function scheduleSlugCheck() {
+    if (slugCheckTimer) {
+      clearTimeout(slugCheckTimer);
+    }
+    slugCheckTimer = setTimeout(function () {
+      checkSlugAvailability();
+    }, 250);
+  }
+
+  titleInput.addEventListener("input", function () {
+    autoSlugFromTitle();
+    scheduleSlugCheck();
+  });
+
+  autoSlugFromTitle();
+
+  form.addEventListener("submit", async function (event) {
+    if (submitInProgress) {
+      return;
+    }
+
+    event.preventDefault();
+
+    var titleValue = String(titleInput.value || "").trim();
+    if (!titleValue) {
+      titleInput.setCustomValidity("El titulo es obligatorio.");
+      titleInput.reportValidity();
+      return;
+    }
+    titleInput.setCustomValidity("");
+
+    if (summaryInput && String(summaryInput.value || "").trim().length > 400) {
+      summaryInput.setCustomValidity("El resumen no debe superar 400 caracteres.");
+      summaryInput.reportValidity();
+      return;
+    }
+    if (summaryInput) {
+      summaryInput.setCustomValidity("");
+    }
+
+    if (ingredientsData && !String(ingredientsData.value || "").trim()) {
+      notify("Debes agregar al menos un ingrediente a la receta.", "error");
+      return;
+    }
+
+    if (stepsData && !String(stepsData.value || "").trim()) {
+      notify("Debes agregar al menos un paso de preparacion.", "error");
+      return;
+    }
+
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    var available = await checkSlugAvailability();
+    if (!available) {
+      notify("Ese nombre ya existe, ponle otro nombre a la receta", "error");
+      titleInput.focus();
+      return;
+    }
+
+    submitInProgress = true;
+    form.submit();
+  });
+}
+
 // ──────────────────────────────────────────
 // INIT
 // ──────────────────────────────────────────
@@ -897,3 +1085,4 @@ buildStepsBuilder();
 buildIngredientPicker();
 buildImageUpload();
 buildTagBuilder();
+buildRecipeCreateValidation();

@@ -494,6 +494,30 @@ async function renderCreateRecipePage(req, res) {
   }
 }
 
+async function checkRecipeSlugAvailability(req, res) {
+  try {
+    const requested = String(req.query.slug || req.query.title || "");
+    const normalizedSlug = slugify(requested);
+
+    if (!normalizedSlug) {
+      return sendError(res, new Error("Slug invalido."), "Debes enviar un slug o titulo valido.", 400);
+    }
+
+    const exists = await Recipe.exists({ slug: normalizedSlug });
+
+    return sendSuccess(
+      res,
+      {
+        slug: normalizedSlug,
+        available: !Boolean(exists)
+      },
+      "Disponibilidad de slug obtenida correctamente."
+    );
+  } catch (error) {
+    return sendError(res, error, "No fue posible verificar la disponibilidad del slug.");
+  }
+}
+
 async function renderEditRecipePage(req, res) {
   try {
     const [recipe, regions] = await Promise.all([
@@ -579,10 +603,40 @@ async function createRecipe(req, res) {
     const { payload, hasUser } = await mapRecipePayload(req.body);
 
     if (!payload.title) {
+      if (req.accepts("html") && !req.path.startsWith("/api")) {
+        const [regions, allIngredients] = await Promise.all([
+          Region.find().sort({ name: 1 }).lean(),
+          Ingredient.find(ingredientCatalogQueryForUser(res.locals.currentUser)).sort({ name: 1 }).lean()
+        ]);
+        return res.status(400).render("recipes/create", {
+          pageTitle: "Chef's Logic | Nueva receta",
+          activeTab: "recetas",
+          regions,
+          allIngredients,
+          recipe: null,
+          errorMessage: "El titulo es obligatorio."
+        });
+      }
+
       return sendError(res, new Error("El titulo es obligatorio."), "El titulo es obligatorio.", 400);
     }
 
     if (!hasUser) {
+      if (req.accepts("html") && !req.path.startsWith("/api")) {
+        const [regions, allIngredients] = await Promise.all([
+          Region.find().sort({ name: 1 }).lean(),
+          Ingredient.find(ingredientCatalogQueryForUser(res.locals.currentUser)).sort({ name: 1 }).lean()
+        ]);
+        return res.status(400).render("recipes/create", {
+          pageTitle: "Chef's Logic | Nueva receta",
+          activeTab: "recetas",
+          regions,
+          allIngredients,
+          recipe: null,
+          errorMessage: "No fue posible identificar el usuario que crea la receta."
+        });
+      }
+
       return sendError(
         res,
         new Error("No hay usuario disponible para usuario_id."),
@@ -599,6 +653,26 @@ async function createRecipe(req, res) {
 
     return sendSuccess(res, createdRecipe, "Receta creada correctamente.", 201);
   } catch (error) {
+    if (req.accepts("html") && !req.path.startsWith("/api")) {
+      const [regions, allIngredients] = await Promise.all([
+        Region.find().sort({ name: 1 }).lean(),
+        Ingredient.find(ingredientCatalogQueryForUser(res.locals.currentUser)).sort({ name: 1 }).lean()
+      ]);
+
+      const errorMessage = (error && error.code === 11000)
+        ? "Ya existe una receta con ese slug. Cambia el titulo o ajusta el slug."
+        : "No fue posible crear la receta. Revisa los datos e intenta de nuevo.";
+
+      return res.status((error && error.code === 11000) ? 409 : 500).render("recipes/create", {
+        pageTitle: "Chef's Logic | Nueva receta",
+        activeTab: "recetas",
+        regions,
+        allIngredients,
+        recipe: null,
+        errorMessage
+      });
+    }
+
     if (error && error.code === 11000) {
       return sendError(res, new Error("Ya existe una receta con ese slug."), "Slug duplicado.", 409);
     }
@@ -872,6 +946,7 @@ module.exports = {
   renderRecipesPage,
   renderRecipeDetail,
   renderCreateRecipePage,
+  checkRecipeSlugAvailability,
   renderEditRecipePage,
   getAllRecipes,
   getRecipeById,

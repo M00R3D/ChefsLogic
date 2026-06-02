@@ -12,6 +12,7 @@ router.post("/recipes", requireAuth, recipeController.createRecipe);
 router.post("/recipes/:id", requireAuth, recipeController.updateRecipe);
 
 router.get("/api/recipes", recipeController.getAllRecipes);
+router.get("/api/recipes/slug-availability", recipeController.checkRecipeSlugAvailability);
 router.get("/api/recipes/:id", recipeController.getRecipeById);
 router.post("/api/recipes", requireAuth, recipeController.createRecipe);
 router.put("/api/recipes/:id", requireAuth, recipeController.updateRecipe);
