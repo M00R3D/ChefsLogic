@@ -156,7 +156,43 @@
               <div class="ing-picker">
                 <span class="form-label">Ingredientes</span>
                 <div class="ing-cat-pills" id="ing-cat-pills"></div>
-                <input type="text" id="ing-search" class="ing-search" placeholder="Buscar ingrediente..." autocomplete="off" />
+                <div class="actions" style="margin-bottom:.5rem;gap:.5rem;">
+                  <input type="text" id="ing-search" class="ing-search" placeholder="Buscar ingrediente..." autocomplete="off" />
+                  <input type="text" id="ing-quick-name" class="ing-search" placeholder="Ingrediente rápido..." autocomplete="off" />
+                  <select id="ing-quick-category" aria-label="Categoría rápida">
+                    <option value="otro" selected>Cat: otro</option>
+                    <option value="verdura">Cat: verdura</option>
+                    <option value="fruta">Cat: fruta</option>
+                    <option value="proteina">Cat: proteina</option>
+                    <option value="grano">Cat: grano</option>
+                    <option value="especia">Cat: especia</option>
+                    <option value="lacteo">Cat: lacteo</option>
+                    <option value="aceite">Cat: aceite</option>
+                    <option value="condimento">Cat: condimento</option>
+                    <option value="chile">Cat: chile</option>
+                    <option value="salsa">Cat: salsa</option>
+                    <option value="bebida">Cat: bebida</option>
+                    <option value="conserva">Cat: conserva</option>
+                    <option value="hongo">Cat: hongo</option>
+                  </select>
+                  <select id="ing-quick-unit" aria-label="Unidad rápida">
+                    <option value="g" selected>Uni: g</option>
+                    <option value="kg">Uni: kg</option>
+                    <option value="ml">Uni: ml</option>
+                    <option value="l">Uni: l</option>
+                    <option value="pieza">Uni: pieza</option>
+                    <option value="cdita">Uni: cdita</option>
+                    <option value="cda">Uni: cda</option>
+                    <option value="taza">Uni: taza</option>
+                    <option value="manojo">Uni: manojo</option>
+                    <option value="ramita">Uni: ramita</option>
+                    <option value="lata">Uni: lata</option>
+                    <option value="botella">Uni: botella</option>
+                    <option value="sobre">Uni: sobre</option>
+                    <option value="diente">Uni: diente</option>
+                  </select>
+                  <button type="button" id="ing-quick-add" class="btn btn-soft btn-sm">+ Crear rápido</button>
+                </div>
                 <div class="ing-catalog" id="ing-catalog"></div>
                 <div class="ing-selected" id="ing-selected"></div>
                 <textarea name="ingredientsData" id="ing-data" style="display:none"></textarea>

@@ -414,6 +414,10 @@ function buildIngredientPicker() {
   var catPillsEl = document.getElementById("ing-cat-pills");
   var catalog = document.getElementById("ing-catalog");
   var search = document.getElementById("ing-search");
+  var quickNameInput = document.getElementById("ing-quick-name");
+  var quickCategorySelect = document.getElementById("ing-quick-category");
+  var quickUnitSelect = document.getElementById("ing-quick-unit");
+  var quickAddBtn = document.getElementById("ing-quick-add");
   var selectedList = document.getElementById("ing-selected");
   var hiddenTextarea = document.getElementById("ing-data");
 
@@ -473,9 +477,34 @@ function buildIngredientPicker() {
   function syncHidden() {
     var lines = [];
     selected.forEach(function (v) {
-      lines.push(v.name + "|" + v.qty + "|" + v.unit + "|" + v.notes);
+      lines.push(v.name + "|" + v.qty + "|" + v.unit + "|" + v.notes + "|" + (v.id || ""));
     });
     hiddenTextarea.value = lines.join("\n");
+  }
+
+  function findIngredientByName(name) {
+    var normalized = String(name || "").trim().toLowerCase();
+    if (!normalized) return null;
+    return allIngredients.find(function (ing) {
+      var ingName = String(ing.name || ing.nombre || "").trim().toLowerCase();
+      return ingName === normalized;
+    }) || null;
+  }
+
+  function addIngredientToSelection(ing) {
+    if (!ing || !ing._id) return;
+    var id = String(ing._id);
+    if (selected.has(id)) return;
+    selected.set(id, {
+      id: id,
+      name: ing.name || ing.nombre || "Ingrediente",
+      qty: "1",
+      unit: ing.defaultUnit || ing.unidad || "g",
+      notes: ""
+    });
+    renderCatalog(getFiltered());
+    renderSelectedList();
+    syncHidden();
   }
 
   function renderCatalog(filtered) {
@@ -506,7 +535,7 @@ function buildIngredientPicker() {
       card.addEventListener("click", function () {
         if (selected.has(id)) { return; }
         var defaultUnit = ing.defaultUnit || ing.unidad || "g";
-        selected.set(id, { name: name, qty: "1", unit: defaultUnit, notes: "" });
+        selected.set(id, { id: id, name: name, qty: "1", unit: defaultUnit, notes: "" });
         card.classList.add("is-selected");
         renderSelectedList();
         syncHidden();
@@ -582,6 +611,67 @@ function buildIngredientPicker() {
     searchQuery = search.value.toLowerCase();
     renderCatalog(getFiltered());
   });
+
+  if (quickNameInput && quickAddBtn) {
+    quickAddBtn.addEventListener("click", async function () {
+      var rawName = String(quickNameInput.value || "").trim();
+      if (!rawName) {
+        return;
+      }
+
+      var existing = findIngredientByName(rawName);
+      if (existing) {
+        addIngredientToSelection(existing);
+        quickNameInput.value = "";
+        if (window.ChefUI && typeof window.ChefUI.showToast === "function") {
+          window.ChefUI.showToast("Ingrediente existente agregado a tu receta.", "success");
+        }
+        return;
+      }
+
+      quickAddBtn.disabled = true;
+      try {
+        var quickCategory = quickCategorySelect ? String(quickCategorySelect.value || "otro").trim() : "otro";
+        var quickUnit = quickUnitSelect ? String(quickUnitSelect.value || "g").trim() : "g";
+        var payload = {
+          name: rawName,
+          category: quickCategory || "otro",
+          defaultUnit: quickUnit || "g",
+          tags: "rapido"
+        };
+        var created = window.ChefApi && window.ChefApi.ingredients
+          ? await window.ChefApi.ingredients.create(payload)
+          : null;
+
+        var newIngredient = created && created.data ? created.data : null;
+        if (!newIngredient || !newIngredient._id) {
+          throw new Error("No se pudo crear el ingrediente rápido.");
+        }
+
+        allIngredients.unshift(newIngredient);
+        addIngredientToSelection(newIngredient);
+        quickNameInput.value = "";
+
+        if (window.ChefUI && typeof window.ChefUI.showToast === "function") {
+          var msg = (created && created.message) || "Ingrediente creado correctamente.";
+          window.ChefUI.showToast(msg, "success");
+        }
+      } catch (error) {
+        if (window.ChefUI && typeof window.ChefUI.showToast === "function") {
+          window.ChefUI.showToast(error && error.message ? error.message : "No fue posible crear el ingrediente.", "error");
+        }
+      } finally {
+        quickAddBtn.disabled = false;
+      }
+    });
+
+    quickNameInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        quickAddBtn.click();
+      }
+    });
+  }
 
   renderCatalog(allIngredients);
   renderSelectedList();

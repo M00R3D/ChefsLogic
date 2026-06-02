@@ -157,7 +157,13 @@ async function register(req, res) {
       password: passwordHash,
       avatar: "default.png",
       fecha_registro: new Date(),
-      rol: "usuario"
+      rol: "usuario",
+      role: "usuario",
+      permissions: {
+        canModerateIngredients: false,
+        canDeleteAnyDocument: false,
+        canApproveUserContent: false
+      }
     });
 
     req.session.userId = user._id.toString();

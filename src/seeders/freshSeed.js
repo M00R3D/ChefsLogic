@@ -17,6 +17,7 @@ const COLLECTIONS_TO_CLEAR = [
   "recetas",
   "ingredientes",
   "regiones",
+  "usuarios",
   "sessions"
 ];
 
@@ -56,6 +57,7 @@ async function runFreshSeed() {
   await clearCollections(uri);
 
   console.log("\n2) Ejecutando seeders en orden...");
+  runSeederScript(path.join(root, "userSeeder.js"));
   runSeederScript(path.join(root, "fixRegionesValidator.js"));
   runSeederScript(path.join(root, "regionSeeder.js"));
   runSeederScript(path.join(root, "ingredientSeeder.js"));

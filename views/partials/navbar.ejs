@@ -11,6 +11,9 @@
     <a class="nav-link <%= activeTab === 'recetas' ? 'is-active' : '' %>" href="/recipes">Recetario</a>
     <a class="nav-link <%= activeTab === 'ingredientes' ? 'is-active' : '' %>" href="/ingredients">Ingredientes</a>
     <a class="nav-link <%= activeTab === 'recetarios' ? 'is-active' : '' %>" href="/cookbooks">Recetarios</a>
+    <% if (typeof currentUser !== 'undefined' && currentUser && String(currentUser.role || '').toLowerCase() === 'admin') { %>
+      <a class="nav-link <%= activeTab === 'moderacion' ? 'is-active' : '' %>" href="/ingredients/moderation">Moderación</a>
+    <% } %>
   </div>
 
   <div class="nav-actions">

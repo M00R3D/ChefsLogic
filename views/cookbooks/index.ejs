@@ -159,9 +159,11 @@
                   <a class="btn btn-soft btn-sm" href="/cookbooks/<%= cb._id %>">Ver</a>
                   <% if (canManage) { %>
                     <a class="btn btn-soft btn-sm" href="/cookbooks/<%= cb._id %>/edit">Editar</a>
-                    <form action="/cookbooks/<%= cb._id %>/delete" method="POST" style="margin:0;" onsubmit="return confirm('¿Eliminar este recetario?');">
-                      <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
-                    </form>
+                    <% if (isAdmin) { %>
+                      <form action="/cookbooks/<%= cb._id %>/delete" method="POST" style="margin:0;" onsubmit="return confirm('¿Eliminar este recetario?');">
+                        <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
+                      </form>
+                    <% } %>
                   <% } %>
                 </div>
               </div>

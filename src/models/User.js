@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema(
     },
     rol: {
       type: String,
-      enum: ["usuario", "chef", "admin"],
+      enum: ["usuario", "admin"],
       default: "usuario"
     },
     name: {
@@ -53,7 +53,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["usuario", "chef", "admin"],
+      enum: ["usuario", "admin"],
       default: "usuario"
     },
     avatarUrl: {
@@ -86,6 +86,20 @@ const userSchema = new mongoose.Schema(
       isActive: {
       type: Boolean,
       default: true
+      },
+      permissions: {
+        canModerateIngredients: {
+          type: Boolean,
+          default: false
+        },
+        canDeleteAnyDocument: {
+          type: Boolean,
+          default: false
+        },
+        canApproveUserContent: {
+          type: Boolean,
+          default: false
+        }
     }
   },
   {

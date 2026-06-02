@@ -74,7 +74,9 @@
                         <% if (canEdit) { %>
                           <div class="actions" style="margin-top:0.5rem;">
                             <a class="btn btn-soft btn-sm" href="/recipes/<%= recipe._id %>/edit" onclick="event.stopPropagation()">Editar</a>
-                            <button class="btn btn-danger btn-sm" data-delete-recipe="<%= recipe._id %>" onclick="event.stopPropagation()">Eliminar</button>
+                            <% if (_isAdmin) { %>
+                              <button class="btn btn-danger btn-sm" data-delete-recipe="<%= recipe._id %>" onclick="event.stopPropagation()">Eliminar</button>
+                            <% } %>
                           </div>
                         <% } %>
                       </div>

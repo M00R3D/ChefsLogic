@@ -46,14 +46,15 @@ app.use(async (req, res, next) => {
   if (req.session && req.session.userId) {
     try {
       const user = await User.findById(req.session.userId)
-        .select("name nombre email correo role rol savedRecipes likedRecipes")
+        .select("name nombre email correo role rol savedRecipes likedRecipes permissions")
         .lean();
       if (user) {
         res.locals.currentUser = {
           ...user,
           name: user.name || user.nombre || "Chef",
           email: user.email || user.correo || "",
-          role: user.role || user.rol || "usuario"
+          role: user.role || user.rol || "usuario",
+          permissions: user.permissions || {}
         };
       } else {
         res.locals.currentUser = null;

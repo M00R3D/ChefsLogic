@@ -45,6 +45,23 @@
         <% if (errorMessage) { %>
           <section class="alert alert-error"><%= errorMessage %></section>
         <% } %>
+        <% if (submitted === 'pending') { %>
+          <section class="alert alert-warning">Tu ingrediente fue enviado y está pendiente de aprobación por un administrador.</section>
+        <% } %>
+        <% if (submitted === 'approved') { %>
+          <section class="alert alert-success">Ingrediente publicado correctamente.</section>
+        <% } %>
+        <% if (!isAdmin && myPendingIngredients && myPendingIngredients.length) { %>
+          <section class="card" style="margin-bottom:1rem;">
+            <h3 style="margin-top:0;">Mis ingredientes pendientes</h3>
+            <p class="muted" style="margin-top:.2rem;">Estos ingredientes todavía no salen en el catálogo público, pero sí puedes usarlos en tus recetas.</p>
+            <div class="ing-card-tags" style="margin-top:.5rem;">
+              <% myPendingIngredients.forEach((ing) => { %>
+                <span class="ing-tag-chip"><%= ing.name || ing.nombre %> · pendiente</span>
+              <% }); %>
+            </div>
+          </section>
+        <% } %>
 
         <!-- SEARCH + NEW -->
         <section class="ing-index-topbar">
@@ -61,7 +78,12 @@
               <a class="btn btn-ghost btn-sm" href="/ingredients">Limpiar</a>
             <% } %>
           </form>
-          <a class="btn btn-primary" href="/ingredients/create">+ Nuevo ingrediente</a>
+          <div class="actions" style="gap:.5rem;">
+            <% if (isAdmin) { %>
+              <a class="btn btn-soft" href="/ingredients/moderation">Moderar</a>
+            <% } %>
+            <a class="btn btn-primary" href="/ingredients/create">+ Nuevo ingrediente</a>
+          </div>
         </section>
 
         <!-- CATEGORY PILLS -->

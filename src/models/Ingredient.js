@@ -86,6 +86,29 @@ const ingredientSchema = new mongoose.Schema(
         lowercase: true
       }
     ],
+    sourceType: {
+      type: String,
+      enum: ["seed", "admin", "user"],
+      default: "seed"
+    },
+    approvalStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "approved"
+    },
+    isPublic: {
+      type: Boolean,
+      default: true
+    },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null
+    },
+    approvedAt: {
+      type: Date,
+      default: null
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

@@ -1,16 +1,23 @@
 const express = require("express");
 const ingredientController = require("../controllers/ingredientController");
+const { requireAuth, requireAdmin } = require("../middleware/auth");
 
 const router = express.Router();
 
 router.get("/ingredients", ingredientController.renderIngredientsPage);
-router.get("/ingredients/create", ingredientController.renderCreateIngredientPage);
-router.post("/ingredients", ingredientController.createIngredient);
+router.get("/ingredients/create", requireAuth, ingredientController.renderCreateIngredientPage);
+router.post("/ingredients", requireAuth, ingredientController.createIngredient);
+router.get("/ingredients/moderation", requireAuth, requireAdmin, ingredientController.renderModerationPage);
+router.post("/ingredients/:id/approve", requireAuth, requireAdmin, ingredientController.approveIngredient);
+router.post("/ingredients/:id/reject", requireAuth, requireAdmin, ingredientController.rejectIngredient);
+router.post("/ingredients/:id/delete", requireAuth, requireAdmin, ingredientController.deleteIngredient);
 
 router.get("/api/ingredients", ingredientController.getAllIngredients);
 router.get("/api/ingredients/:id", ingredientController.getIngredientById);
-router.post("/api/ingredients", ingredientController.createIngredient);
-router.put("/api/ingredients/:id", ingredientController.updateIngredient);
-router.delete("/api/ingredients/:id", ingredientController.deleteIngredient);
+router.post("/api/ingredients", requireAuth, ingredientController.createIngredient);
+router.put("/api/ingredients/:id", requireAuth, requireAdmin, ingredientController.updateIngredient);
+router.delete("/api/ingredients/:id", requireAuth, requireAdmin, ingredientController.deleteIngredient);
+router.post("/api/ingredients/:id/approve", requireAuth, requireAdmin, ingredientController.approveIngredient);
+router.post("/api/ingredients/:id/reject", requireAuth, requireAdmin, ingredientController.rejectIngredient);
 
 module.exports = router;

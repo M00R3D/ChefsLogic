@@ -187,10 +187,26 @@ async function seedRecipes() {
   await mongoose.connect(uri);
 
   // Asegurar usuario para asignar como autor
-  let user = await User.findOne();
+  let user = await User.findOne({ $or: [{ email: "seeder@chefslogic.local" }, { correo: "seeder@chefslogic.local" }] });
   if (!user) {
     const passwordHash = await bcrypt.hash("changeme123", 12);
-    user = await User.create({ name: "Seeder User", email: "seeder@chefslogic.local", passwordHash, nombre: "Seeder", correo: "seeder@chefslogic.local", password: passwordHash, rol: "chef", avatar: "default.png", fecha_registro: new Date() });
+    user = await User.create({
+      name: "Seeder User",
+      email: "seeder@chefslogic.local",
+      passwordHash,
+      nombre: "Seeder User",
+      correo: "seeder@chefslogic.local",
+      password: passwordHash,
+      rol: "usuario",
+      role: "usuario",
+      avatar: "default.png",
+      fecha_registro: new Date(),
+      permissions: {
+        canModerateIngredients: false,
+        canDeleteAnyDocument: false,
+        canApproveUserContent: false
+      }
+    });
     console.log("  Usuario seeder creado:", user.email);
   }
 

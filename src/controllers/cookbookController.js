@@ -48,6 +48,10 @@ function canManageCookbook(user, cookbook) {
   return Boolean(userId && ownerId && userId === ownerId);
 }
 
+function isAdminUser(user) {
+  return String((user && (user.role || user.rol)) || "usuario").toLowerCase() === "admin";
+}
+
 function parseRecipeIds(rawRecipes) {
   const values = Array.isArray(rawRecipes)
     ? rawRecipes
@@ -245,6 +249,10 @@ async function updateCookbook(req, res) {
       return sendError(res, new Error("Recetario no encontrado."), "Recetario no encontrado.", 404);
     }
 
+    if (!canManageCookbook(res.locals.currentUser, existingCookbook)) {
+      return sendError(res, new Error("Acceso denegado."), "No tienes permiso para editar este recetario.", 403);
+    }
+
     const { payload, hasUser } = await mapCookbookPayload(req.body, existingCookbook);
 
     if (!hasUser) {
@@ -273,6 +281,10 @@ async function updateCookbook(req, res) {
 
 async function deleteCookbook(req, res) {
   try {
+    if (!isAdminUser(res.locals.currentUser)) {
+      return sendError(res, new Error("Acceso denegado."), "Solo administradores pueden eliminar recetarios.", 403);
+    }
+
     const deleted = await Cookbook.findByIdAndDelete(req.params.id);
 
     if (!deleted) {
@@ -395,7 +407,7 @@ async function deleteCookbookFromForm(req, res) {
       return res.status(404).redirect("/cookbooks");
     }
 
-    if (!canManageCookbook(res.locals.currentUser, existingCookbook)) {
+    if (!isAdminUser(res.locals.currentUser)) {
       return res.status(403).redirect(`/cookbooks/${req.params.id}`);
     }
 

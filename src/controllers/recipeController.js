@@ -53,8 +53,9 @@ function parseIngredients(input) {
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => {
-      const [ingredientName, quantity, unit, notes] = line.split("|").map((part) => part.trim());
+      const [ingredientName, quantity, unit, notes, ingredientId] = line.split("|").map((part) => part.trim());
       return {
+        ingredient: ingredientId || null,
         ingredientName: ingredientName || "",
         quantity: Number(quantity || 0),
         unit: unit || "",
@@ -116,6 +117,54 @@ function canEditRecipeForUser(user, recipe) {
   var userId = String(user._id || user.id || "");
   var ownerId = String(recipe.author || recipe.usuario_id || "");
   return Boolean(userId && ownerId && userId === ownerId);
+}
+
+function isAdminUser(user) {
+  return String((user && (user.role || user.rol)) || "usuario").toLowerCase() === "admin";
+}
+
+function ingredientCatalogQueryForUser(user) {
+  if (isAdminUser(user)) {
+    return {};
+  }
+
+  const userId = toObjectId(user && user._id);
+  if (userId) {
+    return {
+      $or: [
+        {
+          approvalStatus: "approved",
+          isPublic: true
+        },
+        {
+          createdBy: userId,
+          approvalStatus: "pending"
+        }
+      ]
+    };
+  }
+
+  return {
+    approvalStatus: "approved",
+    isPublic: true
+  };
+}
+
+function sanitizeRecipeIngredientsForViewer(recipe, viewer) {
+  if (!recipe || isAdminUser(viewer) || !Array.isArray(recipe.ingredients)) {
+    return recipe;
+  }
+
+  const sanitized = { ...recipe };
+  sanitized.ingredients = recipe.ingredients.filter((item) => {
+    const linkedIngredient = item && item.ingredient;
+    if (!linkedIngredient) {
+      return true;
+    }
+
+    return String(linkedIngredient.approvalStatus || "approved") !== "rejected";
+  });
+  return sanitized;
 }
 
 function mapModernToLegacyInteractionType(type) {
@@ -327,7 +376,7 @@ async function renderRecipeDetail(req, res) {
     const [recipe, comments] = await Promise.all([
       Recipe.findById(req.params.id)
         .populate("region", "name")
-        .populate("ingredients.ingredient", "name category categoria")
+        .populate("ingredients.ingredient", "name category categoria approvalStatus isPublic")
         .lean(),
       Interaction.find({
         $or: [
@@ -379,10 +428,12 @@ async function renderRecipeDetail(req, res) {
       });
     }
 
+    const safeRecipe = sanitizeRecipeIngredientsForViewer(recipe, res.locals.currentUser);
+
     return res.render("recipes/show", {
       pageTitle: `Chef's Logic | ${recipe.title}`,
       activeTab: "recetas",
-      recipe,
+      recipe: safeRecipe,
       comments: (comments || []).map((entry) => {
         const resolvedUser = entry.user || entry.usuario_id || null;
         return {
@@ -420,7 +471,7 @@ async function renderCreateRecipePage(req, res) {
   try {
     const [regions, allIngredients] = await Promise.all([
       Region.find().sort({ name: 1 }).lean(),
-      Ingredient.find().sort({ name: 1 }).lean()
+      Ingredient.find(ingredientCatalogQueryForUser(res.locals.currentUser)).sort({ name: 1 }).lean()
     ]);
 
     return res.render("recipes/create", {
@@ -501,13 +552,18 @@ async function getRecipeById(req, res) {
   try {
     const recipe = await Recipe.findById(req.params.id)
       .populate("region", "name")
-      .populate("ingredients.ingredient", "name");
+      .populate("ingredients.ingredient", "name approvalStatus isPublic");
 
     if (!recipe) {
       return sendError(res, new Error("Receta no encontrada."), "Receta no encontrada.", 404);
     }
 
-    return sendSuccess(res, recipe, "Receta obtenida correctamente.");
+    const safeRecipe = sanitizeRecipeIngredientsForViewer(
+      recipe && typeof recipe.toObject === "function" ? recipe.toObject() : recipe,
+      res.locals.currentUser
+    );
+
+    return sendSuccess(res, safeRecipe, "Receta obtenida correctamente.");
   } catch (error) {
     return sendError(res, error, "No fue posible obtener la receta.");
   }
@@ -601,14 +657,14 @@ async function updateRecipe(req, res) {
 
 async function deleteRecipe(req, res) {
   try {
+    if (!isAdminUser(res.locals.currentUser)) {
+      return sendError(res, new Error("Acceso denegado."), "Solo administradores pueden eliminar recetas.", 403);
+    }
+
     const existingRecipe = await Recipe.findById(req.params.id).lean();
 
     if (!existingRecipe) {
       return sendError(res, new Error("Receta no encontrada."), "Receta no encontrada.", 404);
-    }
-
-    if (!canEditRecipeForUser(res.locals.currentUser, existingRecipe)) {
-      return sendError(res, new Error("Acceso denegado."), "No tienes permiso para eliminar esta receta.", 403);
     }
 
     const deletedRecipe = await Recipe.findByIdAndDelete(req.params.id);

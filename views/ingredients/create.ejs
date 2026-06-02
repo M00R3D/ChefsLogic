@@ -17,6 +17,10 @@
           <div class="alert alert-error"><%= errorMessage %></div>
         <% } %>
 
+        <% if (!(typeof currentUser !== 'undefined' && currentUser && String(currentUser.role || '').toLowerCase() === 'admin')) { %>
+          <div class="alert alert-warning">Los ingredientes enviados por usuarios quedan pendientes hasta que un administrador los apruebe.</div>
+        <% } %>
+
         <section class="card">
           <form class="form-grid" id="ingredient-form" action="/ingredients" method="POST">
 

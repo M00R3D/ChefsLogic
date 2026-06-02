@@ -1,6 +1,6 @@
 const express = require("express");
 const recipeController = require("../controllers/recipeController");
-const { requireAuth } = require("../middleware/auth");
+const { requireAuth, requireAdmin } = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -15,7 +15,7 @@ router.get("/api/recipes", recipeController.getAllRecipes);
 router.get("/api/recipes/:id", recipeController.getRecipeById);
 router.post("/api/recipes", requireAuth, recipeController.createRecipe);
 router.put("/api/recipes/:id", requireAuth, recipeController.updateRecipe);
-router.delete("/api/recipes/:id", requireAuth, recipeController.deleteRecipe);
+router.delete("/api/recipes/:id", requireAuth, requireAdmin, recipeController.deleteRecipe);
 router.post("/api/recipes/:id/like", requireAuth, recipeController.likeRecipe);
 router.post("/api/recipes/:id/dislike", requireAuth, recipeController.dislikeRecipe);
 router.post("/api/recipes/:id/save", requireAuth, recipeController.saveRecipe);

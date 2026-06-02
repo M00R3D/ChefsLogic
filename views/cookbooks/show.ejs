@@ -103,9 +103,11 @@
               <div class="actions">
                 <% if (canManage) { %>
                   <a class="btn btn-soft btn-sm" href="/cookbooks/<%= cookbook._id %>/edit">Editar</a>
-                  <form action="/cookbooks/<%= cookbook._id %>/delete" method="POST" style="margin:0;" onsubmit="return confirm('¿Eliminar este recetario?');">
-                    <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
-                  </form>
+                  <% if (typeof currentUser !== 'undefined' && currentUser && String(currentUser.role || '').toLowerCase() === 'admin') { %>
+                    <form action="/cookbooks/<%= cookbook._id %>/delete" method="POST" style="margin:0;" onsubmit="return confirm('¿Eliminar este recetario?');">
+                      <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
+                    </form>
+                  <% } %>
                 <% } %>
                 <a class="btn btn-ghost btn-sm" href="/cookbooks">Volver</a>
               </div>

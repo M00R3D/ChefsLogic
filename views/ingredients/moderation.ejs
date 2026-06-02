@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <%- include("../partials/navbar", { activeTab }) %>
+
+      <main class="main-content">
+        <%- include("../partials/header", { pageTitle: "Moderacion de ingredientes" }) %>
+
+        <% if (errorMessage) { %>
+          <section class="alert alert-error"><%= errorMessage %></section>
+        <% } %>
+
+        <section class="ing-index-topbar">
+          <form class="ing-search-form" action="/ingredients/moderation" method="GET">
+            <input class="ing-index-search" type="text" name="q" value="<%= search %>" placeholder="Buscar ingrediente..." autocomplete="off" />
+            <select name="status">
+              <option value="pending" <%= statusFilter === 'pending' ? 'selected' : '' %>>Pendientes</option>
+              <option value="approved" <%= statusFilter === 'approved' ? 'selected' : '' %>>Aprobados</option>
+              <option value="rejected" <%= statusFilter === 'rejected' ? 'selected' : '' %>>Rechazados</option>
+            </select>
+            <button class="btn btn-soft btn-sm" type="submit">Filtrar</button>
+            <a class="btn btn-ghost btn-sm" href="/ingredients/moderation">Limpiar</a>
+          </form>
+          <a class="btn btn-soft" href="/ingredients">Volver a ingredientes</a>
+        </section>
+
+        <div class="ing-results-meta">
+          <span class="muted"><%= total %> resultado<%= total !== 1 ? 's' : '' %> · pagina <%= page %> de <%= totalPages %></span>
+        </div>
+
+        <section class="grid cols-2">
+          <% if (!ingredients || ingredients.length === 0) { %>
+            <article class="card" style="grid-column:1/-1;text-align:center;">
+              <p class="muted">No hay ingredientes para moderar con estos filtros.</p>
+            </article>
+          <% } %>
+
+          <% (ingredients || []).forEach((ing) => { %>
+            <article class="card">
+              <h3 style="margin-top:0;"><%= ing.name || ing.nombre || 'Sin nombre' %></h3>
+              <p class="muted" style="margin-top:.2rem;">
+                Estado: <strong><%= ing.approvalStatus || 'pending' %></strong>
+                · Publico: <strong><%= ing.isPublic ? 'si' : 'no' %></strong>
+                · Fuente: <strong><%= ing.sourceType || 'user' %></strong>
+              </p>
+              <p class="muted" style="margin-top:.2rem;">
+                Creado por: <%= (ing.createdBy && (ing.createdBy.name || ing.createdBy.nombre || ing.createdBy.email || ing.createdBy.correo)) || 'N/A' %>
+              </p>
+              <p class="muted" style="margin-top:.2rem;">
+                Categoria: <%= ing.category || ing.categoria || 'otro' %> · Unidad: <%= ing.defaultUnit || ing.unidad || 'g' %>
+              </p>
+
+              <% if (Array.isArray(ing.tags) && ing.tags.length) { %>
+                <div class="ing-card-tags" style="margin-top:.6rem;">
+                  <% ing.tags.slice(0, 8).forEach((tag) => { %>
+                    <span class="ing-tag-chip"><%= tag %></span>
+                  <% }); %>
+                </div>
+              <% } %>
+
+              <div class="actions" style="margin-top:.8rem;">
+                <% if (ing.approvalStatus !== 'approved') { %>
+                  <form action="/ingredients/<%= ing._id %>/approve" method="POST" style="margin:0;">
+                    <button class="btn btn-primary btn-sm" type="submit">Aprobar</button>
+                  </form>
+                <% } %>
+                <% if (ing.approvalStatus !== 'rejected') { %>
+                  <form action="/ingredients/<%= ing._id %>/reject" method="POST" style="margin:0;">
+                    <button class="btn btn-soft btn-sm" type="submit">Rechazar</button>
+                  </form>
+                <% } %>
+                <form action="/ingredients/<%= ing._id %>/delete" method="POST" style="margin:0;" onsubmit="return confirm('¿Eliminar este ingrediente de forma permanente?');">
+                  <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
+                </form>
+              </div>
+            </article>
+          <% }); %>
+        </section>
+
+        <% if (totalPages > 1) { %>
+          <nav class="ing-pagination" style="margin-top:1rem;">
+            <% const queryBase = `q=${encodeURIComponent(search || '')}&status=${encodeURIComponent(statusFilter || 'pending')}`; %>
+            <% if (page > 1) { %>
+              <a class="btn btn-soft btn-sm" href="/ingredients/moderation?<%= queryBase %>&page=<%= page - 1 %>">← Anterior</a>
+            <% } else { %>
+              <span class="btn btn-soft btn-sm" style="opacity:0.4;cursor:default;">← Anterior</span>
+            <% } %>
+            <% if (page < totalPages) { %>
+              <a class="btn btn-soft btn-sm" href="/ingredients/moderation?<%= queryBase %>&page=<%= page + 1 %>">Siguiente →</a>
+            <% } else { %>
+              <span class="btn btn-soft btn-sm" style="opacity:0.4;cursor:default;">Siguiente →</span>
+            <% } %>
+          </nav>
+        <% } %>
+
+        <%- include("../partials/footer") %>
+      </main>
+    </div>
+  </body>
+</html>
