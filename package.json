@@ -6,7 +6,11 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "seed:regions": "node src/seeders/regionSeeder.js"
+    "seed:regions": "node src/seeders/regionSeeder.js",
+    "seed:recetas": "node src/seeders/recipeSeeder.js",
+    "seed:ingredientes": "node src/seeders/ingredientSeeder.js",
+    "seed:recetarios": "node src/seeders/cookbookSeeder.js",
+    "db:fresh:seed": "node src/seeders/freshSeed.js"
   },
   "keywords": [
     "nodejs",
