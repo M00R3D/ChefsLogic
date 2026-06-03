@@ -43,6 +43,11 @@
             if (/antojito|tamal|gordita|sopes|tlayuda|flauta/.test(text)) return '🫔';
             return getTheme(cb.theme).emoji;
           }
+          function ownerName(cb) {
+            const owner = cb.owner || cb.usuario_id;
+            if (owner && typeof owner === 'object') return owner.name || owner.nombre || 'Usuario';
+            return 'Usuario';
+          }
           function buildCbQuery(overrides) {
             const base = { q: search, theme: themeFilter, page: page };
             const merged = Object.assign({}, base, overrides);
@@ -121,8 +126,12 @@
               const ownerId = String((cb.owner && cb.owner._id) || cb.owner || (cb.usuario_id && cb.usuario_id._id) || cb.usuario_id || '');
               const isAdmin = (typeof currentUser !== 'undefined' && currentUser) && String(currentUser.role || '').toLowerCase() === 'admin';
               const canManage = Boolean(currentUserId && ownerId && currentUserId === ownerId) || Boolean(isAdmin);
+              const ownerLabel = ownerName(cb);
+              const previewRecipes = Array.isArray(cb.recipes) ? cb.recipes.slice(0, 4) : [];
             %>
-            <article class="cb-card reveal" data-reveal-index="<%= idx %>" style="--cb-accent:<%= cbAccent %>">
+            <article class="cb-card cb-book-card reveal" data-reveal-index="<%= idx %>" style="--cb-accent:<%= cbAccent %>">
+              <div class="cb-book-spine"></div>
+              <div class="cb-book-pages"></div>
               <div class="cb-card-cover">
                 <% if (cbImg && cbCanImg) { %>
                   <img class="cb-card-cover-img" src="<%= cbImg %>" alt="<%= cb.title || cb.nombre %>" loading="lazy" />
@@ -142,16 +151,7 @@
               </div>
               <div class="cb-card-body">
                 <h3 class="cb-card-title"><%= cb.title || cb.nombre || 'Sin título' %></h3>
-                <% if (cb.description || cb.descripcion) { %>
-                  <p class="muted cb-card-desc"><%= String(cb.description || cb.descripcion || '').slice(0, 100) %><%= (cb.description || cb.descripcion || '').length > 100 ? '…' : '' %></p>
-                <% } %>
-                <% if ((cb.tags || []).length) { %>
-                  <div class="ing-card-tags" style="margin-top:.4rem;">
-                    <% (cb.tags || []).slice(0, 5).forEach((tag) => { %>
-                      <span class="ing-tag-chip"><%= tag %></span>
-                    <% }); %>
-                  </div>
-                <% } %>
+                <p class="cb-credit">Creado por <strong><%= ownerLabel %></strong></p>
                 <div class="cb-card-footer">
                   <span class="muted">📋 <%= cbRecipeCount %> receta<%= cbRecipeCount !== 1 ? 's' : '' %></span>
                 </div>
@@ -166,6 +166,23 @@
                     <% } %>
                   <% } %>
                 </div>
+              </div>
+              <div class="cb-hover-detail" aria-hidden="true">
+                <h4 class="cb-hover-title">Vista rápida</h4>
+                <% if (cb.description || cb.descripcion) { %>
+                  <p class="cb-hover-desc"><%= String(cb.description || cb.descripcion || '').slice(0, 180) %><%= (cb.description || cb.descripcion || '').length > 180 ? '…' : '' %></p>
+                <% } else { %>
+                  <p class="cb-hover-desc">Este recetario aún no tiene descripción.</p>
+                <% } %>
+                <p class="cb-credit">Autor: <strong><%= ownerLabel %></strong></p>
+                <% if (previewRecipes.length) { %>
+                  <div class="cb-hover-recipes">
+                    <% previewRecipes.forEach((recipe) => { %>
+                      <span class="chip"><%= recipe.title || 'Receta' %></span>
+                    <% }); %>
+                  </div>
+                <% } %>
+                <a class="btn btn-primary btn-sm" href="/cookbooks/<%= cb._id %>">Abrir detalle</a>
               </div>
             </article>
           <% }); %>

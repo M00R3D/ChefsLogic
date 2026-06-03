@@ -39,6 +39,11 @@
           function _accent(r){ var h=/^#[0-9a-fA-F]{3,6}$/.test(String(r.accentColor||''))?r.accentColor:''; return h||_diffColor(r.difficulty); }
           function _src(r){ return String(r.imageUrl||r.imagen_principal||'').trim(); }
           function _okSrc(s){ return /^(https?:\/\/|\/|data:image\/)/i.test(s); }
+          function _creator(r){
+            var u = r.author || r.usuario_id;
+            if (u && typeof u === 'object') return u.name || u.nombre || 'Usuario';
+            return 'Usuario';
+          }
         %>
 
         <div class="rb-panels">
@@ -66,6 +71,7 @@
                       <div class="recipe-card-body">
                         <p class="recipe-card-meta"><%= recipe.region ? recipe.region.name : 'Sin región' %></p>
                         <h3 class="recipe-card-title"><%= recipe.title||recipe.titulo||'Sin título' %></h3>
+                        <p class="recipe-card-author">Por <%= _creator(recipe) %></p>
                         <div class="recipe-card-footer">
                           <span>⏱ <%= (recipe.prepMinutes||0)+(recipe.cookMinutes||0) %> min</span>
                           <span>❤ <%= recipe.likeCount||0 %></span>
@@ -109,6 +115,7 @@
                       <div class="recipe-card-body">
                         <p class="recipe-card-meta"><%= recipe.region ? recipe.region.name : 'Sin región' %></p>
                         <h3 class="recipe-card-title"><%= recipe.title||recipe.titulo||'Sin título' %></h3>
+                        <p class="recipe-card-author">Por <%= _creator(recipe) %></p>
                         <div class="recipe-card-footer">
                           <span>⏱ <%= (recipe.prepMinutes||0)+(recipe.cookMinutes||0) %> min</span>
                           <span>❤ <%= recipe.likeCount||0 %></span>
@@ -146,6 +153,7 @@
                       <div class="recipe-card-body">
                         <p class="recipe-card-meta"><%= recipe.region ? (recipe.region.name||'') : 'Sin región' %></p>
                         <h3 class="recipe-card-title"><%= recipe.title||recipe.titulo||'Sin título' %></h3>
+                        <p class="recipe-card-author">Por <%= _creator(recipe) %></p>
                         <div class="recipe-card-footer">
                           <span>⏱ <%= (recipe.prepMinutes||0)+(recipe.cookMinutes||0) %> min</span>
                           <span>❤ <%= recipe.likeCount||0 %></span>

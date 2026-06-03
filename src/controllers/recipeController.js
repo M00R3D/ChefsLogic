@@ -331,6 +331,8 @@ async function renderRecipesPage(req, res) {
 
     const allRecipes = await Recipe.find()
       .populate("region", "name")
+      .populate("author", "name nombre")
+      .populate("usuario_id", "name nombre")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -356,7 +358,11 @@ async function renderRecipesPage(req, res) {
         .select("savedRecipes")
         .populate({
           path: "savedRecipes",
-          populate: { path: "region", select: "name" }
+          populate: [
+            { path: "region", select: "name" },
+            { path: "author", select: "name nombre" },
+            { path: "usuario_id", select: "name nombre" }
+          ]
         })
         .lean();
       savedRecipes = (userFull && Array.isArray(userFull.savedRecipes) ? userFull.savedRecipes : [])
@@ -393,6 +399,8 @@ async function renderRecipeDetail(req, res) {
     const [recipe, comments] = await Promise.all([
       Recipe.findById(req.params.id)
         .populate("region", "name")
+        .populate("author", "name nombre")
+        .populate("usuario_id", "name nombre")
         .populate("ingredients.ingredient", "name category categoria approvalStatus isPublic")
         .lean(),
       Interaction.find({

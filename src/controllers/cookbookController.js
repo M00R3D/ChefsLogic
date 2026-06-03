@@ -130,7 +130,11 @@ async function renderCookbooksPage(req, res) {
     const query = conditions.length ? { $and: conditions } : {};
 
     const [cookbooks, total, themeCounts] = await Promise.all([
-      Cookbook.find(query).populate("recipes", "title").sort({ createdAt: -1 })
+      Cookbook.find(query)
+        .populate("recipes", "title slug summary imageUrl imagen_principal")
+        .populate("owner", "name nombre")
+        .populate("usuario_id", "name nombre")
+        .sort({ createdAt: -1 })
         .skip((page - 1) * CB_PAGE_SIZE).limit(CB_PAGE_SIZE).lean(),
       Cookbook.countDocuments(query),
       Cookbook.aggregate([{ $group: { _id: "$theme", count: { $sum: 1 } } }])
@@ -168,7 +172,12 @@ async function renderCookbooksPage(req, res) {
 
 async function renderCreateCookbookPage(req, res) {
   try {
-    const allRecipes = await Recipe.find().select("title").sort({ title: 1 }).lean();
+    const allRecipes = await Recipe.find()
+      .select("title summary author usuario_id")
+      .populate("author", "name nombre")
+      .populate("usuario_id", "name nombre")
+      .sort({ title: 1 })
+      .lean();
 
     return res.render("cookbooks/create", {
       pageTitle: "Chef's Logic | Nuevo recetario",
@@ -304,8 +313,9 @@ async function deleteCookbook(req, res) {
 async function renderCookbookDetail(req, res) {
   try {
     const cookbook = await Cookbook.findById(req.params.id)
-      .populate("recipes", "title slug summary imageUrl imagen_principal")
+      .populate("recipes", "title slug summary imageUrl imagen_principal author usuario_id")
       .populate("owner", "name nombre")
+      .populate("usuario_id", "name nombre")
       .lean();
 
     if (!cookbook) {
@@ -340,7 +350,12 @@ async function renderEditCookbookPage(req, res) {
   try {
     const [cookbook, allRecipes] = await Promise.all([
       Cookbook.findById(req.params.id).lean(),
-      Recipe.find().select("title").sort({ title: 1 }).lean()
+      Recipe.find()
+        .select("title summary author usuario_id")
+        .populate("author", "name nombre")
+        .populate("usuario_id", "name nombre")
+        .sort({ title: 1 })
+        .lean()
     ]);
 
     if (!cookbook) {

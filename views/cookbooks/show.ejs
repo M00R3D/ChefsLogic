@@ -71,6 +71,11 @@
           <% const hex = /^#[0-9a-fA-F]{3,6}$/.test(String(cookbook.accentColor || '')) ? cookbook.accentColor : ''; %>
           <% const accent = hex || tMeta.color; %>
           <% const symbol = cookbookSymbol(cookbook); %>
+          <% const cookbookAuthor = (function() {
+            const owner = cookbook.owner || cookbook.usuario_id;
+            if (owner && typeof owner === 'object') return owner.name || owner.nombre || 'Usuario';
+            return 'Usuario';
+          })(); %>
 
           <section class="cookbook-hero reveal" style="--cb-accent:<%= accent %>">
             <% if (img && canImg) { %>
@@ -94,6 +99,7 @@
                   <%= (cookbook.isPublic || cookbook.publico) ? '🌐 Público' : '🔒 Privado' %>
                 </span>
                 <span class="chip">📋 <%= (cookbook.recipes || cookbook.recetas || []).length %> recetas</span>
+                <span class="chip">Autor: <%= cookbookAuthor %></span>
               </div>
             </div>
           </section>
@@ -120,11 +126,16 @@
             <% if (!recipes.length) { %>
               <p class="muted">Este recetario aún no tiene recetas.</p>
             <% } else { %>
-              <section class="grid cols-3">
+              <section class="grid cols-2 cb-detail-recipes-grid">
                 <% recipes.forEach((recipe) => { %>
                   <% const rImg = String(recipe.imageUrl || recipe.imagen_principal || '').trim(); %>
                   <% const rCanImg = /^(https?:\/\/|\/|data:image\/)/i.test(rImg); %>
                   <% const rSymbol = recipeSymbol(recipe); %>
+                  <% const recipeAuthor = (function() {
+                    const author = recipe.author || recipe.usuario_id;
+                    if (author && typeof author === 'object') return author.name || author.nombre || 'Usuario';
+                    return 'Usuario';
+                  })(); %>
                   <article class="recipe-card">
                     <% if (rImg && rCanImg) { %>
                       <img class="recipe-card-img" src="<%= rImg %>" alt="<%= recipe.title || 'Receta' %>" loading="lazy" />
@@ -133,9 +144,10 @@
                     <% } %>
 
                     <div class="recipe-card-body">
-                      <h4 class="recipe-card-title" style="font-size:1.2rem;"><%= recipe.title || 'Sin título' %></h4>
+                      <h4 class="recipe-card-title" style="font-size:1.45rem;"><%= recipe.title || 'Sin título' %></h4>
+                    <p class="recipe-card-author">Por <%= recipeAuthor %></p>
                     <% if (recipe.summary) { %>
-                      <p class="muted"><%= String(recipe.summary).slice(0, 120) %><%= String(recipe.summary).length > 120 ? '…' : '' %></p>
+                      <p class="muted"><%= String(recipe.summary).slice(0, 170) %><%= String(recipe.summary).length > 170 ? '…' : '' %></p>
                     <% } %>
                     <div class="actions">
                       <a class="btn btn-soft btn-sm" href="/recipes/<%= recipe._id %>">Ver receta</a>

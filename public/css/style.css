@@ -2768,3 +2768,136 @@ th {
   .nav-toggle .hamburger::after { top:6px; }
 }
 
+.recipe-card-author {
+  margin: 0 0 0.45rem;
+  color: var(--text-soft);
+  font-size: 0.8rem;
+}
+
+.cb-result-author {
+  margin: 0.1rem 0 0;
+  font-size: 0.74rem;
+}
+
+.cb-recipe-results {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.grid.cols-3.cb-cards-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.cb-book-card {
+  position: relative;
+  min-height: 520px;
+  overflow: hidden;
+  border-radius: 20px;
+  transform-style: preserve-3d;
+}
+
+.cb-book-spine {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 16px;
+  background: linear-gradient(180deg, #6a3717 0%, #3f200d 100%);
+  z-index: 3;
+  box-shadow: inset -2px 0 0 rgba(255, 255, 255, 0.22);
+}
+
+.cb-book-pages {
+  position: absolute;
+  top: 9px;
+  bottom: 9px;
+  right: -4px;
+  width: 8px;
+  border-radius: 0 12px 12px 0;
+  background: repeating-linear-gradient(180deg, #fffef8 0 3px, #f0e7d8 3px 6px);
+  z-index: 1;
+}
+
+.cb-book-card .cb-card-cover {
+  aspect-ratio: 4 / 5;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.cb-book-card .cb-card-body {
+  padding-left: 1.15rem;
+}
+
+.cb-credit {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.8rem;
+}
+
+.cb-hover-detail {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: 4;
+  background: linear-gradient(180deg, rgba(250, 245, 236, 0.98) 0%, rgba(255, 252, 246, 1) 35%);
+  border-top: 1px solid var(--border);
+  padding: 0.8rem 0.9rem 0.9rem 1.1rem;
+  transform: translateY(105%);
+  transition: transform 0.28s ease;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.cb-book-card:hover .cb-hover-detail,
+.cb-book-card:focus-within .cb-hover-detail {
+  transform: translateY(0);
+}
+
+.cb-hover-title {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.cb-hover-desc {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.cb-hover-recipes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.cookbook-hero {
+  min-height: 360px;
+}
+
+.cookbook-hero-content {
+  min-height: 360px;
+  padding: 1.4rem 1.4rem 1.2rem;
+}
+
+.cb-detail-recipes-grid .recipe-card-img,
+.cb-detail-recipes-grid .recipe-card-img-placeholder {
+  aspect-ratio: 16 / 9;
+}
+
+@media (max-width: 720px) {
+  .cb-book-card {
+    min-height: 460px;
+  }
+
+  .cb-book-card .cb-card-cover {
+    aspect-ratio: 16 / 10;
+  }
+
+  .cb-hover-detail {
+    position: static;
+    transform: none;
+    border-top: 1px solid var(--border-light);
+  }
+
+  .cb-detail-recipes-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

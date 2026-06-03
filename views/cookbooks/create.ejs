@@ -126,7 +126,7 @@
               <legend>Recetas en este recetario</legend>
               <input type="hidden" name="recipes" id="cb-recipes-data" value="" />
               <div class="cb-recipe-search-bar">
-                <input type="text" id="cb-recipe-search" placeholder="Buscar receta por nombre..." autocomplete="off" />
+                <input type="text" id="cb-recipe-search" placeholder="Filtrar recetas por nombre..." autocomplete="off" />
               </div>
               <div id="cb-recipe-results" class="cb-recipe-results"></div>
               <div id="cb-recipe-selected" class="cb-recipe-selected-list"></div>
@@ -321,11 +321,20 @@
 
         function renderResults(list) {
           if (!resultsDiv) return;
-          if (!list.length) { resultsDiv.innerHTML = '<p class="muted" style="font-size:.85rem;padding:.4rem 0;">Sin resultados.</p>'; return; }
-          resultsDiv.innerHTML = list.slice(0, 10).map(function(r) {
+          if (!list.length) { resultsDiv.innerHTML = '<p class="muted" style="font-size:.85rem;padding:.4rem .7rem;">Sin resultados.</p>'; return; }
+
+          function recipeAuthorLabel(recipe) {
+            var resolved = recipe.author || recipe.usuario_id;
+            if (resolved && typeof resolved === 'object') {
+              return resolved.name || resolved.nombre || 'Usuario';
+            }
+            return 'Usuario';
+          }
+
+          resultsDiv.innerHTML = list.map(function(r) {
             var added = selected.some(function(s){ return s._id === String(r._id); });
             return '<div class="cb-result-item' + (added ? ' is-added' : '') + '" data-rid="' + String(r._id) + '" data-title="' + (r.title||'').replace(/"/g,'&quot;') + '">' +
-              '<span>' + (r.title || 'Receta') + '</span>' +
+              '<div><strong>' + (r.title || 'Receta') + '</strong><p class="muted cb-result-author">por ' + recipeAuthorLabel(r) + '</p></div>' +
               '<button type="button" class="btn btn-soft btn-sm">' + (added ? '✓ Añadida' : '+ Añadir') + '</button></div>';
           }).join('');
           resultsDiv.querySelectorAll('.cb-result-item:not(.is-added)').forEach(function(row) {
@@ -343,12 +352,16 @@
           clearTimeout(timer);
           timer = setTimeout(function() {
             var q = searchInput.value.trim().toLowerCase();
-            if (!q) { resultsDiv.innerHTML = ''; return; }
+            if (!q) {
+              renderResults(allRecipes);
+              return;
+            }
             renderResults(allRecipes.filter(function(r){ return r.title && r.title.toLowerCase().includes(q); }));
           }, 250);
         });
 
         renderSelected();
+        renderResults(allRecipes);
       })();
     })();
     </script>

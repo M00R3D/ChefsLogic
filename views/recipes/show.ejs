@@ -58,6 +58,11 @@
             if (/servir|decorar|emplatar|presentar|acompa|verter|espolvorear|terminar/.test(t)) return { icon: '🍽️', type: 'serve' };
             return { icon: '👨‍🍳', type: 'def' };
           }; %>
+          <% const recipeAuthorName = (function() {
+            const author = recipe.author || recipe.usuario_id;
+            if (author && typeof author === 'object') return author.name || author.nombre || 'Usuario';
+            return 'Usuario';
+          })(); %>
 
           <% if (imageCandidate && canRenderImage) { %>
             <img class="recipe-hero reveal" src="<%= imageCandidate %>" alt="<%= recipe.title %>" />
@@ -77,6 +82,7 @@
               <span class="chip"><%= recipe.difficulty || "media" %></span>
               <span class="chip"><%= recipe.servings || 1 %> porciones</span>
               <span class="chip"><%= (recipe.prepMinutes || 0) + (recipe.cookMinutes || 0) %> min total</span>
+              <span class="chip">Autor: <%= recipeAuthorName %></span>
               <span class="status-badge <%= recipe.status || 'borrador' %>"><%= recipe.status || 'borrador' %></span>
             </div>
 
