@@ -13,91 +13,117 @@
         <section class="section-heading">
           <div>
             <h2>Dashboard administrativo</h2>
-            <p>Resumen de usuarios, recetas, ingredientes y actividad registrada.</p>
+            <p>Resumen detallado de usuarios, recetas y eventos con filtros por período.</p>
           </div>
         </section>
+
+        <div class="filter-pills" style="margin-bottom:1rem;">
+          <% ['today', '7', '30', 'year'].forEach(function(key) { %>
+            <a class="pill <%= rangeKey === key ? 'active' : '' %>" href="/admin/dashboard?range=<%= key %>"><%= key === 'today' ? 'Hoy' : key === '7' ? '7 días' : key === '30' ? '30 días' : 'Este año' %></a>
+          <% }); %>
+        </div>
 
         <% if (errorMessage) { %>
           <section class="alert alert-error"><%= errorMessage %></section>
         <% } %>
 
-        <div class="grid cols-4" style="margin-bottom:1rem;">
-          <div class="card">
+        <div class="dashboard-summary-grid" style="margin-bottom:1rem;">
+          <div class="card dashboard-small-card">
             <h3>Total usuarios</h3>
             <p class="big-number"><%= totalUsers %></p>
           </div>
-          <div class="card">
+          <div class="card dashboard-small-card">
             <h3>Total recetas</h3>
             <p class="big-number"><%= totalRecipes %></p>
           </div>
-          <div class="card">
+          <div class="card dashboard-small-card">
             <h3>Total ingredientes</h3>
             <p class="big-number"><%= totalIngredients %></p>
           </div>
-          <div class="card">
+          <div class="card dashboard-small-card">
             <h3>Total eventos</h3>
             <p class="big-number"><%= totalEvents %></p>
+          </div>
+          <div class="card dashboard-small-card">
+            <h3>Eventos <%= rangeLabel %></h3>
+            <p class="big-number"><%= eventsInRange %></p>
+          </div>
+          <div class="card dashboard-small-card">
+            <h3>Usuarios activos</h3>
+            <p class="big-number"><%= activeUsers %></p>
+          </div>
+        </div>
+
+        <div class="dashboard-event-grid" style="margin-bottom:1rem;">
+          <div class="card dashboard-small-card">
+            <h4>Visitas</h4>
+            <p class="big-number"><%= eventSummary.ver_receta %></p>
+          </div>
+          <div class="card dashboard-small-card">
+            <h4>Likes</h4>
+            <p class="big-number"><%= eventSummary.like %></p>
+          </div>
+          <div class="card dashboard-small-card">
+            <h4>Guardados</h4>
+            <p class="big-number"><%= eventSummary.guardar_receta %></p>
+          </div>
+          <div class="card dashboard-small-card">
+            <h4>Búsquedas</h4>
+            <p class="big-number"><%= eventSummary.buscar_receta %></p>
+          </div>
+          <div class="card dashboard-small-card">
+            <h4>Creaciones</h4>
+            <p class="big-number"><%= eventSummary.crear_receta %></p>
           </div>
         </div>
 
         <div class="grid cols-3" style="gap:1rem; margin-bottom:1rem;">
-          <div class="card">
-            <h3>Usuarios este mes</h3>
-            <p class="big-number"><%= usersThisMonth %></p>
-          </div>
-          <div class="card">
-            <h3>Usuarios activos</h3>
-            <p class="big-number"><%= activeUsers %></p>
-          </div>
-          <div class="card">
-            <h3>Recetas más vistas</h3>
-            <ol style="padding-left:1.2rem; margin:0.8rem 0 0;">
+          <div class="card dashboard-list-card">
+            <h3>Top recetas vistas</h3>
+            <ol>
               <% topRecipes.forEach(function(item) { %>
                 <li><strong><%= item.title %></strong> — <%= item.total %></li>
               <% }); %>
             </ol>
           </div>
-        </div>
-
-        <div class="grid cols-2" style="gap:1rem; margin-bottom:1rem;">
-          <div class="card">
-            <h3>Usuarios más activos</h3>
-            <ol style="padding-left:1.2rem; margin:0.8rem 0 0;">
-              <% topUsers.forEach(function(item) { %>
-                <li><%= item.name %> — <%= item.total %> acciones</li>
+          <div class="card dashboard-list-card">
+            <h3>Top recetas por likes</h3>
+            <ol>
+              <% topRecipesByLikes.forEach(function(item) { %>
+                <li><%= item.title %> — <%= item.total %></li>
               <% }); %>
             </ol>
           </div>
-          <div class="card">
-            <h3>Recetas con más likes</h3>
-            <ol style="padding-left:1.2rem; margin:0.8rem 0 0;">
-              <% topRecipesByLikes.forEach(function(item) { %>
-                <li><%= item.title %> — <%= item.total %></li>
+          <div class="card dashboard-list-card">
+            <h3>Usuarios más activos</h3>
+            <ol>
+              <% topUsers.forEach(function(item) { %>
+                <li><%= item.name %> — <%= item.total %></li>
               <% }); %>
             </ol>
           </div>
         </div>
 
         <div class="grid cols-3" style="gap:1rem; margin-bottom:1rem;">
-          <div class="card">
+          <div class="card dashboard-list-card">
             <h3>Ingredientes más usados</h3>
-            <ol style="padding-left:1.2rem; margin:0.8rem 0 0;">
+            <ol>
               <% topIngredients.forEach(function(item) { %>
                 <li><%= item.name || 'Desconocido' %> — <%= item.total %></li>
               <% }); %>
             </ol>
           </div>
-          <div class="card">
-            <h3>Regiones más populares</h3>
-            <ol style="padding-left:1.2rem; margin:0.8rem 0 0;">
+          <div class="card dashboard-list-card">
+            <h3>Regiones más visitadas</h3>
+            <ol>
               <% regionViews.forEach(function(item) { %>
                 <li><%= item.name || 'Sin región' %> — <%= item.total %></li>
               <% }); %>
             </ol>
           </div>
-          <div class="card">
+          <div class="card dashboard-list-card">
             <h3>Recetas por usuario</h3>
-            <ol style="padding-left:1.2rem; margin:0.8rem 0 0;">
+            <ol>
               <% recipesByUser.forEach(function(item) { %>
                 <li><%= item.name %> — <%= item.total %></li>
               <% }); %>
@@ -111,14 +137,46 @@
             <canvas id="usersByMonthChart"></canvas>
           </div>
           <div class="card dashboard-chart-card">
-            <h3>Actividad diaria</h3>
+            <h3>Eventos por día</h3>
             <canvas id="dailyActivityChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:1rem;">
+          <h3>Eventos recientes</h3>
+          <div class="dashboard-table-wrapper">
+            <table class="dashboard-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Tipo</th>
+                  <th>Usuario</th>
+                  <th>Receta</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (recentEvents && recentEvents.length) { %>
+                  <% recentEvents.forEach(function(event) { %>
+                    <tr>
+                      <td><%= new Date(event.fecha).toLocaleString('es-ES') %></td>
+                      <td><%= event.tipo %></td>
+                      <td><%= (event.usuario_id && (event.usuario_id.name || event.usuario_id.nombre)) || 'Anónimo' %></td>
+                      <td><%= (event.receta_id && (event.receta_id.title || event.receta_id.titulo)) || 'N/A' %></td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="4">No hay eventos recientes para este período.</td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
           </div>
         </div>
 
         <div class="card" style="margin-top:1rem;">
           <h3>Notas</h3>
-          <p style="margin:0.75rem 0 0; color: var(--text-soft);">Los eventos registrados ayudan a construir métricas más precisas. Esta vista usa la nueva colección <strong>eventos</strong> para ver recuentos de vistas, likes, guardados y búsquedas.</p>
+          <p style="margin:0.75rem 0 0; color: var(--text-soft);">Utiliza los filtros para explorar cómo cambian las métricas en períodos de tiempo diferentes. Los datos se generan en la colección <strong>eventos</strong> y se actualizan cada vez que el usuario interactúa con recetas.</p>
         </div>
 
         <%- include("partials/footer") %>

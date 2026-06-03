@@ -22,9 +22,49 @@ function buildWeekdayLabels() {
   return WEEKDAY_NAMES;
 }
 
+const DATE_RANGES = {
+  today: 'Hoy',
+  '7': 'Últimos 7 días',
+  '30': 'Últimos 30 días',
+  year: 'Este año'
+};
+
+function normalizeRange(range) {
+  const key = String(range || '30').toLowerCase();
+  if (Object.keys(DATE_RANGES).includes(key)) {
+    return key;
+  }
+  return '30';
+}
+
+function buildDateRange(key) {
+  const now = new Date();
+
+  if (key === 'today') {
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    return start;
+  }
+
+  if (key === 'year') {
+    return new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+  }
+
+  const days = Number(key) || 30;
+  const start = new Date(now);
+  start.setDate(now.getDate() - (days - 1));
+  start.setHours(0, 0, 0, 0);
+  return start;
+}
+
 async function renderDashboardPage(req, res) {
   try {
     const now = new Date();
+    const rangeKey = normalizeRange(req.query.range);
+    const rangeLabel = DATE_RANGES[rangeKey];
+    const startDate = buildDateRange(rangeKey);
+    const eventMatch = { fecha: { $gte: startDate, $lte: now } };
+
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const firstDayOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
@@ -50,6 +90,7 @@ async function renderDashboardPage(req, res) {
     ]);
 
     const [
+      eventTypeCounts,
       topViewedRecipes,
       topLikedRecipes,
       mostActiveUsers,
@@ -57,10 +98,16 @@ async function renderDashboardPage(req, res) {
       topIngredients,
       regionViews,
       registrationAggregation,
-      activityAggregation
+      activityAggregation,
+      recentEvents
     ] = await Promise.all([
       Evento.aggregate([
-        { $match: { tipo: 'ver_receta', receta_id: { $ne: null } } },
+        { $match: eventMatch },
+        { $group: { _id: '$tipo', total: { $sum: 1 } } },
+        { $sort: { total: -1 } }
+      ]),
+      Evento.aggregate([
+        { $match: { ...eventMatch, tipo: 'ver_receta', receta_id: { $ne: null } } },
         { $group: { _id: '$receta_id', total: { $sum: 1 } } },
         { $sort: { total: -1 } },
         { $limit: 6 },
@@ -89,7 +136,7 @@ async function renderDashboardPage(req, res) {
         .select('title titulo likes')
         .lean(),
       Evento.aggregate([
-        { $match: { usuario_id: { $ne: null } } },
+        { $match: { ...eventMatch, usuario_id: { $ne: null } } },
         { $group: { _id: '$usuario_id', total: { $sum: 1 } } },
         { $sort: { total: -1 } },
         { $limit: 6 },
@@ -139,7 +186,7 @@ async function renderDashboardPage(req, res) {
         }
       ]),
       Evento.aggregate([
-        { $match: { tipo: 'ver_receta', receta_id: { $ne: null } } },
+        { $match: { ...eventMatch, tipo: 'ver_receta', receta_id: { $ne: null } } },
         {
           $lookup: {
             from: Recipe.collection.name,
@@ -183,6 +230,7 @@ async function renderDashboardPage(req, res) {
         { $sort: { '_id.year': 1, '_id.month': 1 } }
       ]),
       Evento.aggregate([
+        { $match: eventMatch },
         {
           $group: {
             _id: { dayOfWeek: { $dayOfWeek: '$fecha' } },
@@ -190,8 +238,27 @@ async function renderDashboardPage(req, res) {
           }
         },
         { $sort: { '_id.dayOfWeek': 1 } }
-      ])
+      ]),
+      Evento.find(eventMatch)
+        .sort({ fecha: -1 })
+        .limit(10)
+        .populate('usuario_id', 'name nombre')
+        .populate('receta_id', 'title titulo')
+        .lean()
     ]);
+
+    const eventTotalsMap = eventTypeCounts.reduce((acc, entry) => {
+      acc[entry._id] = entry.total;
+      return acc;
+    }, {});
+
+    const eventSummary = {
+      ver_receta: eventTotalsMap.ver_receta || 0,
+      like: eventTotalsMap.like || 0,
+      guardar_receta: eventTotalsMap.guardar_receta || 0,
+      buscar_receta: eventTotalsMap.buscar_receta || 0,
+      crear_receta: eventTotalsMap.crear_receta || 0
+    };
 
     const topRecipesByLikes = topLikedRecipes.map((item) => ({
       title: item.title || item.titulo || 'Sin título',
@@ -252,12 +319,16 @@ async function renderDashboardPage(req, res) {
     return res.render('dashboard', {
       pageTitle: "Chef's Logic | Dashboard",
       activeTab: 'dashboard',
+      rangeKey,
+      rangeLabel,
       totalUsers,
       totalRecipes,
       totalIngredients,
       totalEvents,
+      eventsInRange: Object.values(eventSummary).reduce((sum, value) => sum + value, 0),
       usersThisMonth,
       activeUsers,
+      eventSummary,
       topRecipes,
       topRecipesByLikes,
       topIngredients,
@@ -268,6 +339,7 @@ async function renderDashboardPage(req, res) {
       monthlyCounts,
       weekdayLabels,
       weekdayCounts,
+      recentEvents,
       errorMessage: ''
     });
   } catch (error) {
@@ -275,12 +347,16 @@ async function renderDashboardPage(req, res) {
     return res.status(500).render('dashboard', {
       pageTitle: "Chef's Logic | Dashboard",
       activeTab: 'dashboard',
+      rangeKey: '30',
+      rangeLabel: DATE_RANGES['30'],
       totalUsers: 0,
       totalRecipes: 0,
       totalIngredients: 0,
       totalEvents: 0,
+      eventsInRange: 0,
       usersThisMonth: 0,
       activeUsers: 0,
+      eventSummary: { ver_receta: 0, like: 0, guardar_receta: 0, buscar_receta: 0, crear_receta: 0 },
       topRecipes: [],
       topRecipesByLikes: [],
       topIngredients: [],
@@ -291,6 +367,7 @@ async function renderDashboardPage(req, res) {
       monthlyCounts: Array(12).fill(0),
       weekdayLabels: buildWeekdayLabels(),
       weekdayCounts: Array(7).fill(0),
+      recentEvents: [],
       errorMessage: 'No fue posible cargar el dashboard. Revisa la consola del servidor.'
     });
   }

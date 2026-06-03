@@ -12,6 +12,7 @@ const mongoose = require("mongoose");
 const { spawnSync } = require("child_process");
 
 const COLLECTIONS_TO_CLEAR = [
+  "eventos",
   "interacciones",
   "recetarios",
   "recetas",
@@ -63,6 +64,7 @@ async function runFreshSeed() {
   runSeederScript(path.join(root, "ingredientSeeder.js"));
   runSeederScript(path.join(root, "recipeSeeder.js"));
   runSeederScript(path.join(root, "cookbookSeeder.js"));
+  runSeederScript(path.join(root, "eventoSeeder.js"));
 
   console.log("\n=========================================");
   console.log(" Fresh seed completado correctamente");
