@@ -211,6 +211,47 @@ function renderCreateIngredientPage(req, res) {
   });
 }
 
+async function renderIngredientDetailPage(req, res) {
+  try {
+    const ingredient = await Ingredient.findById(req.params.id).lean();
+
+    if (!ingredient) {
+      return res.status(404).render("ingredients/show", {
+        pageTitle: "Chef's Logic | Ingrediente",
+        activeTab: "ingredientes",
+        ingredient: null,
+        errorMessage: "Ingrediente no encontrado."
+      });
+    }
+
+    if (!isAdminUser(res.locals.currentUser)) {
+      const isVisible = ingredient.approvalStatus === "approved" && Boolean(ingredient.isPublic);
+      if (!isVisible) {
+        return res.status(404).render("ingredients/show", {
+          pageTitle: "Chef's Logic | Ingrediente",
+          activeTab: "ingredientes",
+          ingredient: null,
+          errorMessage: "Ingrediente no encontrado."
+        });
+      }
+    }
+
+    return res.render("ingredients/show", {
+      pageTitle: `Chef's Logic | ${ingredient.name || ingredient.nombre || "Ingrediente"}`,
+      activeTab: "ingredientes",
+      ingredient,
+      errorMessage: ""
+    });
+  } catch (error) {
+    return res.status(500).render("ingredients/show", {
+      pageTitle: "Chef's Logic | Ingrediente",
+      activeTab: "ingredientes",
+      ingredient: null,
+      errorMessage: "No fue posible cargar el detalle del ingrediente."
+    });
+  }
+}
+
 async function getAllIngredients(req, res) {
   try {
     const wantsAll = String(req.query.scope || "").toLowerCase() === "all";
@@ -501,6 +542,7 @@ module.exports = {
   renderIngredientsPage,
   renderModerationPage,
   renderCreateIngredientPage,
+  renderIngredientDetailPage,
   getAllIngredients,
   getIngredientById,
   checkIngredientNameAvailability,

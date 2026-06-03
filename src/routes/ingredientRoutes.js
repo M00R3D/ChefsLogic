@@ -8,6 +8,7 @@ router.get("/ingredients", ingredientController.renderIngredientsPage);
 router.get("/ingredients/create", requireAuth, ingredientController.renderCreateIngredientPage);
 router.post("/ingredients", requireAuth, ingredientController.createIngredient);
 router.get("/ingredients/moderation", requireAuth, requireAdmin, ingredientController.renderModerationPage);
+router.get("/ingredients/:id", ingredientController.renderIngredientDetailPage);
 router.post("/ingredients/:id/approve", requireAuth, requireAdmin, ingredientController.approveIngredient);
 router.post("/ingredients/:id/reject", requireAuth, requireAdmin, ingredientController.rejectIngredient);
 router.post("/ingredients/:id/delete", requireAuth, requireAdmin, ingredientController.deleteIngredient);

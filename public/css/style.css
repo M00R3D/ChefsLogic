@@ -1748,6 +1748,21 @@ th {
   transform: translateY(-2px);
 }
 
+.ing-card-clickable {
+  cursor: pointer;
+}
+
+.ing-card-clickable:hover {
+  border-color: color-mix(in srgb, var(--cat-color, var(--accent)) 55%, #d8d8d8);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--cat-color, #000) 16%, transparent);
+  transform: translateY(-4px);
+}
+
+.ing-card-clickable:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--cat-color, var(--accent)) 30%, transparent);
+  outline-offset: 2px;
+}
+
 .ing-card-detail-header {
   display: flex;
   align-items: center;
@@ -1826,6 +1841,11 @@ th {
   color: #fff;
   border-color: var(--accent);
 }
+.ing-tag-chip-empty {
+  background: transparent;
+  color: var(--text-soft);
+  border-style: dashed;
+}
 
 /* Nutrition chips on card */
 .ing-nutrition-row {
@@ -1858,6 +1878,15 @@ th {
   color: #2e7d32;
   font-size: .7rem;
   font-weight: 600;
+}
+.ing-season-chip.is-active {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.ing-season-chip.is-empty {
+  background: var(--bg);
+  color: var(--text-soft);
+  border: 1px dashed var(--border);
 }
 
 /* Pagination */

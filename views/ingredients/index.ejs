@@ -142,7 +142,7 @@
             <% const cat = String(ing.category || ing.categoria || 'otro').toLowerCase(); %>
             <% const m = getMeta(cat); %>
             <% const ni = ing.nutritionalInfo || {}; %>
-            <article class="ing-card-detail reveal" data-reveal-index="<%= idx %>"
+            <article class="ing-card-detail ing-card-clickable reveal" data-reveal-index="<%= idx %>" data-ing-href="/ingredients/<%= ing._id %>" role="link" tabindex="0"
                      style="--cat-color:<%= m.color %>;--cat-bg:<%= m.bg %>">
               <div class="ing-card-detail-header">
                 <span class="ing-card-detail-emoji"><%= m.emoji %></span>
@@ -220,5 +220,36 @@
         <%- include("../partials/footer") %>
       </main>
     </div>
+
+    <script>
+      (function () {
+        var cards = document.querySelectorAll('[data-ing-href]');
+        if (!cards.length) return;
+
+        var interactiveSelector = 'a, button, input, textarea, select, label, form';
+
+        cards.forEach(function (card) {
+          var href = card.getAttribute('data-ing-href');
+          if (!href) return;
+
+          card.addEventListener('click', function (event) {
+            if (event.target && event.target.closest(interactiveSelector)) {
+              return;
+            }
+            window.location.href = href;
+          });
+
+          card.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+              if (event.target && event.target.closest(interactiveSelector)) {
+                return;
+              }
+              event.preventDefault();
+              window.location.href = href;
+            }
+          });
+        });
+      })();
+    </script>
   </body>
 </html>
