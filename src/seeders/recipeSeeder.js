@@ -234,34 +234,154 @@ const RECIPES_BY_REGION = {
     }
   ],
   "oriente": [
-    { title: "Huachinango a la veracruzana", tags: ["mariscos","veracruz"], difficulty: "media" },
-    { title: "Arroz a la tumbada veracruzana", tags: ["mariscos","arroz"], difficulty: "media" },
-    { title: "Pescado a la talla adaptado", tags: ["mariscos","talla"], difficulty: "media" },
-    { title: "Tacos de cochinita al estilo golfo", tags: ["cochinita","antojitos"], difficulty: "media" },
-    { title: "Tamales de chipilín", tags: ["tamales","regional"], difficulty: "media" },
-    { title: "Mole de Xico (versión ligera)", tags: ["mole","regional"], difficulty: "dificil" },
-    { title: "Ensalada tropical con aguacate", tags: ["ensaladas","tropical"], difficulty: "facil" },
-    { title: "Camarones al mojo de ajo", tags: ["mariscos","camarones"], difficulty: "facil" }
+    {
+      title: "Huachinango a la veracruzana",
+      tags: ["mariscos","veracruz"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjD32SROqM3FAqDVjqQBk8xHjvQyQVhMjx9X_7dFPRYA&s=10"
+    },
+    {
+      title: "Arroz a la tumbada veracruzana",
+      tags: ["mariscos","arroz"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRiUFN0LHOsy1RdlAWa-XaLFWmr1PWMrrBxRG1Y07_7qA&s=10"
+    },
+    {
+      title: "Pescado a la talla adaptado",
+      tags: ["mariscos","talla"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQaQYRYoQM-laDpfGBbUzr32u7k9hHNlnS_oJrkqGQTw&s=10"
+    },
+    {
+      title: "Tacos de cochinita al estilo golfo",
+      tags: ["cochinita","antojitos"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRc9xt7peTXdxjgjedSV1g9eRa4CokR7mLc5BamSrKskA&s=10"
+    },
+    {
+      title: "Tamales de chipilín",
+      tags: ["tamales","regional"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBVAv5fIVYKD1Wmg1blIHz3PBDJOxfO1Npc5XzN-XcXw&s=10"
+    },
+    {
+      title: "Mole de Xico (versión ligera)",
+      tags: ["mole","regional"],
+      difficulty: "dificil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQNrwuVLf1tk46a-Xu5ytbh2CK8xnN132sjwLHh3nL9XA&s=10"
+    },
+    {
+      title: "Ensalada tropical con aguacate",
+      tags: ["ensaladas","tropical"],
+      difficulty: "facil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRIYe1PYYiWEukqqIZ9oX3OZUMfUGmWgflS30W5Oa0weA&s=10"
+    },
+    {
+      title: "Camarones al mojo de ajo",
+      tags: ["mariscos","camarones"],
+      difficulty: "facil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoM5aBRuxlOlzQClwiLcHsfM1LtpPvqwZ58kZBKJTsmg&s=10"
+    }
   ],
   "sur": [
-    { title: "Mole negro oaxaqueño", tags: ["mole","oaxaca"], difficulty: "dificil" },
-    { title: "Tlayudas oaxaqueñas auténticas", tags: ["antojitos","tlayuda"], difficulty: "media" },
-    { title: "Tamales de mole oaxaqueño", tags: ["tamales","mole"], difficulty: "media" },
-    { title: "Ensalada de hoja santa y queso", tags: ["ensaladas","regional"], difficulty: "facil" },
-    { title: "Chapulines con guacamole", tags: ["antojitos","insectos"], difficulty: "media" },
-    { title: "Pescado en hoja de plátano", tags: ["mariscos","regional"], difficulty: "media" },
-    { title: "Sopa de piedra (versión)", tags: ["sopas","tradicional"], difficulty: "dificil" },
-    { title: "Mole verde con pollo", tags: ["mole","pollo"], difficulty: "media" }
+    {
+      title: "Mole negro oaxaqueño",
+      tags: ["mole","oaxaca"],
+      difficulty: "dificil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSvbO7_5cSOqbvKoQatj6WKl5m5T_ppTxpBEwP6Wd4Mkg&s=10"
+    },
+    {
+      title: "Tlayudas oaxaqueñas auténticas",
+      tags: ["antojitos","tlayuda"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQ76sacMlqQBcBb63bcHI6EqywpoqkiSWvoj1diA2d4w&s=10"
+    },
+    {
+      title: "Tamales de mole oaxaqueño",
+      tags: ["tamales","mole"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR1aP1Zh5nOtXdl1hqwy21Ak9906RTbYoOerm9_57fPew&s=10"
+    },
+    {
+      title: "Ensalada de hoja santa y queso",
+      tags: ["ensaladas","regional"],
+      difficulty: "facil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS25-jreFlx6JP-Yhg8fxWdMR0MiTlJSykqkxuH7L0vig&s=10"
+    },
+    {
+      title: "Chapulines con guacamole",
+      tags: ["antojitos","insectos"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuALxYEnS-Jh3Ip9hqKhMvkxVXQwt4CWmLBwBYZ5zpuQ&s=10"
+    },
+    {
+      title: "Pescado en hoja de plátano",
+      tags: ["mariscos","regional"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQxk_BX-yi71WF49K0aN7CHDXZVRwWyEMcXDPHKiPcPOQ&s=10"
+    },
+    {
+      title: "Sopa de piedra (versión)",
+      tags: ["sopas","tradicional"],
+      difficulty: "dificil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSunsmeBSwn9Se40_KHT5hYirh1Gi_5iujOVfJ99Z29Dg&s=10"
+    },
+    {
+      title: "Mole verde con pollo",
+      tags: ["mole","pollo"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQaaubUwDgkOJLtddpRokZEhBKxvk5WguBPsChSBnQPSQ&s=10"
+    }
   ],
   "sureste": [
-    { title: "Cochinita pibil clásica", tags: ["cochinita","pibil"], difficulty: "dificil" },
-    { title: "Sopa de lima", tags: ["sopas","yucatán"], difficulty: "facil" },
-    { title: "Panuchos y salbutes mixtos", tags: ["antojitos","yucatán"], difficulty: "media" },
-    { title: "Pescado tikin-xic", tags: ["mariscos","maya"], difficulty: "media" },
-    { title: "Relleno negro (versión sureste)", tags: ["mole","regional"], difficulty: "dificil" },
-    { title: "Ensalada de naranja agria", tags: ["ensaladas","citrico"], difficulty: "facil" },
-    { title: "Tamales de chaya", tags: ["tamales","regional"], difficulty: "media" },
-    { title: "Pollo tikin-xic en hojas", tags: ["pollo","mariscos"], difficulty: "media" }
+    {
+      title: "Cochinita pibil clásica",
+      tags: ["cochinita","pibil"],
+      difficulty: "dificil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjU50ND-ouTs4ZSIhCyc5rneRzO6r1qFFFWPNhds0mGQ&s=10"
+    },
+    {
+      title: "Sopa de lima",
+      tags: ["sopas","yucatán"],
+      difficulty: "facil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRailXvvT_X8YEEx8WHa2yoG8qJgIAaT2NQMgoddqP4gw&s=10"
+    },
+    {
+      title: "Panuchos y salbutes mixtos",
+      tags: ["antojitos","yucatán"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQUR232Tuzw1ZX4AoVlg2r-KsfsCU2PV3g8IrTaTxchKQ&s=10"
+    },
+    {
+      title: "Pescado tikin-xic",
+      tags: ["mariscos","maya"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxSb6iivhAGKtMSwowO4-MUII_MZ-a63h1D7yTGBFRow&s=10"
+    },
+    {
+      title: "Relleno negro (versión sureste)",
+      tags: ["mole","regional"],
+      difficulty: "dificil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRU122r6p7mrP0YqqrFVQbNWl6iIppGOl_D8T9luaASXw&s=10"
+    },
+    {
+      title: "Ensalada de naranja agria",
+      tags: ["ensaladas","citrico"],
+      difficulty: "facil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT4OeL0B01TdTsFTNKfyo8U-G5ybe9OB5Zzrl39rKjRsw&s=10"
+    },
+    {
+      title: "Tamales de chaya",
+      tags: ["tamales","regional"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRDcf6n5sFkY24V6Sejd0g74RyCXRNxGf2PD2YF91kydg&s=10"
+    },
+    {
+      title: "Pollo tikin-xic en hojas",
+      tags: ["pollo","mariscos"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRmpxULvi9ndJc6gpNaYLMhkwP0O5M4tYVZ6eOasDTn9Q&s=10"
+    }
   ]
 };
 
