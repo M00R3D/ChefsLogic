@@ -84,14 +84,54 @@ const RECIPES_BY_REGION = {
     }
   ],
   "noreste": [
-    { title: "Cabrito al pastor", tags: ["cabrito","asado"], difficulty: "dificil" },
-    { title: "Carne seca con machaca", tags: ["carnes","machaca"], difficulty: "media" },
-    { title: "Frijoles con venado", tags: ["carnes","frijoles"], difficulty: "media" },
-    { title: "Tortilla de harina con chorizo", tags: ["tortillas","chorizo"], difficulty: "facil" },
-    { title: "Caldo de res estilo norteño", tags: ["caldos","res"], difficulty: "media" },
-    { title: "Asado con salsa de chile seco", tags: ["carnes","salsa"], difficulty: "media" },
-    { title: "Ensalada de nopal asado", tags: ["ensaladas","nopal"], difficulty: "facil" },
-    { title: "Empanadas de carne al horno", tags: ["empanadas","horno"], difficulty: "media" }
+    {
+      title: "Cabrito al pastor",
+      tags: ["cabrito","asado"],
+      difficulty: "dificil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ0Hj3xt8us4oLCQVgUNRJfLEr5AxHW7CdVjOxLaIjQUg&s=10"
+    },
+    {
+      title: "Carne seca con machaca",
+      tags: ["carnes","machaca"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtSjiHWWRns1M3AD9OWHfHoNw15dQYs2yGUt1KUQAf3w&s=10"
+    },
+    {
+      title: "Frijoles con venado",
+      tags: ["carnes","frijoles"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTAclrlE3pP971Z1n5uGziVlZblX8AVgeeWWTA_eRL0hw&s=10"
+    },
+    {
+      title: "Tortilla de harina con chorizo",
+      tags: ["tortillas","chorizo"],
+      difficulty: "facil",
+      image: "https://cdn0.recetasgratis.net/es/posts/6/6/7/burritos_de_choriqueso_60766_paso_5_600.jpg"
+    },
+    {
+      title: "Caldo de res estilo norteño",
+      tags: ["caldos","res"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSClSempLETOVrK7XzebnNxe3DkoBIUITmDgn8a8_lGow&s=10"
+    },
+    {
+      title: "Asado con salsa de chile seco",
+      tags: ["carnes","salsa"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFxYUIPbTDwDOHLW4pJ7jrwrZsgcPIC03_P8I2_wrmeg&s=10"
+    },
+    {
+      title: "Ensalada de nopal asado",
+      tags: ["ensaladas","nopal"],
+      difficulty: "facil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSRH-259azbySTQe-654aaVkEHOt2M2BA-9KBROrgClQ&s=10"
+    },
+    {
+      title: "Empanadas de carne al horno",
+      tags: ["empanadas","horno"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTMMkHTtFIRh9yZIUVFor_UQhNRbO2aV4f7Bas2VUFJEg&s=10"
+    }
   ],
   "occidente": [
     { title: "Birria tapatía", tags: ["birria","carnes"], difficulty: "dificil" },
