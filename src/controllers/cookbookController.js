@@ -74,8 +74,9 @@ async function mapCookbookPayload(body = {}, fallbackCookbook = null) {
   const recipeIds = parseRecipeIds(body.recipes || body.recetas);
   const title = String(body.title || body.nombre || "").trim();
   const description = String(body.description || body.descripcion || "").trim();
+  const hasIsPublicProp = Object.prototype.hasOwnProperty.call(body, 'isPublic') || Object.prototype.hasOwnProperty.call(body, 'publico');
   const isPublicRaw = String(body.isPublic ?? body.publico ?? "").toLowerCase().trim();
-  const isPublic =
+  const parsedIsPublic =
     body.isPublic === true ||
     body.isPublic === "true" ||
     body.isPublic === 1 ||
@@ -86,6 +87,8 @@ async function mapCookbookPayload(body = {}, fallbackCookbook = null) {
     body.publico === 1 ||
     body.publico === "1" ||
     isPublicRaw === "on";
+  // Default to published (public) when creating and no explicit flag provided
+  const isPublic = hasIsPublicProp ? parsedIsPublic : true;
   const resolvedUserId = await resolveUserId(body, fallbackCookbook && fallbackCookbook.usuario_id);
 
   return {

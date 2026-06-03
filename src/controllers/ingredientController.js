@@ -337,22 +337,19 @@ async function createIngredient(req, res) {
 
     payload.createdBy = currentUserId || null;
     payload.sourceType = isAdmin ? "admin" : "user";
-    payload.approvalStatus = isAdmin ? "approved" : "pending";
-    payload.isPublic = isAdmin;
-    payload.approvedBy = isAdmin ? currentUserId : null;
-    payload.approvedAt = isAdmin ? new Date() : null;
+    // Per new policy: ingredients created are published immediately
+    payload.approvalStatus = "approved";
+    payload.isPublic = true;
+    payload.approvedBy = currentUserId || null;
+    payload.approvedAt = new Date();
 
     const ingredient = await Ingredient.create(payload);
 
     if (req.accepts("html") && !req.path.startsWith("/api")) {
-      const submitted = isAdmin ? "approved" : "pending";
-      return res.redirect(`/ingredients?submitted=${submitted}`);
+      return res.redirect(`/ingredients?submitted=approved`);
     }
 
-    const message = isAdmin
-      ? "Ingrediente creado y publicado correctamente."
-      : "Ingrediente recibido. Queda pendiente de aprobación por un administrador.";
-    return sendSuccess(res, ingredient, message, 201);
+    return sendSuccess(res, ingredient, "Ingrediente creado y publicado correctamente.", 201);
   } catch (error) {
     if (error && error.code === 11000) {
       if (req.accepts("html") && !req.path.startsWith("/api")) {

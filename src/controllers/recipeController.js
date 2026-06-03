@@ -304,7 +304,7 @@ async function mapRecipePayload(body = {}, fallbackRecipe = null) {
     cookMinutes,
     servings: Number(body.servings || 1),
     imageUrl: String(body.imageUrl || body.imagen_principal || "").trim(),
-    status: body.status || "borrador",
+    status: body.status || "publicada",
     tags,
     ingredients,
     steps,
@@ -344,12 +344,21 @@ async function renderRecipesPage(req, res) {
       });
     }
 
+    function isRecipeOwnedByUser(r, userId) {
+      if (!r) return false;
+      // author or usuario_id may be populated objects or raw ids
+      const authorId = r && r.author && (r.author._id || r.author);
+      const usuarioId = r && r.usuario_id && (r.usuario_id._id || r.usuario_id);
+      const candidates = [authorId, usuarioId, r.author, r.usuario_id].filter(Boolean).map(String);
+      return Boolean(userId && candidates.includes(userId));
+    }
+
     const myRecipes = currentUserId
-      ? allRecipes.filter((r) => String(r.author || r.usuario_id || "") === currentUserId)
+      ? allRecipes.filter((r) => isRecipeOwnedByUser(r, currentUserId))
       : [];
 
     const otherRecipes = currentUserId
-      ? allRecipes.filter((r) => String(r.author || r.usuario_id || "") !== currentUserId)
+      ? allRecipes.filter((r) => !isRecipeOwnedByUser(r, currentUserId))
       : allRecipes;
 
     let savedRecipes = [];
