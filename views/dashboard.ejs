@@ -23,6 +23,24 @@
           <% }); %>
         </div>
 
+        <div class="dashboard-controls" style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:.5rem;">
+            <label style="font-weight:600">Actualizado:</label>
+            <span id="dashboard-last-updated"><%= (typeof lastUpdated !== 'undefined' && lastUpdated) ? new Date(lastUpdated).toLocaleString('es-ES') : new Date().toLocaleString('es-ES') %></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem;">
+            <label for="alert-threshold">Alerta interacciones &gt;</label>
+            <input id="alert-threshold" type="number" min="1" value="100" style="width:6rem;padding:.25rem;border-radius:4px;border:1px solid #ddd" />
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem;">
+            <button id="dashboard-refresh" class="btn btn-soft">Actualizar ahora</button>
+            <button id="dashboard-toggle-live" class="btn btn-outline">Live: Off</button>
+          </div>
+          <div style="margin-left:auto;font-size:.9rem;color:var(--text-soft)">Responsable: <strong>Administrador del sistema</strong></div>
+        </div>
+
+        <div id="dashboard-notifications" style="margin-bottom:1rem;"></div>
+
         <% if (errorMessage) { %>
           <section class="alert alert-error"><%= errorMessage %></section>
         <% } %>
@@ -52,6 +70,10 @@
             <h3>Usuarios activos</h3>
             <p class="big-number"><%= activeUsers %></p>
           </div>
+          <div class="card dashboard-small-card">
+            <h3>Tiempo promedio preparación</h3>
+            <p class="big-number" id="avg-prep-time"><%= (typeof avgPrepTime !== 'undefined' && avgPrepTime) ? avgPrepTime : '-' %> min</p>
+          </div>
         </div>
 
         <div class="dashboard-event-grid" style="margin-bottom:1rem;">
@@ -77,28 +99,35 @@
           </div>
         </div>
 
+        <div class="card" style="margin-bottom:1rem;">
+          <h3>Categorías populares</h3>
+          <div style="position:relative;width:100%;height:320px;">
+            <canvas id="categoriesChart" aria-label="Gráfico de categorías populares"></canvas>
+          </div>
+        </div>
+
         <div class="grid cols-3" style="gap:1rem; margin-bottom:1rem;">
           <div class="card dashboard-list-card">
             <h3>Top recetas vistas</h3>
             <ol>
-              <% topRecipes.forEach(function(item) { %>
-                <li><strong><%= item.title %></strong> — <%= item.total %></li>
+              <% (typeof topRecipes !== 'undefined' ? topRecipes : []).forEach(function(item) { %>
+                <li><strong><%= item.title %></strong> — <%= item.total %> visitas</li>
               <% }); %>
             </ol>
           </div>
           <div class="card dashboard-list-card">
             <h3>Top recetas por likes</h3>
             <ol>
-              <% topRecipesByLikes.forEach(function(item) { %>
-                <li><%= item.title %> — <%= item.total %></li>
+              <% (typeof topRecipesByLikes !== 'undefined' ? topRecipesByLikes : []).forEach(function(item) { %>
+                <li><%= item.title %> — <%= item.total %> likes</li>
               <% }); %>
             </ol>
           </div>
           <div class="card dashboard-list-card">
             <h3>Usuarios más activos</h3>
             <ol>
-              <% topUsers.forEach(function(item) { %>
-                <li><%= item.name %> — <%= item.total %></li>
+              <% (typeof topUsers !== 'undefined' ? topUsers : []).forEach(function(item) { %>
+                <li><%= item.name %> — <%= item.total %> interacciones</li>
               <% }); %>
             </ol>
           </div>
@@ -108,24 +137,62 @@
           <div class="card dashboard-list-card">
             <h3>Ingredientes más usados</h3>
             <ol>
-              <% topIngredients.forEach(function(item) { %>
-                <li><%= item.name || 'Desconocido' %> — <%= item.total %></li>
+              <% (typeof topIngredients !== 'undefined' ? topIngredients : []).forEach(function(item) { %>
+                <li><%= item.name || 'Desconocido' %> — <%= item.total %> usos</li>
               <% }); %>
             </ol>
           </div>
           <div class="card dashboard-list-card">
             <h3>Regiones más visitadas</h3>
             <ol>
-              <% regionViews.forEach(function(item) { %>
-                <li><%= item.name || 'Sin región' %> — <%= item.total %></li>
+              <% (typeof regionViews !== 'undefined' ? regionViews : []).forEach(function(item) { %>
+                <li><%= item.name || 'Sin región' %> — <%= item.total %> visitas</li>
               <% }); %>
             </ol>
           </div>
           <div class="card dashboard-list-card">
             <h3>Recetas por usuario</h3>
             <ol>
-              <% recipesByUser.forEach(function(item) { %>
-                <li><%= item.name %> — <%= item.total %></li>
+              <% (typeof recipesByUser !== 'undefined' ? recipesByUser : []).forEach(function(item) { %>
+                <li><%= item.name %> — <%= item.total %> recetas</li>
+              <% }); %>
+            </ol>
+          </div>
+        </div>
+
+        <div class="grid cols-9" style="gap:1rem; margin-bottom:1rem;">
+          <div class="card dashboard-list-card">
+            <h3>Recetas más guardadas</h3>
+            <ol id="top-saved-recipes">
+              <% (typeof topSavedRecipes !== 'undefined' ? topSavedRecipes : []).forEach(function(item) { %>
+                <li><%= item.title || item.name %> — <%= item.total %> guardados</li>
+              <% }); %>
+            </ol>
+          </div>
+          <div class="card dashboard-list-card">
+            <h3>Categorías más populares</h3>
+            <ol id="top-categories">
+              <% (typeof topCategories !== 'undefined' ? topCategories : []).forEach(function(item) { %>
+                <li><%= item.name %> — <%= item.total %> recetas</li>
+              <% }); %>
+            </ol>
+          </div>
+          <div class="card dashboard-list-card">
+            <h3>Recetarios más populares</h3>
+            <ol id="top-cookbooks">
+              <% (typeof topCookbooks !== 'undefined' ? topCookbooks : []).forEach(function(item) { %>
+                <% const followers = item.followersCount || item.followers || item.followers_count; %>
+                <% const recipesCount = item.recipesCount || item.recipes || item.recipes_count; %>
+                <li>
+                  <%= item.title || item.name %> —
+                  <% if (typeof followers !== 'undefined' && followers !== null) { %>
+                    <%= followers %> seguidores
+                  <% } else if (typeof recipesCount !== 'undefined' && recipesCount !== null) { %>
+                    <%= recipesCount %> recetas
+                  <% } else { %>
+                    <%= item.total || '—' %>
+                  <% } %>
+                </li>
               <% }); %>
             </ol>
           </div>
@@ -184,16 +251,48 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <% 
+      const __DASH_INIT = {
+        totalUsers: (typeof totalUsers !== 'undefined' ? totalUsers : 0),
+        totalRecipes: (typeof totalRecipes !== 'undefined' ? totalRecipes : 0),
+        totalIngredients: (typeof totalIngredients !== 'undefined' ? totalIngredients : 0),
+        totalEvents: (typeof totalEvents !== 'undefined' ? totalEvents : 0),
+        eventsInRange: (typeof eventsInRange !== 'undefined' ? eventsInRange : 0),
+        activeUsers: (typeof activeUsers !== 'undefined' ? activeUsers : 0),
+        eventSummary: (typeof eventSummary !== 'undefined' ? eventSummary : {}),
+        topRecipes: (typeof topRecipes !== 'undefined' ? topRecipes : []),
+        topRecipesByLikes: (typeof topRecipesByLikes !== 'undefined' ? topRecipesByLikes : []),
+        topUsers: (typeof topUsers !== 'undefined' ? topUsers : []),
+        topIngredients: (typeof topIngredients !== 'undefined' ? topIngredients : []),
+        regionViews: (typeof regionViews !== 'undefined' ? regionViews : []),
+        recipesByUser: (typeof recipesByUser !== 'undefined' ? recipesByUser : []),
+        monthlyLabels: (typeof monthlyLabels !== 'undefined' ? monthlyLabels : []),
+        monthlyCounts: (typeof monthlyCounts !== 'undefined' ? monthlyCounts : []),
+        weekdayLabels: (typeof weekdayLabels !== 'undefined' ? weekdayLabels : []),
+        weekdayCounts: (typeof weekdayCounts !== 'undefined' ? weekdayCounts : []),
+        recentEvents: (typeof recentEvents !== 'undefined' ? recentEvents : []),
+        topSavedRecipes: (typeof topSavedRecipes !== 'undefined' ? topSavedRecipes : []),
+        topCategories: (typeof topCategories !== 'undefined' ? topCategories : []),
+        topCookbooks: (typeof topCookbooks !== 'undefined' ? topCookbooks : []),
+        avgPrepTime: (typeof avgPrepTime !== 'undefined' ? avgPrepTime : null)
+      };
+    %>
+    <script>
+      window.__DASHBOARD_INIT = <%- JSON.stringify(__DASH_INIT) %>;
+    </script>
+    <script src="/js/admin-dashboard.js"></script>
     <script>
       (function() {
-        const monthlyLabels = <%- JSON.stringify(monthlyLabels) %>;
-        const monthlyCounts = <%- JSON.stringify(monthlyCounts) %>;
-        const weekdayLabels = <%- JSON.stringify(weekdayLabels) %>;
-        const weekdayCounts = <%- JSON.stringify(weekdayCounts) %>;
+        const init = window.__DASHBOARD_INIT || {};
+        const monthlyLabels = init.monthlyLabels || [];
+        const monthlyCounts = init.monthlyCounts || [];
+        const weekdayLabels = init.weekdayLabels || [];
+        const weekdayCounts = init.weekdayCounts || [];
 
         function renderChart(canvasId, labels, data, label, borderColor) {
           const ctx = document.getElementById(canvasId);
-          if (!ctx) return;
+          if (!ctx || typeof Chart === 'undefined') return;
           new Chart(ctx.getContext('2d'), {
             type: 'bar',
             data: {

@@ -4,6 +4,7 @@ const Ingredient = require('../models/Ingredient');
 const Region = require('../models/Region');
 const Evento = require('../models/Evento');
 const Interaction = require('../models/Interaction');
+const Cookbook = require('../models/Cookbook');
 
 const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -247,6 +248,46 @@ async function renderDashboardPage(req, res) {
         .lean()
     ]);
 
+    // Additional aggregations: top saved recipes, categories, popular cookbooks, avg prep time, weekly growth
+    const topSavedRecipesAgg = await User.aggregate([
+      { $unwind: '$savedRecipes' },
+      { $group: { _id: '$savedRecipes', total: { $sum: 1 } } },
+      { $sort: { total: -1 } },
+      { $limit: 10 },
+      { $lookup: { from: Recipe.collection.name, localField: '_id', foreignField: '_id', as: 'recipe' } },
+      { $unwind: { path: '$recipe', preserveNullAndEmptyArrays: true } },
+      { $project: { _id: 1, total: 1, title: { $ifNull: ['$recipe.title', '$recipe.titulo'] } } }
+    ]).catch(() => []);
+
+    const topCategories = await Recipe.aggregate([
+      { $unwind: '$tags' },
+      { $group: { _id: '$tags', total: { $sum: 1 } } },
+      { $sort: { total: -1 } },
+      { $limit: 10 },
+      { $project: { name: '$_id', total: 1 } }
+    ]).catch(() => []);
+
+    const topCookbooks = await Cookbook.aggregate([
+      { $project: { title: { $ifNull: ['$title', '$nombre'] }, followersCount: { $size: { $ifNull: ['$followers', []] } }, recipesCount: { $size: { $ifNull: ['$recipes', []] } } } },
+      { $sort: { followersCount: -1, recipesCount: -1 } },
+      { $limit: 10 }
+    ]).catch(() => []);
+
+    const avgPrepAggregation = await Recipe.aggregate([
+      { $group: { _id: null, avgPrep: { $avg: { $add: [ { $ifNull: ['$prepMinutes', 0] }, { $ifNull: ['$cookMinutes', 0] } ] } } } }
+    ]).catch(() => []);
+
+    const avgPrepTime = (avgPrepAggregation && avgPrepAggregation[0] && Math.round(avgPrepAggregation[0].avgPrep)) || null;
+
+    // Recipes weekly growth: compare count in last 7 days vs previous 7 days
+    const last7Start = new Date(now); last7Start.setDate(now.getDate() - 6); last7Start.setHours(0,0,0,0);
+    const prev7Start = new Date(now); prev7Start.setDate(now.getDate() - 13); prev7Start.setHours(0,0,0,0);
+    const [last7Count, prev7Count] = await Promise.all([
+      Recipe.countDocuments({ createdAt: { $gte: last7Start, $lte: now } }),
+      Recipe.countDocuments({ createdAt: { $gte: prev7Start, $lt: last7Start } })
+    ]).catch(() => [0,0]);
+
+
     const eventTotalsMap = eventTypeCounts.reduce((acc, entry) => {
       acc[entry._id] = entry.total;
       return acc;
@@ -316,7 +357,7 @@ async function renderDashboardPage(req, res) {
       weekdayCounts[index] = entry.total;
     });
 
-    return res.render('dashboard', {
+    const payload = {
       pageTitle: "Chef's Logic | Dashboard",
       activeTab: 'dashboard',
       rangeKey,
@@ -340,8 +381,23 @@ async function renderDashboardPage(req, res) {
       weekdayLabels,
       weekdayCounts,
       recentEvents,
-      errorMessage: ''
-    });
+      topSavedRecipes: topSavedRecipesAgg,
+      topCategories: topCategories,
+      topCookbooks: topCookbooks,
+      avgPrepTime,
+      recipesWeeklyGrowth: {
+        last7: last7Count || 0,
+        prev7: prev7Count || 0
+      }
+    };
+
+    // If client requested JSON (e.g., dashboard fetch), return structured JSON payload
+    const accept = (req.get('Accept') || '').toLowerCase();
+    if (accept.includes('application/json') || req.xhr) {
+      return res.json(payload);
+    }
+
+    return res.render('dashboard', Object.assign({}, payload, { errorMessage: '' }));
   } catch (error) {
     console.error('Dashboard render error:', error);
     return res.status(500).render('dashboard', {
