@@ -33,12 +33,33 @@
           var __savedRecipes = (typeof savedRecipes !== 'undefined' && Array.isArray(savedRecipes))
             ? savedRecipes
             : ((typeof locals !== 'undefined' && Array.isArray(locals.savedRecipes)) ? locals.savedRecipes : []);
+          var _isLoggedIn = Boolean(typeof currentUser !== 'undefined' && currentUser);
           var _currentId = (typeof currentUser !== 'undefined' && currentUser) ? String(currentUser._id) : '';
           var _isAdmin   = (typeof currentUser !== 'undefined' && currentUser) && String(currentUser.role||'').toLowerCase() === 'admin';
+          var __allRecipesMap = {};
+          var __allRecipes = [];
+          (__myRecipes.concat(__otherRecipes)).forEach(function(r) {
+            var id = String((r && r._id) || '');
+            if (!id || __allRecipesMap[id]) return;
+            __allRecipesMap[id] = true;
+            __allRecipes.push(r);
+          });
+          var __allRegionsMap = {};
+          var __allRegions = [];
+          (__myRecipes.concat(__otherRecipes).concat(__savedRecipes)).forEach(function(r) {
+            var regionName = String((r && r.region && (r.region.name || r.region.nombre)) || '').trim();
+            var key = regionName.toLowerCase();
+            if (!key || __allRegionsMap[key]) return;
+            __allRegionsMap[key] = true;
+            __allRegions.push(regionName);
+          });
+          __allRegions.sort(function(a, b) { return a.localeCompare(b, 'es'); });
           function _diffColor(d){ return ({facil:'#27ae60',media:'#e67e22',dificil:'#c0392b'})[String(d||'media')]||'#546e7a'; }
           function _accent(r){ var h=/^#[0-9a-fA-F]{3,6}$/.test(String(r.accentColor||''))?r.accentColor:''; return h||_diffColor(r.difficulty); }
           function _src(r){ return String(r.imageUrl||r.imagen_principal||'').trim(); }
           function _okSrc(s){ return /^(https?:\/\/|\/|data:image\/)/i.test(s); }
+          function _region(r){ return String((r && r.region && (r.region.name || r.region.nombre)) || 'Sin región'); }
+          function _difficulty(r){ return String(r.difficulty || r.dificultad || 'media').toLowerCase(); }
           function _creator(r){
             var u = r.author || r.usuario_id;
             if (u && typeof u === 'object') return u.name || u.nombre || 'Usuario';
@@ -46,10 +67,50 @@
           }
         %>
 
-        <div class="rb-panels">
+        <section class="rb-toolbar card" data-recipe-filters>
+          <div class="rb-toolbar-field rb-toolbar-search">
+            <label for="recipes-search-input">Buscar</label>
+            <input id="recipes-search-input" type="search" placeholder="Título, autor o región..." data-filter-search />
+          </div>
+          <div class="rb-toolbar-field">
+            <label for="recipes-difficulty-filter">Dificultad</label>
+            <select id="recipes-difficulty-filter" data-filter-difficulty>
+              <option value="all">Todas</option>
+              <option value="facil">Fácil</option>
+              <option value="media">Media</option>
+              <option value="dificil">Difícil</option>
+            </select>
+          </div>
+          <div class="rb-toolbar-field">
+            <label for="recipes-region-filter">Región</label>
+            <select id="recipes-region-filter" data-filter-region>
+              <option value="all">Todas</option>
+              <% __allRegions.forEach(function(regionName) { %>
+                <option value="<%= regionName.toLowerCase() %>"><%= regionName %></option>
+              <% }); %>
+            </select>
+          </div>
+          <% if (_isLoggedIn) { %>
+          <div class="rb-toolbar-field">
+            <label for="recipes-panel-filter">Panel</label>
+            <select id="recipes-panel-filter" data-filter-panel>
+              <option value="all">Todos</option>
+              <option value="mine">Mis recetas</option>
+              <option value="community">Comunidad</option>
+              <option value="saved">Guardadas</option>
+            </select>
+          </div>
+          <% } %>
+          <div class="rb-toolbar-actions">
+            <button class="btn btn-soft btn-sm" type="button" data-filter-clear>Limpiar filtros</button>
+          </div>
+        </section>
+
+        <div class="rb-panels <%= !_isLoggedIn ? 'rb-panels-single' : '' %>">
+          <% if (_isLoggedIn) { %>
 
           <!-- ── PANEL: Mis recetas ── -->
-          <div class="rb-panel">
+          <div class="rb-panel" data-panel-type="mine">
             <div class="rb-panel-header">
               <span class="rb-panel-icon">👨‍🍳</span>
               <span class="rb-panel-title">Mis recetas</span>
@@ -65,7 +126,7 @@
                        var em = String(recipe.fallbackEmoji||'').trim()||'🍳';
                        var canEdit = Boolean(currentUser && (_isAdmin||(_currentId&&String(recipe.author||recipe.usuario_id||'')===_currentId)));
                   %>
-                    <article class="recipe-card recipe-card-clickable" data-card-href="/recipes/<%= recipe._id %>" role="link" tabindex="0">
+                    <article class="recipe-card recipe-card-clickable" data-card-href="/recipes/<%= recipe._id %>" data-recipe-card data-recipe-title="<%= String(recipe.title||recipe.titulo||'').toLowerCase() %>" data-recipe-author="<%= String(_creator(recipe)).toLowerCase() %>" data-recipe-region="<%= String(_region(recipe)).toLowerCase() %>" data-recipe-difficulty="<%= _difficulty(recipe) %>" role="link" tabindex="0">
                       <% if (s && ok) { %><img class="recipe-card-img" src="<%= s %>" alt="<%= recipe.title||recipe.titulo %>" loading="lazy" />
                       <% } else { %><div class="recipe-card-img-accent" style="--card-accent:<%= acc %>"><span class="recipe-card-img-emoji"><%= em %></span></div><% } %>
                       <div class="recipe-card-body">
@@ -94,7 +155,7 @@
           </div>
 
           <!-- ── PANEL: Comunidad ── -->
-          <div class="rb-panel">
+          <div class="rb-panel" data-panel-type="community">
             <div class="rb-panel-header">
               <span class="rb-panel-icon">🌮</span>
               <span class="rb-panel-title">Comunidad</span>
@@ -109,7 +170,7 @@
                        var s = _src(recipe), ok = _okSrc(s), acc = _accent(recipe);
                        var em = String(recipe.fallbackEmoji||'').trim()||'🍳';
                   %>
-                    <article class="recipe-card recipe-card-clickable" data-card-href="/recipes/<%= recipe._id %>" role="link" tabindex="0">
+                    <article class="recipe-card recipe-card-clickable" data-card-href="/recipes/<%= recipe._id %>" data-recipe-card data-recipe-title="<%= String(recipe.title||recipe.titulo||'').toLowerCase() %>" data-recipe-author="<%= String(_creator(recipe)).toLowerCase() %>" data-recipe-region="<%= String(_region(recipe)).toLowerCase() %>" data-recipe-difficulty="<%= _difficulty(recipe) %>" role="link" tabindex="0">
                       <% if (s && ok) { %><img class="recipe-card-img" src="<%= s %>" alt="<%= recipe.title||recipe.titulo %>" loading="lazy" />
                       <% } else { %><div class="recipe-card-img-accent" style="--card-accent:<%= acc %>"><span class="recipe-card-img-emoji"><%= em %></span></div><% } %>
                       <div class="recipe-card-body">
@@ -130,16 +191,14 @@
           </div>
 
           <!-- ── PANEL: Guardadas ── -->
-          <div class="rb-panel">
+          <div class="rb-panel" data-panel-type="saved">
             <div class="rb-panel-header">
               <span class="rb-panel-icon">🔖</span>
               <span class="rb-panel-title">Guardadas</span>
               <span class="rb-panel-count"><%= __savedRecipes.length %></span>
             </div>
             <div class="rb-panel-body">
-              <% if (!(typeof currentUser !== 'undefined' && currentUser)) { %>
-                <p class="rb-empty">Inicia sesión para ver tus recetas guardadas.</p>
-              <% } else if (__savedRecipes.length === 0) { %>
+              <% if (__savedRecipes.length === 0) { %>
                 <p class="rb-empty">Aún no has guardado ninguna receta.</p>
               <% } else { %>
                 <div class="rb-grid">
@@ -147,7 +206,7 @@
                        var s = _src(recipe), ok = _okSrc(s), acc = _accent(recipe);
                        var em = String(recipe.fallbackEmoji||'').trim()||'🍳';
                   %>
-                    <article class="recipe-card recipe-card-clickable" data-card-href="/recipes/<%= recipe._id %>" role="link" tabindex="0">
+                    <article class="recipe-card recipe-card-clickable" data-card-href="/recipes/<%= recipe._id %>" data-recipe-card data-recipe-title="<%= String(recipe.title||recipe.titulo||'').toLowerCase() %>" data-recipe-author="<%= String(_creator(recipe)).toLowerCase() %>" data-recipe-region="<%= String(_region(recipe)).toLowerCase() %>" data-recipe-difficulty="<%= _difficulty(recipe) %>" role="link" tabindex="0">
                       <% if (s && ok) { %><img class="recipe-card-img" src="<%= s %>" alt="<%= recipe.title||recipe.titulo %>" loading="lazy" />
                       <% } else { %><div class="recipe-card-img-accent" style="--card-accent:<%= acc %>"><span class="recipe-card-img-emoji"><%= em %></span></div><% } %>
                       <div class="recipe-card-body">
@@ -165,6 +224,44 @@
               <% } %>
             </div>
           </div>
+          <% } else { %>
+
+          <!-- ── PANEL: Todas las recetas (no logueado) ── -->
+          <div class="rb-panel" data-panel-type="all">
+            <div class="rb-panel-header">
+              <span class="rb-panel-icon">🍽️</span>
+              <span class="rb-panel-title">Todas las recetas</span>
+              <span class="rb-panel-count"><%= __allRecipes.length %></span>
+            </div>
+            <div class="rb-panel-body">
+              <% if (__allRecipes.length === 0) { %>
+                <p class="rb-empty">No hay recetas publicadas todavía.</p>
+              <% } else { %>
+                <div class="rb-grid">
+                  <% __allRecipes.forEach(function(recipe) {
+                       var s = _src(recipe), ok = _okSrc(s), acc = _accent(recipe);
+                       var em = String(recipe.fallbackEmoji||'').trim()||'🍳';
+                  %>
+                    <article class="recipe-card recipe-card-clickable" data-card-href="/recipes/<%= recipe._id %>" data-recipe-card data-recipe-title="<%= String(recipe.title||recipe.titulo||'').toLowerCase() %>" data-recipe-author="<%= String(_creator(recipe)).toLowerCase() %>" data-recipe-region="<%= String(_region(recipe)).toLowerCase() %>" data-recipe-difficulty="<%= _difficulty(recipe) %>" role="link" tabindex="0">
+                      <% if (s && ok) { %><img class="recipe-card-img" src="<%= s %>" alt="<%= recipe.title||recipe.titulo %>" loading="lazy" />
+                      <% } else { %><div class="recipe-card-img-accent" style="--card-accent:<%= acc %>"><span class="recipe-card-img-emoji"><%= em %></span></div><% } %>
+                      <div class="recipe-card-body">
+                        <p class="recipe-card-meta"><%= recipe.region ? (recipe.region.name||'') : 'Sin región' %></p>
+                        <h3 class="recipe-card-title"><%= recipe.title||recipe.titulo||'Sin título' %></h3>
+                        <p class="recipe-card-author">Por <%= _creator(recipe) %></p>
+                        <div class="recipe-card-footer">
+                          <span>⏱ <%= (recipe.prepMinutes||0)+(recipe.cookMinutes||0) %> min</span>
+                          <span>❤ <%= recipe.likeCount||0 %></span>
+                          <span class="chip chip-sm"><%= recipe.difficulty||recipe.dificultad||'media' %></span>
+                        </div>
+                      </div>
+                    </article>
+                  <% }); %>
+                </div>
+              <% } %>
+            </div>
+          </div>
+          <% } %>
 
         </div><!-- /rb-panels -->
 

@@ -71,6 +71,92 @@ function bindClickableRecipeCards() {
 
 bindClickableRecipeCards();
 
+function bindRecipesFilters() {
+  const toolbar = document.querySelector("[data-recipe-filters]");
+  if (!toolbar) return;
+
+  const searchInput = toolbar.querySelector("[data-filter-search]");
+  const difficultySelect = toolbar.querySelector("[data-filter-difficulty]");
+  const regionSelect = toolbar.querySelector("[data-filter-region]");
+  const panelSelect = toolbar.querySelector("[data-filter-panel]");
+  const clearButton = toolbar.querySelector("[data-filter-clear]");
+  const panels = Array.from(document.querySelectorAll(".rb-panel[data-panel-type]"));
+
+  if (!panels.length) return;
+
+  function ensureEmptyMessage(panel) {
+    let message = panel.querySelector(".rb-filter-empty");
+    if (message) return message;
+
+    const body = panel.querySelector(".rb-panel-body");
+    if (!body) return null;
+
+    message = document.createElement("p");
+    message.className = "rb-filter-empty";
+    message.textContent = "No hay recetas que coincidan con los filtros.";
+    message.hidden = true;
+    body.appendChild(message);
+    return message;
+  }
+
+  function applyFilters() {
+    const text = String((searchInput && searchInput.value) || "").trim().toLowerCase();
+    const difficulty = String((difficultySelect && difficultySelect.value) || "all").toLowerCase();
+    const region = String((regionSelect && regionSelect.value) || "all").toLowerCase();
+    const panelFilter = String((panelSelect && panelSelect.value) || "all").toLowerCase();
+
+    panels.forEach((panel) => {
+      const panelType = String(panel.getAttribute("data-panel-type") || "all").toLowerCase();
+      const panelMatches = panelFilter === "all" || panelFilter === panelType;
+      panel.hidden = !panelMatches;
+      if (!panelMatches) return;
+
+      const cards = Array.from(panel.querySelectorAll("[data-recipe-card]"));
+      let visibleCount = 0;
+
+      cards.forEach((card) => {
+        const title = String(card.getAttribute("data-recipe-title") || "").toLowerCase();
+        const author = String(card.getAttribute("data-recipe-author") || "").toLowerCase();
+        const cardRegion = String(card.getAttribute("data-recipe-region") || "").toLowerCase();
+        const cardDifficulty = String(card.getAttribute("data-recipe-difficulty") || "").toLowerCase();
+
+        const matchesText = !text || title.includes(text) || author.includes(text) || cardRegion.includes(text);
+        const matchesDifficulty = difficulty === "all" || cardDifficulty === difficulty;
+        const matchesRegion = region === "all" || cardRegion === region;
+        const visible = matchesText && matchesDifficulty && matchesRegion;
+
+        card.classList.toggle("is-filtered-out", !visible);
+        if (visible) visibleCount += 1;
+      });
+
+      const badge = panel.querySelector(".rb-panel-count");
+      if (badge) badge.textContent = String(visibleCount);
+
+      const emptyMsg = ensureEmptyMessage(panel);
+      if (emptyMsg) emptyMsg.hidden = visibleCount > 0;
+    });
+  }
+
+  if (searchInput) searchInput.addEventListener("input", applyFilters);
+  if (difficultySelect) difficultySelect.addEventListener("change", applyFilters);
+  if (regionSelect) regionSelect.addEventListener("change", applyFilters);
+  if (panelSelect) panelSelect.addEventListener("change", applyFilters);
+
+  if (clearButton) {
+    clearButton.addEventListener("click", () => {
+      if (searchInput) searchInput.value = "";
+      if (difficultySelect) difficultySelect.value = "all";
+      if (regionSelect) regionSelect.value = "all";
+      if (panelSelect) panelSelect.value = "all";
+      applyFilters();
+    });
+  }
+
+  applyFilters();
+}
+
+bindRecipesFilters();
+
 function getAuthRedirectUrl() {
   const currentPath = window.location.pathname || "/";
   return `/login?returnTo=${encodeURIComponent(currentPath)}`;
