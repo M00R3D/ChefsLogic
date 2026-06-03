@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <%- include("../partials/navbar", { activeTab }) %>
+      <main class="main-content">
+        <%- include("../partials/header", { pageTitle: pageTitle }) %>
+
+        <section class="card">
+          <% if (errorMessage) { %>
+            <div class="alert alert-error"><%= errorMessage %></div>
+          <% } %>
+
+          <form action="/recipes/<%= recipeId %>/comments/<%= comment._id %>/edit" method="POST" class="form-grid">
+            <label>
+              Texto del comentario
+              <textarea name="commentText" required><%= comment.commentText || comment.comentario || '' %></textarea>
+            </label>
+
+            <div class="actions">
+              <button class="btn btn-primary" type="submit">Guardar</button>
+              <a class="btn btn-soft" href="/recipes/<%= recipeId %>">Cancelar</a>
+            </div>
+          </form>
+        </section>
+
+        <%- include('../partials/footer') %>
+      </main>
+    </div>
+  </body>
+</html>

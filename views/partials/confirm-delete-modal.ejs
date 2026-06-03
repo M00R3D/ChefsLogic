@@ -1,0 +1,105 @@
+<div id="confirm-delete-modal" class="confirm-modal" aria-hidden="true" role="dialog" aria-modal="true">
+  <div class="confirm-modal-backdrop" data-close-modal></div>
+  <div class="confirm-modal-panel">
+    <h3 id="confirm-delete-title">Confirmar eliminación</h3>
+    <p id="confirm-delete-message">¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.</p>
+    <div class="confirm-modal-actions">
+      <button class="btn btn-outline" data-close-modal>Cancelar</button>
+      <button id="confirm-delete-confirm" class="btn btn-danger">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+;(function(){
+  const modal = document.getElementById('confirm-delete-modal');
+  const titleEl = document.getElementById('confirm-delete-title');
+  const messageEl = document.getElementById('confirm-delete-message');
+  const confirmBtn = document.getElementById('confirm-delete-confirm');
+
+  let currentAction = null;
+
+  function openModal(opts) {
+    titleEl.textContent = opts.title || 'Confirmar eliminación';
+    messageEl.textContent = opts.message || '¿Estás seguro? Esta acción no se puede deshacer.';
+    currentAction = opts;
+    modal.setAttribute('aria-hidden', 'false');
+    modal.classList.add('is-open');
+  }
+
+  function closeModal() {
+    modal.setAttribute('aria-hidden', 'true');
+    modal.classList.remove('is-open');
+    currentAction = null;
+  }
+
+  document.querySelectorAll('[data-close-modal]').forEach(el => el.addEventListener('click', closeModal));
+
+  confirmBtn.addEventListener('click', async function() {
+    if (!currentAction || !currentAction.url) return closeModal();
+    try {
+      const method = currentAction.method || 'POST';
+      const headers = { 'Accept': 'application/json' };
+      if (method !== 'GET' && !(currentAction.formSubmit)) headers['Content-Type'] = 'application/json';
+
+      // If a DOM form exists for this action, submit it to preserve redirects and cookies
+      if (currentAction.formSubmit) {
+        const form = currentAction.formSubmit instanceof HTMLFormElement ? currentAction.formSubmit : document.querySelector(currentAction.formSubmit);
+        if (form) { form.submit(); closeModal(); return; }
+      }
+
+      const res = await fetch(currentAction.url, { method: method, headers: headers, credentials: 'same-origin' });
+
+      if (res && res.ok) {
+        if (currentAction.onSuccess) currentAction.onSuccess();
+        else window.location.reload();
+      } else {
+        const text = await res.text().catch(() => 'No fue posible completar la acción.');
+        alert(text || 'Error al eliminar.');
+      }
+    } catch (e) {
+      console.error('Delete action failed', e);
+      alert('No fue posible completar la acción.');
+    } finally {
+      closeModal();
+    }
+  });
+
+  // Wire generic delete buttons
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('[data-delete-recipe], [data-delete-ingredient], [data-delete-cookbook], [data-delete-comment]');
+    if (!btn) return;
+    e.preventDefault();
+    const recipeId = btn.dataset.deleteRecipe;
+    const ingredientId = btn.dataset.deleteIngredient;
+    const cookbookId = btn.dataset.deleteCookbook;
+    const commentId = btn.dataset.deleteComment;
+
+    if (recipeId) {
+      const action = { title: 'Eliminar receta', message: '¿Eliminar esta receta permanentemente?', url: '/api/recipes/' + recipeId, method: 'DELETE' };
+      if (btn.dataset.formSelector) action.formSubmit = btn.dataset.formSelector;
+      openModal(action);
+      return;
+    }
+    if (ingredientId) {
+      const action = { title: 'Eliminar ingrediente', message: '¿Eliminar este ingrediente permanentemente?', url: '/ingredients/' + ingredientId + '/delete', method: 'POST' };
+      if (btn.dataset.formSelector) action.formSubmit = btn.dataset.formSelector;
+      openModal(action);
+      return;
+    }
+    if (cookbookId) {
+      const action = { title: 'Eliminar recetario', message: '¿Eliminar este recetario permanentemente?', url: '/cookbooks/' + cookbookId + '/delete', method: 'POST' };
+      if (btn.dataset.formSelector) action.formSubmit = btn.dataset.formSelector;
+      openModal(action);
+      return;
+    }
+    if (commentId) {
+      // comment deletion via API
+      const recipeIdAttr = btn.dataset.recipeId;
+      const url = '/api/recipes/' + (recipeIdAttr || '') + '/comments/' + commentId;
+      openModal({ title: 'Eliminar comentario', message: '¿Eliminar este comentario?', url: url, method: 'DELETE' });
+      return;
+    }
+  });
+})();
+</script>

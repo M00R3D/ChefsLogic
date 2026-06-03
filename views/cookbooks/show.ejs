@@ -110,9 +110,9 @@
                 <% if (canManage) { %>
                   <a class="btn btn-soft btn-sm" href="/cookbooks/<%= cookbook._id %>/edit">Editar</a>
                   <% if (typeof currentUser !== 'undefined' && currentUser && String(currentUser.role || '').toLowerCase() === 'admin') { %>
-                    <form action="/cookbooks/<%= cookbook._id %>/delete" method="POST" style="margin:0;" onsubmit="return confirm('¿Eliminar este recetario?');">
-                      <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
-                    </form>
+                      <form action="/cookbooks/<%= cookbook._id %>/delete" method="POST" style="margin:0;">
+                        <button class="btn btn-danger btn-sm" type="button" data-delete-cookbook="<%= cookbook._id %>" data-form-selector="form[action='/cookbooks/<%= cookbook._id %>/delete']">Eliminar</button>
+                      </form>
                   <% } %>
                 <% } %>
                 <a class="btn btn-ghost btn-sm" href="/cookbooks">Volver</a>
@@ -159,6 +159,15 @@
             <% } %>
           </section>
         <% } %>
+        <section class="card reveal" style="margin-top:.7rem;">
+          <div class="actions">
+            <a class="btn btn-soft" href="/cookbooks">Volver a recetarios</a>
+            <% if (typeof currentUser !== 'undefined' && currentUser && String(currentUser.role || '').toLowerCase() === 'admin') { %>
+              <a class="btn btn-primary" href="/cookbooks/<%= cookbook._id %>/edit">Editar recetario</a>
+              <button class="btn btn-danger" data-delete-cookbook="<%= cookbook._id %>">Eliminar recetario</button>
+            <% } %>
+          </div>
+        </section>
 
         <%- include("../partials/footer") %>
       </main>

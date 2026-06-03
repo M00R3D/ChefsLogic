@@ -798,6 +798,41 @@ textarea {
   background: transparent;
 }
 
+/* Danger button */
+.btn-danger {
+  background: linear-gradient(135deg, #d9534f, var(--danger));
+  color: #fff;
+  border-color: transparent;
+}
+
+/* Confirmation modal */
+.confirm-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+}
+.confirm-modal.is-open { display: flex; }
+.confirm-modal-backdrop {
+  position: absolute; inset: 0; background: rgba(18, 19, 20, 0.4);
+  backdrop-filter: blur(2px);
+}
+.confirm-modal-panel {
+  position: relative;
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 1.1rem 1.25rem;
+  box-shadow: var(--shadow-lg);
+  max-width: 520px;
+  width: 92%;
+  z-index: 1;
+}
+.confirm-modal-panel h3 { margin: 0 0 0.45rem; font-family: var(--font-serif); color: var(--brand); }
+.confirm-modal-panel p { margin: 0 0 1rem; color: var(--text-soft); }
+.confirm-modal-actions { display:flex; justify-content:flex-end; gap:0.6rem; }
+
 .btn-ghost:hover {
   background: var(--surface-soft);
   color: var(--text);

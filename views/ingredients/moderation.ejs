@@ -76,8 +76,8 @@
                     <button class="btn btn-soft btn-sm" type="submit">Rechazar</button>
                   </form>
                 <% } %>
-                <form action="/ingredients/<%= ing._id %>/delete" method="POST" style="margin:0;" onsubmit="return confirm('¿Eliminar este ingrediente de forma permanente?');">
-                  <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
+                <form action="/ingredients/<%= ing._id %>/delete" method="POST" style="margin:0;">
+                  <button class="btn btn-danger btn-sm" type="button" data-delete-ingredient="<%= ing._id %>" data-form-selector="form[action='/ingredients/<%= ing._id %>/delete']">Eliminar</button>
                 </form>
               </div>
             </article>

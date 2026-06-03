@@ -118,6 +118,9 @@
               <a class="btn btn-soft" href="/recipes">Volver</a>
               <% if (canEdit) { %>
                 <a class="btn btn-primary" href="/recipes/<%= recipe._id %>/edit">Editar receta</a>
+                <% if (typeof currentUser !== 'undefined' && currentUser && String(currentUser.role || '').toLowerCase() === 'admin') { %>
+                  <button class="btn btn-danger" data-delete-recipe="<%= recipe._id %>">Eliminar receta</button>
+                <% } %>
               <% } %>
             </div>
           </section>
@@ -198,6 +201,12 @@
                     <div class="comment-avatar"><%= ((comment.user && comment.user.name) ? comment.user.name.charAt(0) : '?').toUpperCase() %></div>
                     <span class="comment-author"><%= (comment.user && comment.user.name) ? comment.user.name : 'Usuario' %></span>
                     <span class="comment-date"><%= new Date(comment.createdAt).toLocaleDateString('es-MX') %></span>
+                    <% if (typeof currentUser !== 'undefined' && currentUser && String(currentUser.role || '').toLowerCase() === 'admin') { %>
+                      <div style="margin-left:8px;display:flex;gap:.4rem;">
+                        <a class="btn btn-soft btn-sm" href="#" onclick="event.preventDefault(); location.href='/recipes/<%= recipe._id %>/comments/<%= comment._id %>/edit'">Editar</a>
+                        <button class="btn btn-danger btn-sm" data-delete-comment="<%= comment._id %>" data-recipe-id="<%= recipe._id %>">Eliminar</button>
+                      </div>
+                    <% } %>
                   </div>
                   <p class="comment-text"><%= comment.commentText %></p>
                 </article>

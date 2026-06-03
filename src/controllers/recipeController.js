@@ -800,6 +800,90 @@ async function deleteRecipe(req, res) {
   }
 }
 
+async function deleteRecipeFromForm(req, res) {
+  try {
+    // reuse deleteRecipe logic but redirect after
+    await deleteRecipe(req, res);
+    // If deleteRecipe already sent a response, return
+    if (res.headersSent) return;
+    return res.redirect('/recipes');
+  } catch (error) {
+    console.error('deleteRecipeFromForm error', error);
+    return res.status(500).redirect('/recipes');
+  }
+}
+
+async function deleteComment(req, res) {
+  try {
+    const recipeId = toObjectId(req.params.id);
+    const commentId = toObjectId(req.params.commentId);
+    if (!commentId) return res.status(400).send('Comentario invalido');
+
+    const query = { _id: commentId, type: 'comment' };
+    if (recipeId) query.recipe = recipeId;
+
+    const deleted = await Interaction.findOneAndDelete(query);
+    if (!deleted) return res.status(404).send('Comentario no encontrado');
+
+    if (req.accepts('html')) return res.redirect('back');
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('deleteComment error', error);
+    return res.status(500).send('No fue posible eliminar el comentario');
+  }
+}
+
+async function updateComment(req, res) {
+  try {
+    const commentId = toObjectId(req.params.commentId);
+    if (!commentId) return res.status(400).send('Comentario invalido');
+    const text = String(req.body.commentText || req.body.comment || '').trim();
+    if (!text) return res.status(400).send('El texto es obligatorio');
+
+    const updated = await Interaction.findOneAndUpdate({ _id: commentId, type: 'comment' }, { comentario: text, commentText: text }, { new: true });
+    if (!updated) return res.status(404).send('Comentario no encontrado');
+
+    if (req.accepts('html')) return res.redirect('back');
+    return res.status(200).json({ success: true, comment: updated });
+  } catch (error) {
+    console.error('updateComment error', error);
+    return res.status(500).send('No fue posible actualizar el comentario');
+  }
+}
+
+async function renderEditCommentPage(req, res) {
+  try {
+    const commentId = toObjectId(req.params.commentId);
+    if (!commentId) return res.status(404).render('recipes/show', { pageTitle: "Editar comentario", recipe: null, comments: [], errorMessage: 'Comentario no encontrado' });
+
+    const comment = await Interaction.findById(commentId).lean();
+    if (!comment) return res.status(404).render('recipes/show', { pageTitle: "Editar comentario", recipe: null, comments: [], errorMessage: 'Comentario no encontrado' });
+
+    return res.render('recipes/edit-comment', {
+      pageTitle: 'Editar comentario',
+      activeTab: 'recetas',
+      comment,
+      recipeId: req.params.id,
+      errorMessage: ''
+    });
+  } catch (error) {
+    console.error('renderEditCommentPage error', error);
+    return res.status(500).render('recipes/show', { pageTitle: 'Editar comentario', recipe: null, comments: [], errorMessage: 'No fue posible cargar el comentario.' });
+  }
+}
+
+async function updateCommentFromForm(req, res) {
+  try {
+    // reuse updateComment logic
+    await updateComment(req, res);
+    if (res.headersSent) return;
+    return res.redirect(`/recipes/${req.params.id}`);
+  } catch (error) {
+    console.error('updateCommentFromForm error', error);
+    return res.status(500).redirect(`/recipes/${req.params.id}`);
+  }
+}
+
 async function likeRecipe(req, res) {
   try {
     const recipeId = toObjectId(req.params.id);
@@ -1012,8 +1096,14 @@ module.exports = {
   createRecipe,
   updateRecipe,
   deleteRecipe,
+  deleteRecipeFromForm,
   likeRecipe,
   dislikeRecipe,
   saveRecipe,
-  addComment
+  addComment,
+  deleteComment,
+  updateComment,
+  renderEditCommentPage,
+  updateCommentFromForm
 };
+
