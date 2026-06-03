@@ -13,7 +13,8 @@
     "seed:ingredientes": "node src/seeders/ingredientSeeder.js",
     "seed:recetarios": "node src/seeders/cookbookSeeder.js",
     "seed:eventos": "node src/seeders/eventoSeeder.js",
-    "db:fresh:seed": "node src/seeders/freshSeed.js"
+    "db:fresh:seed": "node src/seeders/freshSeed.js",
+    "update:image-urls": "node src/scripts/updateImageUrls.js"
   },
   "keywords": [
     "nodejs",

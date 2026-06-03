@@ -34,14 +34,54 @@ function normalizeKey(value) {
 // Plantillas de recetas por región (títulos + resumen + tags + plantilla simple de ingredientes/pasos)
 const RECIPES_BY_REGION = {
   "noroeste": [
-    { title: "Tacos de pescado estilo Baja", tags: ["mariscos","tacos"], difficulty: "facil" },
-    { title: "Ceviche sinaloense", tags: ["mariscos","ceviche"], difficulty: "facil" },
-    { title: "Camarones al coco", tags: ["mariscos","camarones"], difficulty: "media" },
-    { title: "Carne asada con frijoles", tags: ["carnes","asado"], difficulty: "media" },
-    { title: "Sopa de mariscos del Pacífico", tags: ["sopas","mariscos"], difficulty: "media" },
-    { title: "Ensalada de nopal y queso", tags: ["ensaladas","tradicional"], difficulty: "facil" },
-    { title: "Tortilla de harina casera", tags: ["panes","acompañamiento"], difficulty: "media" },
-    { title: "Chiles rellenos estilo norteño", tags: ["chiles","tradicional"], difficulty: "dificil" }
+    {
+      title: "Tacos de pescado estilo Baja",
+      tags: ["mariscos","tacos"],
+      difficulty: "facil",
+      image: "https://www.recetasnestle.com.mx/sites/default/files/styles/recipe_detail_desktop_new/public/srh_recipes/24f49d0459444d4c89c9e4d9747a2145.webp?itok=dP46DW2J"
+    },
+    {
+      title: "Ceviche sinaloense",
+      tags: ["mariscos","ceviche"],
+      difficulty: "facil",
+      image: "https://i0.wp.com/estoessinaloa.com/wp-content/uploads/2021/02/9AEB32EF-8AA5-44DB-997D-A2D0B30678A1.jpeg?fit=712%2C400&ssl=1"
+    },
+    {
+      title: "Camarones al coco",
+      tags: ["mariscos","camarones"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwY7aibPr6vl2s0oLm0pjkIPYEswKwS2IEXStXsRJv-Q&s=10"
+    },
+    {
+      title: "Carne asada con frijoles",
+      tags: ["carnes","asado"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3Ctb6EZbFgpI9E05-RFMGtuIgLHGliD_UitlJLj3e8Q&s=10"
+    },
+    {
+      title: "Sopa de mariscos del Pacífico",
+      tags: ["sopas","mariscos"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRERp9CiitbA3IIsDVkNCVUm0dXPk4ytohKrK4P4xx2Vw&s=10"
+    },
+    {
+      title: "Ensalada de nopal y queso",
+      tags: ["ensaladas","tradicional"],
+      difficulty: "facil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCRQO9UHKk1Q5FToFPjx030xgNc3BX-cVlJO28J2z71w&s=10"
+    },
+    {
+      title: "Tortilla de harina casera",
+      tags: ["panes","acompañamiento"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRKbjqM9IobumW5JcJ9rdOVir7TO1O2CWrZ_Jp92kTjsQ&s=10"
+    },
+    {
+      title: "Chiles rellenos estilo norteño",
+      tags: ["chiles","tradicional"],
+      difficulty: "dificil",
+      image: "https://www.mexicodesconocido.com.mx/sites/default/files/nodes/2381/chiles-rellenos-nortenos.jpg"
+    }
   ],
   "noreste": [
     { title: "Cabrito al pastor", tags: ["cabrito","asado"], difficulty: "dificil" },
