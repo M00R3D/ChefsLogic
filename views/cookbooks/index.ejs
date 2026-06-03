@@ -129,7 +129,7 @@
               const ownerLabel = ownerName(cb);
               const previewRecipes = Array.isArray(cb.recipes) ? cb.recipes.slice(0, 4) : [];
             %>
-            <article class="cb-card cb-book-card reveal" data-reveal-index="<%= idx %>" style="--cb-accent:<%= cbAccent %>">
+            <article class="cb-card cb-book-card reveal" data-reveal-index="<%= idx %>" data-cookbook-card="<%= cb._id %>" role="button" tabindex="0" style="--cb-accent:<%= cbAccent %>">
               <div class="cb-book-spine"></div>
               <div class="cb-book-pages"></div>
               <div class="cb-card-cover">
@@ -148,6 +148,16 @@
                     <%= (cb.isPublic || cb.publico) ? '🌐 Público' : '🔒 Privado' %>
                   </span>
                 </div>
+                <% if (canManage) { %>
+                  <div class="cb-card-admin-actions">
+                    <a class="btn btn-soft btn-sm" href="/cookbooks/<%= cb._id %>/edit">Editar</a>
+                    <% if (isAdmin) { %>
+                      <form action="/cookbooks/<%= cb._id %>/delete" method="POST" style="margin:0;" onsubmit="return confirm('¿Eliminar este recetario?');">
+                        <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
+                      </form>
+                    <% } %>
+                  </div>
+                <% } %>
               </div>
               <div class="cb-card-body">
                 <h3 class="cb-card-title"><%= cb.title || cb.nombre || 'Sin título' %></h3>
@@ -155,17 +165,7 @@
                 <div class="cb-card-footer">
                   <span class="muted">📋 <%= cbRecipeCount %> receta<%= cbRecipeCount !== 1 ? 's' : '' %></span>
                 </div>
-                <div class="actions" style="margin-top:.5rem;">
-                  <a class="btn btn-soft btn-sm" href="/cookbooks/<%= cb._id %>">Ver</a>
-                  <% if (canManage) { %>
-                    <a class="btn btn-soft btn-sm" href="/cookbooks/<%= cb._id %>/edit">Editar</a>
-                    <% if (isAdmin) { %>
-                      <form action="/cookbooks/<%= cb._id %>/delete" method="POST" style="margin:0;" onsubmit="return confirm('¿Eliminar este recetario?');">
-                        <button class="btn btn-danger btn-sm" type="submit">Eliminar</button>
-                      </form>
-                    <% } %>
-                  <% } %>
-                </div>
+                <p class="muted" style="margin-top:.4rem;font-size:.78rem;">Haz clic en la tarjeta para abrir el libro.</p>
               </div>
               <div class="cb-hover-detail" aria-hidden="true">
                 <h4 class="cb-hover-title">Vista rápida</h4>
@@ -182,10 +182,32 @@
                     <% }); %>
                   </div>
                 <% } %>
-                <a class="btn btn-primary btn-sm" href="/cookbooks/<%= cb._id %>">Abrir detalle</a>
               </div>
             </article>
           <% }); %>
+        </section>
+
+        <section id="cookbook-book-modal" class="cookbook-book-modal" aria-hidden="true">
+          <div class="cookbook-book-backdrop" data-cookbook-close></div>
+          <div class="cookbook-book-dialog" role="dialog" aria-modal="true" aria-labelledby="book-modal-title">
+            <button class="cookbook-book-close" type="button" aria-label="Cerrar" data-cookbook-close>✕</button>
+            <header class="cookbook-book-header">
+              <p class="cookbook-book-kicker" id="book-modal-author">Creado por Usuario</p>
+              <h3 id="book-modal-title">Recetario</h3>
+              <p class="cookbook-book-summary" id="book-modal-summary">Detalle del recetario.</p>
+            </header>
+
+            <div class="cookbook-book-shell" id="cookbook-book-shell">
+              <article class="cookbook-page cookbook-page-left" id="book-left-page"></article>
+              <article class="cookbook-page cookbook-page-right" id="book-right-page"></article>
+            </div>
+
+            <footer class="cookbook-book-footer">
+              <button class="btn btn-soft btn-sm" type="button" id="book-prev-page">⟵ Hoja anterior</button>
+              <span class="cookbook-book-page-indicator" id="book-page-indicator">Hoja 1</span>
+              <button class="btn btn-soft btn-sm" type="button" id="book-next-page">Hoja siguiente ⟶</button>
+            </footer>
+          </div>
         </section>
 
         <!-- PAGINATION -->
@@ -215,5 +237,29 @@
         <%- include("../partials/footer") %>
       </main>
     </div>
+
+    <script id="cookbooks-book-data" type="application/json"><%- JSON.stringify((cookbooks || []).map((cb) => {
+      const owner = cb.owner || cb.usuario_id || null;
+      const ownerName = owner && typeof owner === 'object' ? (owner.name || owner.nombre || 'Usuario') : 'Usuario';
+      const recipes = Array.isArray(cb.recipes) ? cb.recipes : [];
+      return {
+        _id: String(cb._id),
+        title: cb.title || cb.nombre || 'Sin título',
+        description: cb.description || cb.descripcion || '',
+        ownerName,
+        theme: cb.theme || 'otro',
+        coverEmoji: cb.coverEmoji || '',
+        coverImage: cb.coverImage || '',
+        accentColor: cb.accentColor || '',
+        recipes: recipes.map((recipe) => ({
+          _id: String(recipe._id || ''),
+          title: recipe.title || 'Receta',
+          slug: recipe.slug || '',
+          summary: recipe.summary || '',
+          imageUrl: recipe.imageUrl || recipe.imagen_principal || ''
+        }))
+      };
+    })) %></script>
+    <script src="/js/recipes.js"></script>
   </body>
 </html>

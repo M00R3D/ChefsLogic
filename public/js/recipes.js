@@ -249,3 +249,174 @@ document.querySelectorAll("[data-comment-form]").forEach((form) => {
     handleComment(form);
   });
 });
+
+function bindCookbookBookModal() {
+  const modal = document.getElementById("cookbook-book-modal");
+  const dataEl = document.getElementById("cookbooks-book-data");
+  if (!modal || !dataEl) return;
+
+  let catalog = [];
+  try {
+    catalog = JSON.parse(dataEl.textContent || "[]");
+  } catch {
+    catalog = [];
+  }
+
+  const byId = new Map(catalog.map((item) => [String(item._id), item]));
+  const titleEl = document.getElementById("book-modal-title");
+  const authorEl = document.getElementById("book-modal-author");
+  const summaryEl = document.getElementById("book-modal-summary");
+  const leftPage = document.getElementById("book-left-page");
+  const rightPage = document.getElementById("book-right-page");
+  const shell = document.getElementById("cookbook-book-shell");
+  const indicator = document.getElementById("book-page-indicator");
+  const prevBtn = document.getElementById("book-prev-page");
+  const nextBtn = document.getElementById("book-next-page");
+
+  let activeCookbook = null;
+  let spread = 0;
+  let animating = false;
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function maxSpread() {
+    const totalRecipes = Array.isArray(activeCookbook && activeCookbook.recipes)
+      ? activeCookbook.recipes.length
+      : 0;
+    return Math.max(0, Math.ceil(totalRecipes / 2) - 1);
+  }
+
+  function renderRecipeCard(recipe, side) {
+    if (!recipe) {
+      return '<div class="cookbook-page-empty"><p>Hoja en blanco</p><span>Agrega más recetas al recetario.</span></div>';
+    }
+
+    const img = String(recipe.imageUrl || "").trim();
+    const validImg = /^(https?:\/\/|\/|data:image\/)/i.test(img);
+    const safeTitle = escapeHtml(recipe.title || "Receta");
+    const safeSummary = escapeHtml(String(recipe.summary || "Sin resumen.").slice(0, 170));
+    const recipeHref = recipe._id ? `/recipes/${recipe._id}` : (recipe.slug ? `/recipes/${recipe.slug}` : "#");
+
+    return `
+      <div class="cookbook-page-art cookbook-page-art-${side}">
+        ${validImg
+          ? `<img src="${escapeHtml(img)}" alt="${safeTitle}" class="cookbook-page-image" />`
+          : `<div class="cookbook-page-image cookbook-page-image-fallback">🍽️</div>`
+        }
+      </div>
+      <div class="cookbook-page-content">
+        <h4>${safeTitle}</h4>
+        <p>${safeSummary}${(recipe.summary || "").length > 170 ? "…" : ""}</p>
+        <a class="btn btn-soft btn-sm" href="${recipeHref}">Ver receta</a>
+      </div>
+    `;
+  }
+
+  function renderSpread() {
+    if (!activeCookbook) return;
+    const recipes = Array.isArray(activeCookbook.recipes) ? activeCookbook.recipes : [];
+    const start = spread * 2;
+    const leftRecipe = recipes[start] || null;
+    const rightRecipe = recipes[start + 1] || null;
+
+    if (leftPage) leftPage.innerHTML = renderRecipeCard(leftRecipe, "left");
+    if (rightPage) rightPage.innerHTML = renderRecipeCard(rightRecipe, "right");
+
+    if (indicator) {
+      const totalSpreads = maxSpread() + 1;
+      indicator.textContent = `Hoja ${spread + 1} de ${totalSpreads}`;
+    }
+    if (prevBtn) prevBtn.disabled = spread <= 0 || animating;
+    if (nextBtn) nextBtn.disabled = spread >= maxSpread() || animating;
+  }
+
+  function flip(direction) {
+    if (!activeCookbook || animating) return;
+
+    if (direction === "next" && spread >= maxSpread()) return;
+    if (direction === "prev" && spread <= 0) return;
+
+    animating = true;
+    if (shell) shell.classList.add(direction === "next" ? "is-flip-next" : "is-flip-prev");
+    renderSpread();
+
+    window.setTimeout(() => {
+      spread += direction === "next" ? 1 : -1;
+      if (shell) shell.classList.remove("is-flip-next", "is-flip-prev");
+      animating = false;
+      renderSpread();
+    }, 420);
+  }
+
+  function openModal(cookbookId) {
+    const record = byId.get(String(cookbookId));
+    if (!record) return;
+
+    activeCookbook = record;
+    spread = 0;
+
+    if (titleEl) titleEl.textContent = record.title || "Recetario";
+    if (authorEl) authorEl.textContent = `Creado por ${record.ownerName || "Usuario"}`;
+    if (summaryEl) summaryEl.textContent = record.description || "Recetario sin descripción.";
+
+    modal.classList.add("is-open");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("has-modal-open");
+    renderSpread();
+  }
+
+  function closeModal() {
+    modal.classList.remove("is-open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("has-modal-open");
+    activeCookbook = null;
+    spread = 0;
+    animating = false;
+    if (shell) shell.classList.remove("is-flip-next", "is-flip-prev");
+  }
+
+  document.querySelectorAll("[data-cookbook-open]").forEach((btn) => {
+    btn.addEventListener("click", () => openModal(btn.getAttribute("data-cookbook-open")));
+  });
+
+  const interactiveSelector = "a, button, input, textarea, select, label, form";
+  document.querySelectorAll("[data-cookbook-card]").forEach((card) => {
+    const cookbookId = card.getAttribute("data-cookbook-card");
+    if (!cookbookId) return;
+
+    card.addEventListener("click", (event) => {
+      if (event.target && event.target.closest(interactiveSelector)) return;
+      openModal(cookbookId);
+    });
+
+    card.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      if (event.target && event.target.closest(interactiveSelector)) return;
+      event.preventDefault();
+      openModal(cookbookId);
+    });
+  });
+
+  modal.querySelectorAll("[data-cookbook-close]").forEach((btn) => {
+    btn.addEventListener("click", closeModal);
+  });
+
+  if (prevBtn) prevBtn.addEventListener("click", () => flip("prev"));
+  if (nextBtn) nextBtn.addEventListener("click", () => flip("next"));
+
+  document.addEventListener("keydown", (event) => {
+    if (!modal.classList.contains("is-open")) return;
+    if (event.key === "Escape") closeModal();
+    if (event.key === "ArrowRight") flip("next");
+    if (event.key === "ArrowLeft") flip("prev");
+  });
+}
+
+bindCookbookBookModal();
