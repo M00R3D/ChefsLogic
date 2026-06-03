@@ -184,14 +184,54 @@ const RECIPES_BY_REGION = {
     }
   ],
   "centro-sur": [
-    { title: "Mole poblano clásico", tags: ["mole","puebla"], difficulty: "dificil" },
-    { title: "Chiles en nogada (versión tradicional)", tags: ["festivo","chiles"], difficulty: "dificil" },
-    { title: "Tlayudas de la CDMX", tags: ["antojitos","tlayuda"], difficulty: "media" },
-    { title: "Tamales de elote con crema", tags: ["tamales","dulce"], difficulty: "facil" },
-    { title: "Sopa de tortilla", tags: ["sopas","tortilla"], difficulty: "facil" },
-    { title: "Enchiladas de mole verde", tags: ["enchiladas","mole"], difficulty: "media" },
-    { title: "Quesadillas placenteras", tags: ["antojitos","quesadilla"], difficulty: "facil" },
-    { title: "Carnitas estilo centro", tags: ["carnitas","cerdo"], difficulty: "media" }
+    {
+      title: "Mole poblano clásico",
+      tags: ["mole","puebla"],
+      difficulty: "dificil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUcQJUsTweco9UmuVgkk7P2Hpxc7rahwQ5XU9ABV4Xfg&s=10"
+    },
+    {
+      title: "Chiles en nogada (versión tradicional)",
+      tags: ["festivo","chiles"],
+      difficulty: "dificil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQiuPYIn4L_dvaUX1uOx5JoOk0Rqttmq_XZ0ga45UBNnw&s=10"
+    },
+    {
+      title: "Tlayudas de la CDMX",
+      tags: ["antojitos","tlayuda"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS43xWydbPQHDKGomVOeBtPg4WTrkeAesTkQKeAZu_AjQ&s=10"
+    },
+    {
+      title: "Tamales de elote con crema",
+      tags: ["tamales","dulce"],
+      difficulty: "facil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwxjM8VIq_xc0PBkirCsMCr1ZQFgdyqhWAtCuT3od5iQ&s=10"
+    },
+    {
+      title: "Sopa de tortilla",
+      tags: ["sopas","tortilla"],
+      difficulty: "facil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTA399GBaHmi68gLj3QB_KQmWpenSyfCx6pzSRBcGqPXA&s=10"
+    },
+    {
+      title: "Enchiladas de mole verde",
+      tags: ["enchiladas","mole"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSa-Jb5r-v_uRo18ARE9GgZ3KIhP0RcF2ILxpIHj7DtPA&s=10"
+    },
+    {
+      title: "Quesadillas placenteras",
+      tags: ["antojitos","quesadilla"],
+      difficulty: "facil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcToCtCq9MFhoKX5F4SOCxG474dwzafEwVCh4sU43S0IdA&s=10"
+    },
+    {
+      title: "Carnitas estilo centro",
+      tags: ["carnitas","cerdo"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTuHdAdhvyHDwq_7c4MwUjXiTekm-PRv9In4rxvt8vk1A&s=10"
+    }
   ],
   "oriente": [
     { title: "Huachinango a la veracruzana", tags: ["mariscos","veracruz"], difficulty: "media" },
