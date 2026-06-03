@@ -14,6 +14,7 @@
     "seed:recetarios": "node src/seeders/cookbookSeeder.js",
     "seed:eventos": "node src/seeders/eventoSeeder.js",
     "db:fresh:seed": "node src/seeders/freshSeed.js",
+    "seed:test": "node src/seeders/addTestUserAndInteractions.js",
     "update:image-urls": "node src/scripts/updateImageUrls.js"
   },
   "keywords": [
