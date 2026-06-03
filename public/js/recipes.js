@@ -58,6 +58,7 @@ function bindRecipesFilters() {
   const searchInput = toolbar.querySelector("[data-filter-search]");
   const difficultySelect = toolbar.querySelector("[data-filter-difficulty]");
   const regionSelect = toolbar.querySelector("[data-filter-region]");
+  const categorySelect = toolbar.querySelector("[data-filter-category]");
   const panelSelect = toolbar.querySelector("[data-filter-panel]");
   const clearButton = toolbar.querySelector("[data-filter-clear]");
   const panels = Array.from(document.querySelectorAll(".rb-panel[data-panel-type]"));
@@ -83,6 +84,7 @@ function bindRecipesFilters() {
     const text = String((searchInput && searchInput.value) || "").trim().toLowerCase();
     const difficulty = String((difficultySelect && difficultySelect.value) || "all").toLowerCase();
     const region = String((regionSelect && regionSelect.value) || "all").toLowerCase();
+    const category = String((categorySelect && categorySelect.value) || "all").toLowerCase();
     const panelFilter = String((panelSelect && panelSelect.value) || "all").toLowerCase();
 
     panels.forEach((panel) => {
@@ -103,7 +105,9 @@ function bindRecipesFilters() {
         const matchesText = !text || title.includes(text) || author.includes(text) || cardRegion.includes(text);
         const matchesDifficulty = difficulty === "all" || cardDifficulty === difficulty;
         const matchesRegion = region === "all" || cardRegion === region;
-        const visible = matchesText && matchesDifficulty && matchesRegion;
+        const cardTags = String(card.getAttribute('data-recipe-tags') || '').toLowerCase().split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+        const matchesCategory = category === "all" || (cardTags.length && cardTags.indexOf(category) !== -1);
+        const visible = matchesText && matchesDifficulty && matchesRegion && matchesCategory;
 
         card.classList.toggle("is-filtered-out", !visible);
         if (visible) visibleCount += 1;
@@ -120,6 +124,7 @@ function bindRecipesFilters() {
   if (searchInput) searchInput.addEventListener("input", applyFilters);
   if (difficultySelect) difficultySelect.addEventListener("change", applyFilters);
   if (regionSelect) regionSelect.addEventListener("change", applyFilters);
+  if (categorySelect) categorySelect.addEventListener("change", applyFilters);
   if (panelSelect) panelSelect.addEventListener("change", applyFilters);
 
   if (clearButton) {
@@ -127,6 +132,7 @@ function bindRecipesFilters() {
       if (searchInput) searchInput.value = "";
       if (difficultySelect) difficultySelect.value = "all";
       if (regionSelect) regionSelect.value = "all";
+      if (categorySelect) categorySelect.value = "all";
       if (panelSelect) panelSelect.value = "all";
       applyFilters();
     });

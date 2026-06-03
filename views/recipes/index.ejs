@@ -90,6 +90,15 @@
               <% }); %>
             </select>
           </div>
+          <div class="rb-toolbar-field">
+            <label for="recipes-category-filter">Categoría</label>
+            <select id="recipes-category-filter" data-filter-category>
+              <option value="all">Todas</option>
+              <% (typeof allTags !== 'undefined' ? allTags : []).forEach(function(tag) { %>
+                <option value="<%= String(tag).toLowerCase() %>"><%= tag %></option>
+              <% }); %>
+            </select>
+          </div>
           <% if (_isLoggedIn) { %>
           <div class="rb-toolbar-field">
             <label for="recipes-panel-filter">Panel</label>
@@ -126,7 +135,7 @@
                        var em = String(recipe.fallbackEmoji||'').trim()||'🍳';
                        var canEdit = Boolean(currentUser && (_isAdmin||(_currentId&&String(recipe.author||recipe.usuario_id||'')===_currentId)));
                   %>
-                    <article class="recipe-card recipe-card-clickable" data-card-href="/recipes/<%= recipe._id %>" data-recipe-card data-recipe-title="<%= String(recipe.title||recipe.titulo||'').toLowerCase() %>" data-recipe-author="<%= String(_creator(recipe)).toLowerCase() %>" data-recipe-region="<%= String(_region(recipe)).toLowerCase() %>" data-recipe-difficulty="<%= _difficulty(recipe) %>" role="link" tabindex="0">
+                    <article class="recipe-card recipe-card-clickable" data-card-href="/recipes/<%= recipe._id %>" data-recipe-card data-recipe-title="<%= String(recipe.title||recipe.titulo||'').toLowerCase() %>" data-recipe-author="<%= String(_creator(recipe)).toLowerCase() %>" data-recipe-region="<%= String(_region(recipe)).toLowerCase() %>" data-recipe-difficulty="<%= _difficulty(recipe) %>" data-recipe-tags="<%= (Array.isArray(recipe.tags) && recipe.tags.length ? recipe.tags : (Array.isArray(recipe.etiquetas) ? recipe.etiquetas : [])).join(',') %>" role="link" tabindex="0">
                       <% if (s && ok) { %><img class="recipe-card-img" src="<%= s %>" alt="<%= recipe.title||recipe.titulo %>" loading="lazy" />
                       <% } else { %><div class="recipe-card-img-accent" style="--card-accent:<%= acc %>"><span class="recipe-card-img-emoji"><%= em %></span></div><% } %>
                       <div class="recipe-card-body">
@@ -170,7 +179,7 @@
                        var s = _src(recipe), ok = _okSrc(s), acc = _accent(recipe);
                        var em = String(recipe.fallbackEmoji||'').trim()||'🍳';
                   %>
-                    <article class="recipe-card recipe-card-clickable" data-card-href="/recipes/<%= recipe._id %>" data-recipe-card data-recipe-title="<%= String(recipe.title||recipe.titulo||'').toLowerCase() %>" data-recipe-author="<%= String(_creator(recipe)).toLowerCase() %>" data-recipe-region="<%= String(_region(recipe)).toLowerCase() %>" data-recipe-difficulty="<%= _difficulty(recipe) %>" role="link" tabindex="0">
+                    <article class="recipe-card recipe-card-clickable" data-card-href="/recipes/<%= recipe._id %>" data-recipe-card data-recipe-title="<%= String(recipe.title||recipe.titulo||'').toLowerCase() %>" data-recipe-author="<%= String(_creator(recipe)).toLowerCase() %>" data-recipe-region="<%= String(_region(recipe)).toLowerCase() %>" data-recipe-difficulty="<%= _difficulty(recipe) %>" data-recipe-tags="<%= (Array.isArray(recipe.tags) && recipe.tags.length ? recipe.tags : (Array.isArray(recipe.etiquetas) ? recipe.etiquetas : [])).join(',') %>" role="link" tabindex="0">
                       <% if (s && ok) { %><img class="recipe-card-img" src="<%= s %>" alt="<%= recipe.title||recipe.titulo %>" loading="lazy" />
                       <% } else { %><div class="recipe-card-img-accent" style="--card-accent:<%= acc %>"><span class="recipe-card-img-emoji"><%= em %></span></div><% } %>
                       <div class="recipe-card-body">
@@ -206,7 +215,7 @@
                        var s = _src(recipe), ok = _okSrc(s), acc = _accent(recipe);
                        var em = String(recipe.fallbackEmoji||'').trim()||'🍳';
                   %>
-                    <article class="recipe-card recipe-card-clickable" data-card-href="/recipes/<%= recipe._id %>" data-recipe-card data-recipe-title="<%= String(recipe.title||recipe.titulo||'').toLowerCase() %>" data-recipe-author="<%= String(_creator(recipe)).toLowerCase() %>" data-recipe-region="<%= String(_region(recipe)).toLowerCase() %>" data-recipe-difficulty="<%= _difficulty(recipe) %>" role="link" tabindex="0">
+                    <article class="recipe-card recipe-card-clickable" data-card-href="/recipes/<%= recipe._id %>" data-recipe-card data-recipe-title="<%= String(recipe.title||recipe.titulo||'').toLowerCase() %>" data-recipe-author="<%= String(_creator(recipe)).toLowerCase() %>" data-recipe-region="<%= String(_region(recipe)).toLowerCase() %>" data-recipe-difficulty="<%= _difficulty(recipe) %>" data-recipe-tags="<%= (Array.isArray(recipe.tags) && recipe.tags.length ? recipe.tags : (Array.isArray(recipe.etiquetas) ? recipe.etiquetas : [])).join(',') %>" role="link" tabindex="0">
                       <% if (s && ok) { %><img class="recipe-card-img" src="<%= s %>" alt="<%= recipe.title||recipe.titulo %>" loading="lazy" />
                       <% } else { %><div class="recipe-card-img-accent" style="--card-accent:<%= acc %>"><span class="recipe-card-img-emoji"><%= em %></span></div><% } %>
                       <div class="recipe-card-body">

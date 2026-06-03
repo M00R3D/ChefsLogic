@@ -382,6 +382,21 @@ async function renderRecipesPage(req, res) {
     res.locals.myRecipes    = myRecipes;
     res.locals.otherRecipes = otherRecipes;
     res.locals.savedRecipes = savedRecipes;
+    // gather all unique tags/categories from recipes for filtering UI
+    try {
+      const tagSet = new Set();
+      (allRecipes || []).forEach((r) => {
+        const tags = Array.isArray(r.tags) && r.tags.length ? r.tags : (Array.isArray(r.etiquetas) ? r.etiquetas : []);
+        (tags || []).forEach((t) => {
+          const v = String(t || '').trim();
+          if (v) tagSet.add(v);
+        });
+      });
+      const allTags = Array.from(tagSet).map(String).sort((a, b) => a.localeCompare(b, 'es'));
+      res.locals.allTags = allTags;
+    } catch (e) {
+      res.locals.allTags = [];
+    }
 
     return res.render("recipes/index", {
       pageTitle: "Chef's Logic | Recetas",
