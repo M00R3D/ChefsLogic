@@ -222,9 +222,60 @@
           <% }); %>
         </section>
 
+        <% if (typeof userHomeStats !== 'undefined' && userHomeStats) { %>
+        <section class="section-heading" style="margin-top:2rem;">
+          <div>
+            <h2>Mi resumen <span style="font-size:1rem;font-weight:400;color:var(--text-soft)">(últimos 30 días)</span></h2>
+            <p style="margin:0;color:var(--text-soft)">Actividad sobre tus recetas</p>
+          </div>
+          <a class="btn btn-soft btn-sm" href="/mi-dashboard">Ver mi dashboard completo →</a>
+        </section>
+
+        <div class="dashboard-summary-grid" style="margin-bottom:1rem;grid-template-columns:repeat(4,minmax(0,1fr));">
+          <div class="card dashboard-small-card">
+            <h4>Mis recetas</h4>
+            <p class="big-number"><%= userHomeStats.totalMyRecipes %></p>
+          </div>
+          <div class="card dashboard-small-card">
+            <h4>Visitas</h4>
+            <p class="big-number"><%= userHomeStats.visitas %></p>
+          </div>
+          <div class="card dashboard-small-card">
+            <h4>Likes recibidos</h4>
+            <p class="big-number"><%= userHomeStats.likes %></p>
+          </div>
+          <div class="card dashboard-small-card">
+            <h4>Guardados</h4>
+            <p class="big-number"><%= userHomeStats.guardados %></p>
+          </div>
+        </div>
+
+        <div class="grid cols-3" style="gap:1rem;margin-bottom:1.5rem;">
+          <div class="card dashboard-list-card">
+            <h3>Más vistas</h3>
+            <ol>
+              <% (userHomeStats.topViewed||[]).forEach(function(r){ %><li><strong><%= r.title %></strong> — <%= r.total %> visitas</li><% }); %>
+              <% if (!(userHomeStats.topViewed||[]).length) { %><li style="color:var(--text-muted)">Sin datos aún</li><% } %>
+            </ol>
+          </div>
+          <div class="card dashboard-list-card">
+            <h3>Más gustadas</h3>
+            <ol>
+              <% (userHomeStats.topLiked||[]).forEach(function(r){ %><li><%= r.title %> — <%= r.total %> likes</li><% }); %>
+              <% if (!(userHomeStats.topLiked||[]).length) { %><li style="color:var(--text-muted)">Sin datos aún</li><% } %>
+            </ol>
+          </div>
+          <div class="card dashboard-list-card">
+            <h3>Más guardadas</h3>
+            <ol>
+              <% (userHomeStats.topSaved||[]).forEach(function(r){ %><li><%= r.title %> — <%= r.total %> guardados</li><% }); %>
+              <% if (!(userHomeStats.topSaved||[]).length) { %><li style="color:var(--text-muted)">Sin datos aún</li><% } %>
+            </ol>
+          </div>
+        </div>
+        <% } %>
+
         <%- include("partials/footer") %>
-      </main>
-    </div>
 
     <script src="/js/recipes.js"></script>
     <script>

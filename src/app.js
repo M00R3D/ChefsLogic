@@ -74,6 +74,11 @@ app.use(dashboardRoutes);
 
 app.get("/", async (req, res) => {
   try {
+    const mongoose = require("mongoose");
+    const Evento   = require("./models/Evento");
+
+    const userId = req.session && req.session.userId;
+
     const [
       recipesResult,
       regionsResult,
@@ -103,6 +108,59 @@ app.get("/", async (req, res) => {
       cookbooks: cookbookCountResult.status === "fulfilled" ? cookbookCountResult.value : featuredCookbooks.length
     };
 
+    // Build user-scoped mini-dashboard for home if logged in
+    let userHomeStats = null;
+    if (userId) {
+      try {
+        const uid = new mongoose.Types.ObjectId(String(userId));
+        const myRecipes = await Recipe.find({ author: uid }).select("_id title titulo likes likeCount tags").lean();
+        const myIds = myRecipes.map(r => r._id);
+        const since30 = new Date(); since30.setDate(since30.getDate() - 29); since30.setHours(0,0,0,0);
+
+        const [eventsOnMine, savedAgg, topViewedAgg] = await Promise.all([
+          Evento.aggregate([
+            { $match: { receta_id: { $in: myIds }, fecha: { $gte: since30 } } },
+            { $group: { _id: '$tipo', total: { $sum: 1 } } }
+          ]).catch(() => []),
+          User.aggregate([
+            { $unwind: '$savedRecipes' },
+            { $match: { savedRecipes: { $in: myIds } } },
+            { $group: { _id: '$savedRecipes', total: { $sum: 1 } } },
+            { $sort: { total: -1 } }, { $limit: 3 },
+            { $lookup: { from: Recipe.collection.name, localField: '_id', foreignField: '_id', as: 'r' } },
+            { $unwind: { path: '$r', preserveNullAndEmptyArrays: true } },
+            { $project: { title: { $ifNull: ['$r.title','$r.titulo'] }, total: 1 } }
+          ]).catch(() => []),
+          Evento.aggregate([
+            { $match: { receta_id: { $in: myIds }, tipo: 'ver_receta', fecha: { $gte: since30 } } },
+            { $group: { _id: '$receta_id', total: { $sum: 1 } } },
+            { $sort: { total: -1 } }, { $limit: 3 },
+            { $lookup: { from: Recipe.collection.name, localField: '_id', foreignField: '_id', as: 'r' } },
+            { $unwind: { path: '$r', preserveNullAndEmptyArrays: true } },
+            { $project: { title: { $ifNull: ['$r.title','$r.titulo'] }, total: 1 } }
+          ]).catch(() => [])
+        ]);
+
+        const evMap = eventsOnMine.reduce((a,e)=>{ a[e._id]=e.total; return a; }, {});
+        const topLikedHome = [...myRecipes]
+          .sort((a,b)=>(b.likeCount||b.likes||0)-(a.likeCount||a.likes||0))
+          .slice(0,3)
+          .map(r=>({ title: r.title||r.titulo||'Sin título', total: r.likeCount||r.likes||0 }));
+
+        userHomeStats = {
+          totalMyRecipes: myRecipes.length,
+          visitas:   evMap.ver_receta    || 0,
+          likes:     evMap.like          || 0,
+          guardados: evMap.guardar_receta|| 0,
+          topViewed: topViewedAgg.map(r=>({ title: r.title||'Sin título', total: r.total })),
+          topLiked:  topLikedHome,
+          topSaved:  savedAgg.map(r=>({ title: r.title||'Sin título', total: r.total }))
+        };
+      } catch(e) {
+        console.warn("Home userStats error:", e.message);
+      }
+    }
+
     return res.render("index", {
       pageTitle: "Chef's Logic | Descubre Cocina Mexicana",
       activeTab: "inicio",
@@ -111,6 +169,7 @@ app.get("/", async (req, res) => {
       featuredCookbooks,
       recentIngredients,
       stats,
+      userHomeStats,
       errorMessage: ""
     });
   } catch (error) {
@@ -123,6 +182,7 @@ app.get("/", async (req, res) => {
       featuredCookbooks: [],
       recentIngredients: [],
       stats: { recipes: 0, ingredients: 0, cookbooks: 0 },
+      userHomeStats: null,
       errorMessage: "No fue posible cargar las recetas."
     });
   }

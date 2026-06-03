@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <%- include("partials/navbar", { activeTab }) %>
+      <main class="main-content">
+
+        <section class="section-heading">
+          <div>
+            <h2>Mi Dashboard</h2>
+            <p>Estadísticas de tus recetas y cómo interactúa la comunidad con ellas.</p>
+          </div>
+          <a href="/recipes/create" class="btn btn-primary">+ Nueva receta</a>
+        </section>
+
+        <div class="filter-pills" style="margin-bottom:1rem;">
+          <% ['today','7','30','year'].forEach(function(key){ %>
+            <a class="pill <%= rangeKey === key ? 'active' : '' %>" href="/mi-dashboard?range=<%= key %>">
+              <%= key==='today'?'Hoy':key==='7'?'7 días':key==='30'?'30 días':'Este año' %>
+            </a>
+          <% }); %>
+        </div>
+
+        <% if (errorMessage) { %>
+          <section class="alert alert-error"><%= errorMessage %></section>
+        <% } %>
+
+        <!-- KPI summary -->
+        <div class="dashboard-summary-grid" style="margin-bottom:1rem;">
+          <div class="card dashboard-small-card">
+            <h3>Mis recetas</h3>
+            <p class="big-number"><%= totalMyRecipes %></p>
+          </div>
+          <div class="card dashboard-small-card">
+            <h3>Visitas totales</h3>
+            <p class="big-number"><%= eventSummary.ver_receta %></p>
+          </div>
+          <div class="card dashboard-small-card">
+            <h3>Likes recibidos</h3>
+            <p class="big-number"><%= totalLikes %></p>
+          </div>
+          <div class="card dashboard-small-card">
+            <h3>Guardados</h3>
+            <p class="big-number"><%= eventSummary.guardar_receta %></p>
+          </div>
+          <div class="card dashboard-small-card">
+            <h3>Tiempo promedio</h3>
+            <p class="big-number" id="ud-avg-prep"><%= (avgPrepTime !== null && avgPrepTime !== undefined) ? avgPrepTime : '-' %> min</p>
+          </div>
+          <div class="card dashboard-small-card">
+            <h3>Likes <%= rangeLabel %></h3>
+            <p class="big-number"><%= eventSummary.like %></p>
+          </div>
+        </div>
+
+        <!-- Charts row -->
+        <div class="grid cols-2" style="gap:1rem;margin-bottom:1rem;">
+          <div class="card dashboard-chart-card">
+            <h3>Mis recetas por mes</h3>
+            <canvas id="udMonthlyChart"></canvas>
+          </div>
+          <div class="card dashboard-chart-card">
+            <h3>Actividad por día de la semana</h3>
+            <canvas id="udWeeklyChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Categories bar -->
+        <div class="card" style="margin-bottom:1rem;">
+          <h3>Categorías de mis recetas</h3>
+          <div style="position:relative;width:100%;height:280px;">
+            <canvas id="udCategoriesChart" aria-label="Categorías de mis recetas"></canvas>
+          </div>
+        </div>
+
+        <!-- Top lists -->
+        <div class="grid cols-3" style="gap:1rem;margin-bottom:1rem;">
+          <div class="card dashboard-list-card">
+            <h3>Mis recetas más vistas</h3>
+            <ol>
+              <% (topRecipes||[]).forEach(function(item){ %>
+                <li><strong><%= item.title %></strong> — <%= item.total %> visitas</li>
+              <% }); %>
+              <% if (!(topRecipes||[]).length) { %><li style="color:var(--text-muted)">Sin visitas aún</li><% } %>
+            </ol>
+          </div>
+          <div class="card dashboard-list-card">
+            <h3>Mis recetas más gustadas</h3>
+            <ol>
+              <% (topByLikes||[]).forEach(function(item){ %>
+                <li><%= item.title %> — <%= item.total %> likes</li>
+              <% }); %>
+              <% if (!(topByLikes||[]).length) { %><li style="color:var(--text-muted)">Sin likes aún</li><% } %>
+            </ol>
+          </div>
+          <div class="card dashboard-list-card">
+            <h3>Mis recetas más guardadas</h3>
+            <ol>
+              <% (topSaved||[]).forEach(function(item){ %>
+                <li><%= item.title %> — <%= item.total %> guardados</li>
+              <% }); %>
+              <% if (!(topSaved||[]).length) { %><li style="color:var(--text-muted)">Sin guardados aún</li><% } %>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Recent events -->
+        <div class="card" style="margin-bottom:1rem;">
+          <h3>Actividad reciente en mis recetas</h3>
+          <div class="dashboard-table-wrapper">
+            <table class="dashboard-table">
+              <thead>
+                <tr><th>Fecha</th><th>Tipo</th><th>Usuario</th><th>Receta</th></tr>
+              </thead>
+              <tbody>
+                <% if (recentEvents && recentEvents.length) { %>
+                  <% recentEvents.forEach(function(ev){ %>
+                    <tr>
+                      <td><%= new Date(ev.fecha).toLocaleString('es-ES') %></td>
+                      <td><%= ev.tipo %></td>
+                      <td><%= (ev.usuario_id && (ev.usuario_id.name||ev.usuario_id.nombre)) || 'Anónimo' %></td>
+                      <td><%= (ev.receta_id && (ev.receta_id.title||ev.receta_id.titulo)) || 'N/A' %></td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr><td colspan="4" style="color:var(--text-muted)">No hay actividad en este período.</td></tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <%- include("partials/footer") %>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+    <%
+      const __UD_INIT = {
+        monthlyLabels:  (typeof monthlyLabels  !== 'undefined' ? monthlyLabels  : []),
+        monthlyCounts:  (typeof monthlyCounts  !== 'undefined' ? monthlyCounts  : []),
+        weekdayLabels:  (typeof weekdayLabels  !== 'undefined' ? weekdayLabels  : []),
+        weekdayCounts:  (typeof weekdayCounts  !== 'undefined' ? weekdayCounts  : []),
+        topCategories:  (typeof topCategories  !== 'undefined' ? topCategories  : [])
+      };
+    %>
+    <script>
+    (function(){
+      const init = <%- JSON.stringify(__UD_INIT) %>;
+
+      // register datalabels
+      try {
+        if (window.ChartDataLabels && typeof Chart.register === 'function') Chart.register(window.ChartDataLabels);
+      } catch(e){}
+
+      function barChart(id, labels, data, label, color) {
+        const ctx = document.getElementById(id);
+        if (!ctx) return;
+        new Chart(ctx, {
+          type: 'bar',
+          data: { labels, datasets: [{ label, data, backgroundColor: color + '33', borderColor: color, borderWidth: 1, borderRadius: 4 }] },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+            plugins: { legend: { display: false }, datalabels: { display: false } }
+          }
+        });
+      }
+
+      function categoriesBarChart(id, categories) {
+        const ctx = document.getElementById(id);
+        if (!ctx || !categories.length) return;
+        const sorted  = [...categories].sort((a,b)=>b.total-a.total);
+        const labels  = sorted.map(c=>c.name||c._id||'');
+        const vals    = sorted.map(c=>Number(c.total||0));
+        const total   = vals.reduce((s,v)=>s+v,0)||1;
+        new Chart(ctx, {
+          type: 'bar',
+          data: { labels, datasets: [{ data: vals, backgroundColor: labels.map((_,i)=>`hsl(${i*40%360} 70% 60%)`), borderRadius: 4 }] },
+          options: {
+            indexAxis: 'y',
+            responsive: true, maintainAspectRatio: false,
+            layout: { padding: { right: 90 } },
+            scales: {
+              x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(0,0,0,0.06)' } },
+              y: { ticks: { autoSkip: false, font: { size: 13 } } }
+            },
+            plugins: {
+              legend: { display: false },
+              datalabels: {
+                color: '#2c1d13',
+                anchor: 'end', align: 'end', offset: 4, clamp: false, clip: false,
+                font: { weight: '600', size: 12 },
+                formatter: function(value) {
+                  const pct = Math.round((Number(value)/total)*100);
+                  return value + ' (' + pct + '%)';
+                }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(ctx) {
+                    const pct = Math.round((Number(ctx.parsed.x)/total)*100);
+                    return ctx.label + ': ' + ctx.parsed.x + ' recetas (' + pct + '%)';
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        barChart('udMonthlyChart', init.monthlyLabels, init.monthlyCounts, 'Recetas creadas', '#b7652a');
+        barChart('udWeeklyChart',  init.weekdayLabels, init.weekdayCounts, 'Eventos',          '#7d3f17');
+        categoriesBarChart('udCategoriesChart', init.topCategories);
+      });
+    })();
+    </script>
+  </body>
+</html>
