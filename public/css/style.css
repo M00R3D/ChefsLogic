@@ -247,6 +247,19 @@ a {
   font-size: 1.55rem;
 }
 
+.dashboard-chart-card {
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.dashboard-chart-card canvas {
+  width: 100% !important;
+  max-height: 320px;
+  height: 320px !important;
+}
+
 .card h4 {
   margin: 0 0 0.35rem;
   font-family: var(--font-serif);

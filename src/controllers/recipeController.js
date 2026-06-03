@@ -4,6 +4,7 @@ const Region = require("../models/Region");
 const Ingredient = require("../models/Ingredient");
 const User = require("../models/User");
 const Interaction = require("../models/Interaction");
+const Evento = require("../models/Evento");
 const mongoose = require("mongoose");
 const { sendSuccess, sendError } = require("../utils/apiResponse");
 
@@ -14,6 +15,14 @@ function slugify(value) {
     .replace(/[^a-z0-9\s-]/g, "")
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
+}
+
+async function recordEvento(payload) {
+  try {
+    await Evento.create(payload);
+  } catch (error) {
+    console.error('Evento create failed:', error && error.message ? error.message : error);
+  }
 }
 
 function parseTags(tagsInput) {
@@ -325,6 +334,14 @@ async function renderRecipesPage(req, res) {
       .sort({ createdAt: -1 })
       .lean();
 
+    if (req.query && String(req.query.q || '').trim()) {
+      await recordEvento({
+        usuario_id: req.session && req.session.userId ? toObjectId(req.session.userId) : null,
+        tipo: 'buscar_receta',
+        dispositivo: 'web'
+      });
+    }
+
     const myRecipes = currentUserId
       ? allRecipes.filter((r) => String(r.author || r.usuario_id || "") === currentUserId)
       : [];
@@ -429,6 +446,13 @@ async function renderRecipeDetail(req, res) {
     }
 
     const safeRecipe = sanitizeRecipeIngredientsForViewer(recipe, res.locals.currentUser);
+
+    await recordEvento({
+      usuario_id: req.session && req.session.userId ? toObjectId(req.session.userId) : null,
+      receta_id: recipe._id,
+      tipo: 'ver_receta',
+      dispositivo: 'web'
+    });
 
     return res.render("recipes/show", {
       pageTitle: `Chef's Logic | ${recipe.title}`,
@@ -646,6 +670,12 @@ async function createRecipe(req, res) {
     }
 
     const createdRecipe = await Recipe.create(payload);
+    await recordEvento({
+      usuario_id: req.session && req.session.userId ? toObjectId(req.session.userId) : null,
+      receta_id: createdRecipe._id,
+      tipo: 'crear_receta',
+      dispositivo: 'web'
+    });
 
     if (req.accepts("html") && !req.path.startsWith("/api")) {
       return res.redirect(`/recipes/${createdRecipe._id}`);
@@ -784,6 +814,12 @@ async function likeRecipe(req, res) {
     } else {
       user.likedRecipes.push(recipeId);
       await Interaction.create(buildRecipeInteractionPayload(userId, recipeId, "like", { value: 1 }));
+      await recordEvento({
+        usuario_id: userId,
+        receta_id: recipeId,
+        tipo: 'like',
+        dispositivo: 'web'
+      });
     }
 
     await user.save();
@@ -875,6 +911,12 @@ async function saveRecipe(req, res) {
     } else {
       user.savedRecipes.push(recipeId);
       await Interaction.create(buildRecipeInteractionPayload(userId, recipeId, "save", { value: 1 }));
+      await recordEvento({
+        usuario_id: userId,
+        receta_id: recipeId,
+        tipo: 'guardar_receta',
+        dispositivo: 'web'
+      });
     }
 
     await user.save();

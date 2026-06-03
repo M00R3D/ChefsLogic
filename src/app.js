@@ -9,6 +9,7 @@ const Cookbook = require("./models/Cookbook");
 const recipeRoutes = require("./routes/recipeRoutes");
 const ingredientRoutes = require("./routes/ingredientRoutes");
 const cookbookRoutes = require("./routes/cookbookRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 const session = require("express-session");
 const { MongoStore } = require("connect-mongo");
@@ -69,6 +70,7 @@ app.use(async (req, res, next) => {
 });
 
 app.use(authRoutes);
+app.use(dashboardRoutes);
 
 app.get("/", async (req, res) => {
   try {
@@ -177,10 +179,12 @@ app.get("/test-db", async (req, res) => {
 
 app.get("/api/dashboard-stats", async (req, res) => {
   try {
-    const [recipes, ingredients, cookbooks] = await Promise.all([
+    const [recipes, ingredients, cookbooks, users, events] = await Promise.all([
       Recipe.countDocuments(),
       Ingredient.countDocuments(),
-      Cookbook.countDocuments()
+      Cookbook.countDocuments(),
+      require('./models/User').countDocuments(),
+      require('./models/Evento').countDocuments()
     ]);
 
     return res.json({
@@ -189,6 +193,8 @@ app.get("/api/dashboard-stats", async (req, res) => {
         recipes,
         ingredients,
         cookbooks,
+        users,
+        events,
         database: mongoose.connection.name || null,
         connected: mongoose.connection.readyState === 1,
         timestamp: new Date().toISOString()

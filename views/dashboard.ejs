@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <%- include("partials/navbar", { activeTab }) %>
+      <main class="main-content">
+        <section class="section-heading">
+          <div>
+            <h2>Dashboard administrativo</h2>
+            <p>Resumen de usuarios, recetas, ingredientes y actividad registrada.</p>
+          </div>
+        </section>
+
+        <% if (errorMessage) { %>
+          <section class="alert alert-error"><%= errorMessage %></section>
+        <% } %>
+
+        <div class="grid cols-4" style="margin-bottom:1rem;">
+          <div class="card">
+            <h3>Total usuarios</h3>
+            <p class="big-number"><%= totalUsers %></p>
+          </div>
+          <div class="card">
+            <h3>Total recetas</h3>
+            <p class="big-number"><%= totalRecipes %></p>
+          </div>
+          <div class="card">
+            <h3>Total ingredientes</h3>
+            <p class="big-number"><%= totalIngredients %></p>
+          </div>
+          <div class="card">
+            <h3>Total eventos</h3>
+            <p class="big-number"><%= totalEvents %></p>
+          </div>
+        </div>
+
+        <div class="grid cols-3" style="gap:1rem; margin-bottom:1rem;">
+          <div class="card">
+            <h3>Usuarios este mes</h3>
+            <p class="big-number"><%= usersThisMonth %></p>
+          </div>
+          <div class="card">
+            <h3>Usuarios activos</h3>
+            <p class="big-number"><%= activeUsers %></p>
+          </div>
+          <div class="card">
+            <h3>Recetas más vistas</h3>
+            <ol style="padding-left:1.2rem; margin:0.8rem 0 0;">
+              <% topRecipes.forEach(function(item) { %>
+                <li><strong><%= item.title %></strong> — <%= item.total %></li>
+              <% }); %>
+            </ol>
+          </div>
+        </div>
+
+        <div class="grid cols-2" style="gap:1rem; margin-bottom:1rem;">
+          <div class="card">
+            <h3>Usuarios más activos</h3>
+            <ol style="padding-left:1.2rem; margin:0.8rem 0 0;">
+              <% topUsers.forEach(function(item) { %>
+                <li><%= item.name %> — <%= item.total %> acciones</li>
+              <% }); %>
+            </ol>
+          </div>
+          <div class="card">
+            <h3>Recetas con más likes</h3>
+            <ol style="padding-left:1.2rem; margin:0.8rem 0 0;">
+              <% topRecipesByLikes.forEach(function(item) { %>
+                <li><%= item.title %> — <%= item.total %></li>
+              <% }); %>
+            </ol>
+          </div>
+        </div>
+
+        <div class="grid cols-3" style="gap:1rem; margin-bottom:1rem;">
+          <div class="card">
+            <h3>Ingredientes más usados</h3>
+            <ol style="padding-left:1.2rem; margin:0.8rem 0 0;">
+              <% topIngredients.forEach(function(item) { %>
+                <li><%= item.name || 'Desconocido' %> — <%= item.total %></li>
+              <% }); %>
+            </ol>
+          </div>
+          <div class="card">
+            <h3>Regiones más populares</h3>
+            <ol style="padding-left:1.2rem; margin:0.8rem 0 0;">
+              <% regionViews.forEach(function(item) { %>
+                <li><%= item.name || 'Sin región' %> — <%= item.total %></li>
+              <% }); %>
+            </ol>
+          </div>
+          <div class="card">
+            <h3>Recetas por usuario</h3>
+            <ol style="padding-left:1.2rem; margin:0.8rem 0 0;">
+              <% recipesByUser.forEach(function(item) { %>
+                <li><%= item.name %> — <%= item.total %></li>
+              <% }); %>
+            </ol>
+          </div>
+        </div>
+
+        <div class="grid cols-2" style="gap:1rem; margin-bottom:1rem;">
+          <div class="card dashboard-chart-card">
+            <h3>Usuarios nuevos por mes</h3>
+            <canvas id="usersByMonthChart"></canvas>
+          </div>
+          <div class="card dashboard-chart-card">
+            <h3>Actividad diaria</h3>
+            <canvas id="dailyActivityChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:1rem;">
+          <h3>Notas</h3>
+          <p style="margin:0.75rem 0 0; color: var(--text-soft);">Los eventos registrados ayudan a construir métricas más precisas. Esta vista usa la nueva colección <strong>eventos</strong> para ver recuentos de vistas, likes, guardados y búsquedas.</p>
+        </div>
+
+        <%- include("partials/footer") %>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+      (function() {
+        const monthlyLabels = <%- JSON.stringify(monthlyLabels) %>;
+        const monthlyCounts = <%- JSON.stringify(monthlyCounts) %>;
+        const weekdayLabels = <%- JSON.stringify(weekdayLabels) %>;
+        const weekdayCounts = <%- JSON.stringify(weekdayCounts) %>;
+
+        function renderChart(canvasId, labels, data, label, borderColor) {
+          const ctx = document.getElementById(canvasId);
+          if (!ctx) return;
+          new Chart(ctx.getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels,
+              datasets: [{
+                label,
+                data,
+                backgroundColor: 'rgba(125, 63, 23, 0.18)',
+                borderColor: borderColor,
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: { precision: 0 }
+                }
+              },
+              plugins: {
+                legend: { display: false }
+              }
+            }
+          });
+        }
+
+        renderChart('usersByMonthChart', monthlyLabels, monthlyCounts, 'Usuarios nuevos', '#b7652a');
+        renderChart('dailyActivityChart', weekdayLabels, weekdayCounts, 'Eventos', '#7d3f17');
+      })();
+    </script>
+  </body>
+</html>
