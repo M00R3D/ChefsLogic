@@ -83,7 +83,7 @@ app.get("/", async (req, res) => {
       ingredientCountResult,
       cookbookCountResult
     ] = await Promise.allSettled([
-      Recipe.find().populate("region", "name nombre").sort({ createdAt: -1 }).limit(9).lean(),
+      Recipe.find().populate("region", "name nombre").sort({ createdAt: -1 }).lean(),
       Region.find().sort({ name: 1, nombre: 1 }).lean(),
       Cookbook.find().sort({ createdAt: -1 }).limit(6).select("title nombre theme accentColor coverEmoji coverImage recipes recetas tags isPublic publico").lean(),
       Ingredient.find().sort({ createdAt: -1 }).limit(8).select("name nombre category categoria defaultUnit unidad").lean(),
