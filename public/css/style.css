@@ -2337,6 +2337,39 @@ th {
   overflow: hidden;
   background: linear-gradient(135deg, var(--cb-accent,#546e7a) 0%, color-mix(in srgb,var(--cb-accent,#546e7a) 55%,#fff) 100%);
 }
+.cb-card-cover-carousel {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.cb-card-cover-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  transform: scale(1.02);
+  transition: opacity .7s ease, transform 3.2s ease;
+}
+
+.cb-card-cover-slide.is-active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.cb-card-cover-carousel.is-empty::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(140deg, color-mix(in srgb, var(--cb-accent,#546e7a) 85%, #000) 0%, color-mix(in srgb, var(--cb-accent,#546e7a) 45%, #fff) 100%);
+}
+
+.cb-card-cover-carousel.is-static .cb-card-cover-slide {
+  transition: none;
+}
+
 .cb-card-cover-img {
   width: 100%; height: 100%;
   object-fit: cover;
@@ -2344,6 +2377,7 @@ th {
 }
 .cb-card-cover-overlay {
   position: absolute; inset: 0;
+  z-index: 2;
   background: linear-gradient(to bottom, transparent 30%, rgba(0,0,0,.45) 100%);
 }
 .cb-card-cover-placeholder {
@@ -2352,6 +2386,7 @@ th {
 .cb-card-emoji {
   position: absolute;
   bottom: .6rem; left: .75rem;
+  z-index: 3;
   font-size: 2.2rem;
   filter: drop-shadow(0 2px 5px rgba(0,0,0,.25));
   line-height: 1;
@@ -2359,6 +2394,7 @@ th {
 .cb-card-cover-badges {
   position: absolute;
   top: .55rem; right: .6rem;
+  z-index: 4;
   display: flex;
   flex-direction: column;
   gap: .25rem;

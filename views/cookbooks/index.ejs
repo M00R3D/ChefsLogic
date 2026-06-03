@@ -128,17 +128,24 @@
               const canManage = Boolean(currentUserId && ownerId && currentUserId === ownerId) || Boolean(isAdmin);
               const ownerLabel = ownerName(cb);
               const previewRecipes = Array.isArray(cb.recipes) ? cb.recipes.slice(0, 4) : [];
+              const previewImageCandidates = (Array.isArray(cb.recipes) ? cb.recipes : [])
+                .map((recipe) => String((recipe && (recipe.imageUrl || recipe.imagen_principal)) || '').trim())
+                .filter((img) => /^(https?:\/\/|\/|data:image\/)/i.test(img));
+              const encodedPreviewImages = encodeURIComponent(JSON.stringify(previewImageCandidates));
             %>
             <article class="cb-card cb-book-card reveal" data-reveal-index="<%= idx %>" data-cookbook-card="<%= cb._id %>" role="button" tabindex="0" style="--cb-accent:<%= cbAccent %>">
               <div class="cb-book-spine"></div>
               <div class="cb-book-pages"></div>
               <div class="cb-card-cover">
-                <% if (cbImg && cbCanImg) { %>
-                  <img class="cb-card-cover-img" src="<%= cbImg %>" alt="<%= cb.title || cb.nombre %>" loading="lazy" />
-                  <div class="cb-card-cover-overlay"></div>
-                <% } else { %>
-                  <div class="cb-card-cover-placeholder"></div>
-                <% } %>
+                <div
+                  class="cb-card-cover-carousel"
+                  data-cb-preview-carousel
+                  data-carousel-images="<%= encodedPreviewImages %>"
+                  data-cover-fallback="<%= (cbImg && cbCanImg) ? cbImg : '' %>">
+                  <div class="cb-card-cover-slide is-active"></div>
+                  <div class="cb-card-cover-slide"></div>
+                </div>
+                <div class="cb-card-cover-overlay"></div>
                 <span class="cb-card-emoji"><%= cbEmoji %></span>
                 <div class="cb-card-cover-badges">
                   <span class="cb-theme-badge" style="--pill-color:<%= cbThemeMeta.color %>;--pill-bg:<%= cbThemeMeta.bg %>">

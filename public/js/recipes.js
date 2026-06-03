@@ -250,6 +250,140 @@ document.querySelectorAll("[data-comment-form]").forEach((form) => {
   });
 });
 
+function bindCookbookPreviewCarousel() {
+  const carousels = document.querySelectorAll("[data-cb-preview-carousel]");
+  if (!carousels.length) return;
+
+  const canAnimate = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function parseUrls(rawValue) {
+    if (!rawValue) return [];
+    try {
+      const decoded = decodeURIComponent(rawValue);
+      const parsed = JSON.parse(decoded);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function normalizeUrl(raw) {
+    return String(raw || "").trim();
+  }
+
+  function isCandidateUrl(url) {
+    return /^(https?:\/\/|\/|data:image\/)/i.test(url);
+  }
+
+  function dedupe(urls) {
+    const seen = new Set();
+    const result = [];
+    urls.forEach((url) => {
+      const key = String(url).trim();
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      result.push(key);
+    });
+    return result;
+  }
+
+  function canLoadImage(url) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      let done = false;
+      const timer = window.setTimeout(() => {
+        if (done) return;
+        done = true;
+        resolve(false);
+      }, 4500);
+
+      img.onload = () => {
+        if (done) return;
+        done = true;
+        window.clearTimeout(timer);
+        resolve(true);
+      };
+
+      img.onerror = () => {
+        if (done) return;
+        done = true;
+        window.clearTimeout(timer);
+        resolve(false);
+      };
+
+      img.src = url;
+    });
+  }
+
+  function setSlideImage(slide, url) {
+    if (!slide || !url) return;
+    slide.style.backgroundImage = `url("${encodeURI(url)}")`;
+  }
+
+  carousels.forEach(async (carousel) => {
+    const fallback = normalizeUrl(carousel.getAttribute("data-cover-fallback"));
+    const urls = parseUrls(carousel.getAttribute("data-carousel-images"))
+      .map(normalizeUrl)
+      .filter(isCandidateUrl);
+
+    const candidates = dedupe(fallback ? urls.concat([fallback]) : urls);
+    if (!candidates.length) {
+      carousel.classList.add("is-empty");
+      return;
+    }
+
+    const loadedFlags = await Promise.all(candidates.map((url) => canLoadImage(url)));
+    const validUrls = candidates.filter((_url, index) => loadedFlags[index]);
+
+    if (!validUrls.length) {
+      carousel.classList.add("is-empty");
+      return;
+    }
+
+    const slides = Array.from(carousel.querySelectorAll(".cb-card-cover-slide"));
+    if (!slides.length) return;
+
+    let activeSlide = 0;
+    let currentImage = 0;
+    setSlideImage(slides[activeSlide], validUrls[currentImage]);
+    slides[activeSlide].classList.add("is-active");
+
+    if (!canAnimate || validUrls.length < 2 || slides.length < 2) {
+      carousel.classList.add("is-static");
+      return;
+    }
+
+    let intervalId = null;
+
+    function nextFrame() {
+      const nextImage = (currentImage + 1) % validUrls.length;
+      const nextSlide = activeSlide === 0 ? 1 : 0;
+
+      setSlideImage(slides[nextSlide], validUrls[nextImage]);
+      slides[nextSlide].classList.add("is-active");
+      slides[activeSlide].classList.remove("is-active");
+
+      activeSlide = nextSlide;
+      currentImage = nextImage;
+    }
+
+    function start() {
+      if (intervalId) return;
+      intervalId = window.setInterval(nextFrame, 3200);
+    }
+
+    function stop() {
+      if (!intervalId) return;
+      window.clearInterval(intervalId);
+      intervalId = null;
+    }
+
+    carousel.addEventListener("mouseenter", stop);
+    carousel.addEventListener("mouseleave", start);
+    start();
+  });
+}
+
 function bindCookbookBookModal() {
   const modal = document.getElementById("cookbook-book-modal");
   const dataEl = document.getElementById("cookbooks-book-data");
@@ -419,4 +553,5 @@ function bindCookbookBookModal() {
   });
 }
 
+bindCookbookPreviewCarousel();
 bindCookbookBookModal();
