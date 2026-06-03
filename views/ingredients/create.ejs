@@ -11,24 +11,26 @@
       <%- include("../partials/navbar", { activeTab }) %>
 
       <main class="main-content">
-        <%- include("../partials/header", { pageTitle: "Nuevo ingrediente" }) %>
+        <%- include("../partials/header", { pageTitle: isEditMode ? "Editar ingrediente" : "Nuevo ingrediente" }) %>
 
         <% if (errorMessage) { %>
           <div class="alert alert-error"><%= errorMessage %></div>
         <% } %>
 
         <% if (!(typeof currentUser !== 'undefined' && currentUser && String(currentUser.role || '').toLowerCase() === 'admin')) { %>
-          <div class="alert alert-warning">Los ingredientes enviados por usuarios quedan pendientes hasta que un administrador los apruebe.</div>
+          <div class="alert alert-warning"><%= isEditMode ? 'Este ingrediente está ligado a tu cuenta y puedes actualizarlo o eliminarlo cuando lo necesites.' : 'El ingrediente quedará ligado a tu cuenta para que puedas editarlo o eliminarlo más adelante.' %></div>
         <% } %>
 
         <section class="card">
-          <form class="form-grid" id="ingredient-form" action="/ingredients" method="POST">
+          <form class="form-grid" id="ingredient-form" action="<%= formAction || '/ingredients' %>" method="POST">
 
             <!-- NOMBRE + CATEGORIA -->
             <div class="form-grid cols-2">
               <label>
                 Nombre del ingrediente
                 <input id="ing-name-input" name="name" type="text" required
+                       value="<%= ingredient ? (ingredient.name || ingredient.nombre || '') : '' %>"
+                       data-original-name="<%= ingredient ? (ingredient.name || ingredient.nombre || '') : '' %>"
                        placeholder="Ej. Chile ancho, Epazote, Manteca..."
                        autocomplete="off" />
                 <span class="form-help" id="ing-name-feedback"></span>
@@ -37,20 +39,21 @@
               <label>
                 Unidad por defecto
                 <select name="defaultUnit">
-                  <option value="g">g — gramos</option>
-                  <option value="kg">kg — kilogramos</option>
-                  <option value="ml">ml — mililitros</option>
-                  <option value="l">l — litros</option>
-                  <option value="pieza">pieza</option>
-                  <option value="cdita">cdita — cucharadita</option>
-                  <option value="cda">cda — cucharada</option>
-                  <option value="taza">taza</option>
-                  <option value="manojo">manojo</option>
-                  <option value="ramita">ramita</option>
-                  <option value="lata">lata</option>
-                  <option value="botella">botella</option>
-                  <option value="sobre">sobre</option>
-                  <option value="diente">diente</option>
+                  <% const selectedUnit = ingredient ? (ingredient.defaultUnit || ingredient.unidad || 'g') : 'g'; %>
+                  <option value="g" <%= selectedUnit === 'g' ? 'selected' : '' %>>g — gramos</option>
+                  <option value="kg" <%= selectedUnit === 'kg' ? 'selected' : '' %>>kg — kilogramos</option>
+                  <option value="ml" <%= selectedUnit === 'ml' ? 'selected' : '' %>>ml — mililitros</option>
+                  <option value="l" <%= selectedUnit === 'l' ? 'selected' : '' %>>l — litros</option>
+                  <option value="pieza" <%= selectedUnit === 'pieza' ? 'selected' : '' %>>pieza</option>
+                  <option value="cdita" <%= selectedUnit === 'cdita' ? 'selected' : '' %>>cdita — cucharadita</option>
+                  <option value="cda" <%= selectedUnit === 'cda' ? 'selected' : '' %>>cda — cucharada</option>
+                  <option value="taza" <%= selectedUnit === 'taza' ? 'selected' : '' %>>taza</option>
+                  <option value="manojo" <%= selectedUnit === 'manojo' ? 'selected' : '' %>>manojo</option>
+                  <option value="ramita" <%= selectedUnit === 'ramita' ? 'selected' : '' %>>ramita</option>
+                  <option value="lata" <%= selectedUnit === 'lata' ? 'selected' : '' %>>lata</option>
+                  <option value="botella" <%= selectedUnit === 'botella' ? 'selected' : '' %>>botella</option>
+                  <option value="sobre" <%= selectedUnit === 'sobre' ? 'selected' : '' %>>sobre</option>
+                  <option value="diente" <%= selectedUnit === 'diente' ? 'selected' : '' %>>diente</option>
                 </select>
               </label>
             </div>
@@ -58,7 +61,7 @@
             <!-- CATEGORY SELECTOR (visual cards) -->
             <div class="form-group">
               <label class="form-label-text">Categoría</label>
-              <input type="hidden" name="category" id="category-hidden" value="otro" />
+              <input type="hidden" name="category" id="category-hidden" value="<%= ingredient ? (ingredient.category || ingredient.categoria || 'otro') : 'otro' %>" />
               <div class="ing-cat-selector" id="ing-cat-selector">
                 <button type="button" class="ing-cat-option" data-cat="verdura"   style="--cc:#2e7d32;--cb:#e8f5e9">🥦 Verdura</button>
                 <button type="button" class="ing-cat-option" data-cat="fruta"     style="--cc:#c62828;--cb:#ffebee">🍎 Fruta</button>
@@ -80,7 +83,7 @@
             <!-- ETIQUETAS (tag builder con sugerencias de ingredientes) -->
             <div class="form-group">
               <label class="form-label-text">Etiquetas</label>
-              <input type="hidden" name="tags" id="ing-tags-hidden" value="" />
+              <input type="hidden" name="tags" id="ing-tags-hidden" value="<%= ingredient && Array.isArray(ingredient.tags) ? ingredient.tags.join(',') : '' %>" />
               <div class="tag-builder" id="ing-tag-builder">
                 <div class="tag-list" id="ing-tag-list"></div>
                 <div class="tag-entry-row">
@@ -95,7 +98,7 @@
             <!-- ESTACIONALIDAD -->
             <div class="form-group">
               <label class="form-label-text">Estacionalidad *</label>
-              <input type="hidden" name="seasonality" id="seasonality-hidden" value="" />
+              <input type="hidden" name="seasonality" id="seasonality-hidden" value="<%= ingredient && Array.isArray(ingredient.seasonality) ? ingredient.seasonality.join(', ') : '' %>" />
               <div class="ing-month-grid" id="ing-month-grid">
                 <button type="button" class="ing-month-btn" data-month="enero">Ene</button>
                 <button type="button" class="ing-month-btn" data-month="febrero">Feb</button>
@@ -117,9 +120,10 @@
             <label>
               Accesibilidad / precio
               <select name="accesibilidad">
-                <option value="economico">💚 Económico</option>
-                <option value="medio" selected>💛 Precio medio</option>
-                <option value="premium">🔴 Premium</option>
+                <% const selectedAccessibility = ingredient ? (ingredient.accesibilidad || 'medio') : 'medio'; %>
+                <option value="economico" <%= selectedAccessibility === 'economico' ? 'selected' : '' %>>💚 Económico</option>
+                <option value="medio" <%= selectedAccessibility === 'medio' ? 'selected' : '' %>>💛 Precio medio</option>
+                <option value="premium" <%= selectedAccessibility === 'premium' ? 'selected' : '' %>>🔴 Premium</option>
               </select>
             </label>
 
@@ -129,26 +133,26 @@
               <div class="form-grid cols-4">
                 <label>
                   🔥 Calorías
-                  <input name="calories" type="number" min="0" step="0.01" placeholder="0" />
+                  <input name="calories" type="number" min="0" step="0.01" placeholder="0" value="<%= ingredient && ingredient.nutritionalInfo ? ingredient.nutritionalInfo.calories || '' : '' %>" />
                 </label>
                 <label>
                   💪 Proteína (g)
-                  <input name="protein" type="number" min="0" step="0.01" placeholder="0" />
+                  <input name="protein" type="number" min="0" step="0.01" placeholder="0" value="<%= ingredient && ingredient.nutritionalInfo ? ingredient.nutritionalInfo.protein || '' : '' %>" />
                 </label>
                 <label>
                   🌾 Carbohidratos (g)
-                  <input name="carbs" type="number" min="0" step="0.01" placeholder="0" />
+                  <input name="carbs" type="number" min="0" step="0.01" placeholder="0" value="<%= ingredient && ingredient.nutritionalInfo ? ingredient.nutritionalInfo.carbs || '' : '' %>" />
                 </label>
                 <label>
                   🧈 Grasas (g)
-                  <input name="fat" type="number" min="0" step="0.01" placeholder="0" />
+                  <input name="fat" type="number" min="0" step="0.01" placeholder="0" value="<%= ingredient && ingredient.nutritionalInfo ? ingredient.nutritionalInfo.fat || '' : '' %>" />
                 </label>
               </div>
             </fieldset>
 
             <div class="actions">
-              <button class="btn btn-primary" type="submit">Guardar ingrediente</button>
-              <a class="btn btn-soft" href="/ingredients">Cancelar</a>
+              <button class="btn btn-primary" type="submit"><%= submitLabel || 'Guardar ingrediente' %></button>
+              <a class="btn btn-soft" href="<%= ingredient ? '/ingredients/' + ingredient._id : '/ingredients' %>">Cancelar</a>
             </div>
           </form>
         </section>
@@ -173,6 +177,9 @@
         const hidden   = document.getElementById('category-hidden');
         if (!selector || !hidden) return;
         selector.querySelectorAll('.ing-cat-option').forEach(function(btn) {
+          btn.classList.toggle('is-selected', btn.dataset.cat === hidden.value);
+        });
+        selector.querySelectorAll('.ing-cat-option').forEach(function(btn) {
           btn.addEventListener('click', function() {
             selector.querySelectorAll('.ing-cat-option').forEach(function(b) { b.classList.remove('is-selected'); });
             btn.classList.add('is-selected');
@@ -195,7 +202,10 @@
         var sugsWrap = document.getElementById('ing-tag-suggestions');
         if (!hidden || !list || !input || !addBtn) return;
 
-        var tags = [];
+        var tags = String(hidden.value || '')
+          .split(',')
+          .map(function(tag) { return tag.trim().toLowerCase(); })
+          .filter(Boolean);
 
         function renderTags() {
           list.innerHTML = '';
@@ -252,6 +262,7 @@
           if (!input.value) renderSugs('');
         });
 
+        renderTags();
         renderSugs('');
       })();
     </script>

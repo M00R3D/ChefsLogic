@@ -128,6 +128,14 @@ function canEditRecipeForUser(user, recipe) {
   return Boolean(userId && ownerId && userId === ownerId);
 }
 
+function getRecipeDeleteRedirect(req) {
+  const referer = String(req.get("referer") || "");
+  if (referer.includes("/recipes/")) {
+    return "/recipes";
+  }
+  return "/recipes";
+}
+
 function isAdminUser(user) {
   return String((user && (user.role || user.rol)) || "usuario").toLowerCase() === "admin";
 }
@@ -793,14 +801,14 @@ async function updateRecipe(req, res) {
 
 async function deleteRecipe(req, res) {
   try {
-    if (!isAdminUser(res.locals.currentUser)) {
-      return sendError(res, new Error("Acceso denegado."), "Solo administradores pueden eliminar recetas.", 403);
-    }
-
     const existingRecipe = await Recipe.findById(req.params.id).lean();
 
     if (!existingRecipe) {
       return sendError(res, new Error("Receta no encontrada."), "Receta no encontrada.", 404);
+    }
+
+    if (!canEditRecipeForUser(res.locals.currentUser, existingRecipe)) {
+      return sendError(res, new Error("Acceso denegado."), "No tienes permiso para eliminar esta receta.", 403);
     }
 
     const deletedRecipe = await Recipe.findByIdAndDelete(req.params.id);
@@ -817,11 +825,18 @@ async function deleteRecipe(req, res) {
 
 async function deleteRecipeFromForm(req, res) {
   try {
-    // reuse deleteRecipe logic but redirect after
-    await deleteRecipe(req, res);
-    // If deleteRecipe already sent a response, return
-    if (res.headersSent) return;
-    return res.redirect('/recipes');
+    const existingRecipe = await Recipe.findById(req.params.id).lean();
+
+    if (!existingRecipe) {
+      return res.status(404).redirect("/recipes");
+    }
+
+    if (!canEditRecipeForUser(res.locals.currentUser, existingRecipe)) {
+      return res.status(403).redirect(`/recipes/${req.params.id}`);
+    }
+
+    await Recipe.findByIdAndDelete(req.params.id);
+    return res.redirect(getRecipeDeleteRedirect(req));
   } catch (error) {
     console.error('deleteRecipeFromForm error', error);
     return res.status(500).redirect('/recipes');

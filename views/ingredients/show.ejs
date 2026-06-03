@@ -118,9 +118,12 @@
 
             <div class="actions" style="margin-top:.5rem;">
               <a class="btn btn-soft" href="/ingredients">Volver a ingredientes</a>
+              <% if (typeof canManage !== 'undefined' && canManage) { %>
+                <a class="btn btn-primary" href="/ingredients/<%= ingredient._id %>/edit">Editar ingrediente</a>
+                <button class="btn btn-danger" data-delete-ingredient="<%= ingredient._id %>" data-redirect-url="/ingredients">Eliminar ingrediente</button>
+              <% } %>
               <% if (typeof currentUser !== 'undefined' && currentUser && String(currentUser.role || '').toLowerCase() === 'admin') { %>
                 <a class="btn btn-ghost" href="/ingredients/moderation">Ir a moderacion</a>
-                <button class="btn btn-danger" data-delete-ingredient="<%= ingredient._id %>">Eliminar ingrediente</button>
               <% } %>
             </div>
           </section>

@@ -70,6 +70,7 @@
     const btn = e.target.closest('[data-delete-recipe], [data-delete-ingredient], [data-delete-cookbook], [data-delete-comment]');
     if (!btn) return;
     e.preventDefault();
+    const redirectUrl = btn.dataset.redirectUrl;
     const recipeId = btn.dataset.deleteRecipe;
     const ingredientId = btn.dataset.deleteIngredient;
     const cookbookId = btn.dataset.deleteCookbook;
@@ -78,18 +79,21 @@
     if (recipeId) {
       const action = { title: 'Eliminar receta', message: '¿Eliminar esta receta permanentemente?', url: '/api/recipes/' + recipeId, method: 'DELETE' };
       if (btn.dataset.formSelector) action.formSubmit = btn.dataset.formSelector;
+      if (redirectUrl) action.onSuccess = function() { window.location.href = redirectUrl; };
       openModal(action);
       return;
     }
     if (ingredientId) {
       const action = { title: 'Eliminar ingrediente', message: '¿Eliminar este ingrediente permanentemente?', url: '/ingredients/' + ingredientId + '/delete', method: 'POST' };
       if (btn.dataset.formSelector) action.formSubmit = btn.dataset.formSelector;
+      if (redirectUrl) action.onSuccess = function() { window.location.href = redirectUrl; };
       openModal(action);
       return;
     }
     if (cookbookId) {
       const action = { title: 'Eliminar recetario', message: '¿Eliminar este recetario permanentemente?', url: '/cookbooks/' + cookbookId + '/delete', method: 'POST' };
       if (btn.dataset.formSelector) action.formSubmit = btn.dataset.formSelector;
+      if (redirectUrl) action.onSuccess = function() { window.location.href = redirectUrl; };
       openModal(action);
       return;
     }

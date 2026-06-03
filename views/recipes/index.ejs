@@ -130,10 +130,11 @@
                 <p class="rb-empty">Aún no has publicado ninguna receta.</p>
               <% } else { %>
                 <div class="rb-grid">
-                  <% __myRecipes.forEach(function(recipe) {
+                     <% __myRecipes.forEach(function(recipe) {
                        var s = _src(recipe), ok = _okSrc(s), acc = _accent(recipe);
                        var em = String(recipe.fallbackEmoji||'').trim()||'🍳';
-                       var canEdit = Boolean(currentUser && (_isAdmin||(_currentId&&String(recipe.author||recipe.usuario_id||'')===_currentId)));
+                       var authorId = (recipe.author && (recipe.author._id || recipe.author)) || (recipe.usuario_id && (recipe.usuario_id._id || recipe.usuario_id)) || '';
+                       var canEdit = Boolean(currentUser && (_isAdmin || (_currentId && String(authorId) === _currentId)));
                   %>
                     <article class="recipe-card recipe-card-clickable" data-card-href="/recipes/<%= recipe._id %>" data-recipe-card data-recipe-title="<%= String(recipe.title||recipe.titulo||'').toLowerCase() %>" data-recipe-author="<%= String(_creator(recipe)).toLowerCase() %>" data-recipe-region="<%= String(_region(recipe)).toLowerCase() %>" data-recipe-difficulty="<%= _difficulty(recipe) %>" data-recipe-tags="<%= (Array.isArray(recipe.tags) && recipe.tags.length ? recipe.tags : (Array.isArray(recipe.etiquetas) ? recipe.etiquetas : [])).join(',') %>" role="link" tabindex="0">
                       <% if (s && ok) { %><img class="recipe-card-img" src="<%= s %>" alt="<%= recipe.title||recipe.titulo %>" loading="lazy" />
@@ -149,10 +150,8 @@
                         </div>
                         <% if (canEdit) { %>
                           <div class="actions" style="margin-top:0.5rem;">
-                            <a class="btn btn-soft btn-sm" href="/recipes/<%= recipe._id %>/edit" onclick="event.stopPropagation()">Editar</a>
-                            <% if (_isAdmin) { %>
-                              <button class="btn btn-danger btn-sm" data-delete-recipe="<%= recipe._id %>" onclick="event.stopPropagation()">Eliminar</button>
-                            <% } %>
+                            <a class="btn btn-soft btn-sm" href="/recipes/<%= recipe._id %>/edit">Editar</a>
+                            <button class="btn btn-danger btn-sm" data-delete-recipe="<%= recipe._id %>">Eliminar</button>
                           </div>
                         <% } %>
                       </div>

@@ -158,11 +158,9 @@
                 <% if (canManage) { %>
                   <div class="cb-card-admin-actions">
                     <a class="btn btn-soft btn-sm" href="/cookbooks/<%= cb._id %>/edit">Editar</a>
-                    <% if (isAdmin) { %>
-                      <form action="/cookbooks/<%= cb._id %>/delete" method="POST" style="margin:0;">
-                        <button class="btn btn-danger btn-sm" type="button" data-delete-cookbook="<%= cb._id %>" data-form-selector="form[action='/cookbooks/<%= cb._id %>/delete']">Eliminar</button>
-                      </form>
-                    <% } %>
+                    <form action="/cookbooks/<%= cb._id %>/delete" method="POST" style="margin:0;">
+                      <button class="btn btn-danger btn-sm" type="button" data-delete-cookbook="<%= cb._id %>" data-form-selector="form[action='/cookbooks/<%= cb._id %>/delete']">Eliminar</button>
+                    </form>
                   </div>
                 <% } %>
               </div>

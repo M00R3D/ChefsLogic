@@ -16,7 +16,7 @@ router.get("/api/recipes/slug-availability", recipeController.checkRecipeSlugAva
 router.get("/api/recipes/:id", recipeController.getRecipeById);
 router.post("/api/recipes", requireAuth, recipeController.createRecipe);
 router.put("/api/recipes/:id", requireAuth, recipeController.updateRecipe);
-router.delete("/api/recipes/:id", requireAuth, requireAdmin, recipeController.deleteRecipe);
+router.delete("/api/recipes/:id", requireAuth, recipeController.deleteRecipe);
 router.post("/api/recipes/:id/like", requireAuth, recipeController.likeRecipe);
 router.post("/api/recipes/:id/dislike", requireAuth, recipeController.dislikeRecipe);
 router.post("/api/recipes/:id/save", requireAuth, recipeController.saveRecipe);
@@ -24,7 +24,7 @@ router.post("/api/recipes/:id/comment", requireAuth, recipeController.addComment
 router.delete("/api/recipes/:id/comments/:commentId", requireAuth, requireAdmin, recipeController.deleteComment);
 router.put("/api/recipes/:id/comments/:commentId", requireAuth, requireAdmin, recipeController.updateComment);
 // Support form-based delete from UI
-router.post("/recipes/:id/delete", requireAuth, requireAdmin, recipeController.deleteRecipeFromForm);
+router.post("/recipes/:id/delete", requireAuth, recipeController.deleteRecipeFromForm);
 router.get('/recipes/:id/comments/:commentId/edit', requireAuth, requireAdmin, recipeController.renderEditCommentPage);
 router.post('/recipes/:id/comments/:commentId/edit', requireAuth, requireAdmin, recipeController.updateCommentFromForm);
 

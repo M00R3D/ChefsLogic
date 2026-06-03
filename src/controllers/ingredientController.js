@@ -86,6 +86,24 @@ function isAdminUser(user) {
   return String((user && (user.role || user.rol)) || "usuario").toLowerCase() === "admin";
 }
 
+function canManageIngredient(user, ingredient) {
+  if (!user || !ingredient) {
+    return false;
+  }
+
+  if (isAdminUser(user)) {
+    return true;
+  }
+
+  const userId = toObjectIdString(user._id || user.id);
+  const ownerId = toObjectIdString(
+    (ingredient.createdBy && ingredient.createdBy._id) ||
+    ingredient.createdBy
+  );
+
+  return Boolean(userId && ownerId && userId === ownerId);
+}
+
 function getPublicIngredientsFilter() {
   return {
     approvalStatus: "approved",
@@ -105,7 +123,27 @@ function renderCreateIngredientWithError(res, message, statusCode) {
   return res.status(statusCode || 400).render("ingredients/create", {
     pageTitle: "Chef's Logic | Nuevo ingrediente",
     activeTab: "ingredientes",
+    ingredient: null,
+    formAction: "/ingredients",
+    submitLabel: "Guardar ingrediente",
+    isEditMode: false,
     errorMessage: message || "No fue posible crear el ingrediente."
+  });
+}
+
+function renderIngredientForm(res, options = {}) {
+  const ingredient = options.ingredient || null;
+  const isEditMode = Boolean(options.isEditMode);
+  const heading = isEditMode ? "Editar ingrediente" : "Nuevo ingrediente";
+
+  return res.status(options.statusCode || 200).render("ingredients/create", {
+    pageTitle: options.pageTitle || `Chef's Logic | ${heading}`,
+    activeTab: "ingredientes",
+    ingredient,
+    formAction: options.formAction || (ingredient ? `/ingredients/${ingredient._id}` : "/ingredients"),
+    submitLabel: options.submitLabel || (isEditMode ? "Guardar cambios" : "Guardar ingrediente"),
+    isEditMode,
+    errorMessage: options.errorMessage || ""
   });
 }
 
@@ -204,11 +242,48 @@ async function renderIngredientsPage(req, res) {
 }
 
 function renderCreateIngredientPage(req, res) {
-  return res.render("ingredients/create", {
-    pageTitle: "Chef's Logic | Nuevo ingrediente",
-    activeTab: "ingredientes",
+  return renderIngredientForm(res, {
+    ingredient: null,
+    isEditMode: false,
     errorMessage: ""
   });
+}
+
+async function renderEditIngredientPage(req, res) {
+  try {
+    const ingredient = await Ingredient.findById(req.params.id).lean();
+
+    if (!ingredient) {
+      return renderIngredientForm(res, {
+        statusCode: 404,
+        ingredient: null,
+        isEditMode: true,
+        errorMessage: "Ingrediente no encontrado."
+      });
+    }
+
+    if (!canManageIngredient(res.locals.currentUser, ingredient)) {
+      return renderIngredientForm(res, {
+        statusCode: 403,
+        ingredient,
+        isEditMode: true,
+        errorMessage: "No tienes permiso para editar este ingrediente."
+      });
+    }
+
+    return renderIngredientForm(res, {
+      ingredient,
+      isEditMode: true,
+      errorMessage: ""
+    });
+  } catch (error) {
+    return renderIngredientForm(res, {
+      statusCode: 500,
+      ingredient: null,
+      isEditMode: true,
+      errorMessage: "No fue posible cargar el formulario de edición."
+    });
+  }
 }
 
 async function renderIngredientDetailPage(req, res) {
@@ -224,7 +299,9 @@ async function renderIngredientDetailPage(req, res) {
       });
     }
 
-    if (!isAdminUser(res.locals.currentUser)) {
+    const canManage = canManageIngredient(res.locals.currentUser, ingredient);
+
+    if (!isAdminUser(res.locals.currentUser) && !canManage) {
       const isVisible = ingredient.approvalStatus === "approved" && Boolean(ingredient.isPublic);
       if (!isVisible) {
         return res.status(404).render("ingredients/show", {
@@ -240,6 +317,7 @@ async function renderIngredientDetailPage(req, res) {
       pageTitle: `Chef's Logic | ${ingredient.name || ingredient.nombre || "Ingrediente"}`,
       activeTab: "ingredientes",
       ingredient,
+      canManage,
       errorMessage: ""
     });
   } catch (error) {
@@ -272,7 +350,7 @@ async function getIngredientById(req, res) {
       return sendError(res, new Error("Ingrediente no encontrado."), "Ingrediente no encontrado.", 404);
     }
 
-    if (!isAdminUser(res.locals.currentUser)) {
+    if (!isAdminUser(res.locals.currentUser) && !canManageIngredient(res.locals.currentUser, ingredient)) {
       const isVisible = ingredient.approvalStatus === "approved" && Boolean(ingredient.isPublic);
       if (!isVisible) {
         return sendError(res, new Error("Ingrediente no encontrado."), "Ingrediente no encontrado.", 404);
@@ -368,8 +446,14 @@ async function createIngredient(req, res) {
 
 async function updateIngredient(req, res) {
   try {
-    if (!isAdminUser(res.locals.currentUser)) {
-      return sendError(res, new Error("Acceso denegado."), "Solo administradores pueden actualizar ingredientes.", 403);
+    const existingIngredient = await Ingredient.findById(req.params.id).lean();
+
+    if (!existingIngredient) {
+      return sendError(res, new Error("Ingrediente no encontrado."), "Ingrediente no encontrado.", 404);
+    }
+
+    if (!canManageIngredient(res.locals.currentUser, existingIngredient)) {
+      return sendError(res, new Error("Acceso denegado."), "No tienes permiso para actualizar este ingrediente.", 403);
     }
 
     const { payload, invalidSeasonality } = mapIngredientPayload(req.body);
@@ -378,6 +462,13 @@ async function updateIngredient(req, res) {
       const message = getSeasonalityErrorMessage(invalidSeasonality);
       return sendError(res, new Error(message), message, 400);
     }
+
+    payload.createdBy = existingIngredient.createdBy || null;
+    payload.sourceType = existingIngredient.sourceType || payload.sourceType || "user";
+    payload.approvalStatus = existingIngredient.approvalStatus || "approved";
+    payload.isPublic = typeof existingIngredient.isPublic === "boolean" ? existingIngredient.isPublic : true;
+    payload.approvedBy = existingIngredient.approvedBy || null;
+    payload.approvedAt = existingIngredient.approvedAt || null;
 
     const updated = await Ingredient.findByIdAndUpdate(req.params.id, payload, {
       new: true,
@@ -396,11 +487,17 @@ async function updateIngredient(req, res) {
 
 async function deleteIngredient(req, res) {
   try {
-    if (!isAdminUser(res.locals.currentUser)) {
+    const existingIngredient = await Ingredient.findById(req.params.id).lean();
+
+    if (!existingIngredient) {
+      return sendError(res, new Error("Ingrediente no encontrado."), "Ingrediente no encontrado.", 404);
+    }
+
+    if (!canManageIngredient(res.locals.currentUser, existingIngredient)) {
       if (req.accepts("html") && !req.path.startsWith("/api")) {
-        return res.status(403).redirect("/ingredients");
+        return res.status(403).redirect(`/ingredients/${req.params.id}`);
       }
-      return sendError(res, new Error("Acceso denegado."), "Solo administradores pueden eliminar ingredientes.", 403);
+      return sendError(res, new Error("Acceso denegado."), "No tienes permiso para eliminar este ingrediente.", 403);
     }
 
     const deleted = await Ingredient.findByIdAndDelete(req.params.id);
@@ -410,12 +507,84 @@ async function deleteIngredient(req, res) {
     }
 
     if (req.accepts("html") && !req.path.startsWith("/api")) {
-      return res.redirect("/ingredients/moderation");
+      const referer = String(req.get("referer") || "");
+      const redirectTo = referer.includes("/ingredients/moderation") ? "/ingredients/moderation" : "/ingredients";
+      return res.redirect(redirectTo);
     }
 
     return sendSuccess(res, { id: req.params.id }, "Ingrediente eliminado correctamente.");
   } catch (error) {
     return sendError(res, error, "No fue posible eliminar el ingrediente.");
+  }
+}
+
+async function updateIngredientFromForm(req, res) {
+  try {
+    const existingIngredient = await Ingredient.findById(req.params.id).lean();
+
+    if (!existingIngredient) {
+      return res.status(404).redirect("/ingredients");
+    }
+
+    if (!canManageIngredient(res.locals.currentUser, existingIngredient)) {
+      return res.status(403).redirect(`/ingredients/${req.params.id}`);
+    }
+
+    const { payload, invalidSeasonality } = mapIngredientPayload(req.body);
+
+    if (!payload.name) {
+      return renderIngredientForm(res, {
+        statusCode: 400,
+        ingredient: { ...existingIngredient, ...payload },
+        isEditMode: true,
+        errorMessage: "El nombre del ingrediente es obligatorio."
+      });
+    }
+
+    if (invalidSeasonality.length > 0) {
+      return renderIngredientForm(res, {
+        statusCode: 400,
+        ingredient: { ...existingIngredient, ...payload },
+        isEditMode: true,
+        errorMessage: getSeasonalityErrorMessage(invalidSeasonality)
+      });
+    }
+
+    payload.createdBy = existingIngredient.createdBy || null;
+    payload.sourceType = existingIngredient.sourceType || payload.sourceType || "user";
+    payload.approvalStatus = existingIngredient.approvalStatus || "approved";
+    payload.isPublic = typeof existingIngredient.isPublic === "boolean" ? existingIngredient.isPublic : true;
+    payload.approvedBy = existingIngredient.approvedBy || null;
+    payload.approvedAt = existingIngredient.approvedAt || null;
+
+    const updated = await Ingredient.findByIdAndUpdate(req.params.id, payload, {
+      new: true,
+      runValidators: true
+    });
+
+    if (!updated) {
+      return res.status(404).redirect("/ingredients");
+    }
+
+    return res.redirect(`/ingredients/${updated._id}`);
+  } catch (error) {
+    if (error && error.code === 11000) {
+      const existingIngredient = await Ingredient.findById(req.params.id).lean();
+      return renderIngredientForm(res, {
+        statusCode: 409,
+        ingredient: { ...existingIngredient, ...mapIngredientPayload(req.body).payload },
+        isEditMode: true,
+        errorMessage: "Ya existe un ingrediente con ese nombre. Prueba otro nombre."
+      });
+    }
+
+    const existingIngredient = await Ingredient.findById(req.params.id).lean();
+    return renderIngredientForm(res, {
+      statusCode: 500,
+      ingredient: existingIngredient,
+      isEditMode: true,
+      errorMessage: "No fue posible actualizar el ingrediente. Revisa los datos e intenta de nuevo."
+    });
   }
 }
 
@@ -539,12 +708,14 @@ module.exports = {
   renderIngredientsPage,
   renderModerationPage,
   renderCreateIngredientPage,
+  renderEditIngredientPage,
   renderIngredientDetailPage,
   getAllIngredients,
   getIngredientById,
   checkIngredientNameAvailability,
   createIngredient,
   updateIngredient,
+  updateIngredientFromForm,
   deleteIngredient,
   approveIngredient,
   rejectIngredient

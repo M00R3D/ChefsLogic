@@ -181,6 +181,7 @@ async function renderUserDashboard(req, res) {
       rangeLabel,
       lastUpdated: now.toISOString(),
       totalMyRecipes,
+      myRecipes,
       totalLikes,
       avgPrepTime,
       eventSummary,

@@ -118,9 +118,7 @@
               <a class="btn btn-soft" href="/recipes">Volver</a>
               <% if (canEdit) { %>
                 <a class="btn btn-primary" href="/recipes/<%= recipe._id %>/edit">Editar receta</a>
-                <% if (typeof currentUser !== 'undefined' && currentUser && String(currentUser.role || '').toLowerCase() === 'admin') { %>
-                  <button class="btn btn-danger" data-delete-recipe="<%= recipe._id %>">Eliminar receta</button>
-                <% } %>
+                <button class="btn btn-danger" data-delete-recipe="<%= recipe._id %>" data-redirect-url="/recipes">Eliminar receta</button>
               <% } %>
             </div>
           </section>

@@ -293,8 +293,14 @@ async function updateCookbook(req, res) {
 
 async function deleteCookbook(req, res) {
   try {
-    if (!isAdminUser(res.locals.currentUser)) {
-      return sendError(res, new Error("Acceso denegado."), "Solo administradores pueden eliminar recetarios.", 403);
+    const existingCookbook = await Cookbook.findById(req.params.id).lean();
+
+    if (!existingCookbook) {
+      return sendError(res, new Error("Recetario no encontrado."), "Recetario no encontrado.", 404);
+    }
+
+    if (!canManageCookbook(res.locals.currentUser, existingCookbook)) {
+      return sendError(res, new Error("Acceso denegado."), "No tienes permiso para eliminar este recetario.", 403);
     }
 
     const deleted = await Cookbook.findByIdAndDelete(req.params.id);
@@ -425,11 +431,12 @@ async function deleteCookbookFromForm(req, res) {
       return res.status(404).redirect("/cookbooks");
     }
 
-    if (!isAdminUser(res.locals.currentUser)) {
+    if (!canManageCookbook(res.locals.currentUser, existingCookbook)) {
       return res.status(403).redirect(`/cookbooks/${req.params.id}`);
     }
 
-    return deleteCookbook(req, res);
+    await Cookbook.findByIdAndDelete(req.params.id);
+    return res.redirect("/cookbooks");
   } catch (error) {
     return res.status(500).redirect(`/cookbooks/${req.params.id}`);
   }

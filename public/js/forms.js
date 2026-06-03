@@ -1088,7 +1088,7 @@ function buildIngredientCreateValidation() {
   }
 
   var action = String(form.getAttribute("action") || "").trim();
-  if (action !== "/ingredients") {
+  if (!/^\/ingredients(?:\/[^/]+)?$/.test(action)) {
     return;
   }
 
@@ -1150,6 +1150,22 @@ function buildIngredientCreateValidation() {
     return String(value || "").trim().toLowerCase();
   }
 
+  var originalName = normalizeName(nameInput.getAttribute("data-original-name") || "");
+
+  String(seasonalityHidden.value || "")
+    .split(",")
+    .map(function (month) { return String(month || "").trim().toLowerCase(); })
+    .filter(Boolean)
+    .forEach(function (month) {
+      selectedMonths.add(month);
+    });
+
+  monthButtons.forEach(function (btn) {
+    btn.classList.toggle("is-selected", selectedMonths.has(btn.dataset.month));
+  });
+
+  syncSeasonalityHidden();
+
   async function checkNameAvailability() {
     var rawName = String(nameInput.value || "").trim();
     var normalized = normalizeName(rawName);
@@ -1164,6 +1180,14 @@ function buildIngredientCreateValidation() {
       nameInput.setCustomValidity("El nombre debe tener al menos 2 caracteres.");
       setNameFeedback("", false);
       return false;
+    }
+
+    if (originalName && normalized === originalName) {
+      nameInput.setCustomValidity("");
+      setNameFeedback("", false);
+      lastCheckedName = normalized;
+      lastAvailable = true;
+      return true;
     }
 
     if (normalized === lastCheckedName) {

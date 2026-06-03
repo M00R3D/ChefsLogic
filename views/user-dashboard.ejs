@@ -27,6 +27,29 @@
           <% }); %>
         </div>
 
+        <!-- My recipes list (owner actions: Edit / Delete) -->
+        <div class="card" style="margin-bottom:1rem;">
+          <h3>Mis recetas recientes</h3>
+          <% if (typeof myRecipes !== 'undefined' && myRecipes && myRecipes.length) { %>
+            <ul class="list-unstyled" style="margin:0;padding:0;">
+              <% myRecipes.slice(0,8).forEach(function(r){ %>
+                <li style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0;border-top:1px solid rgba(0,0,0,0.04);">
+                  <div>
+                    <a href="/recipes/<%= r._id %>"><strong><%= r.title || r.titulo || 'Sin título' %></strong></a>
+                    <div class="muted" style="font-size:0.9rem">Creada: <%= (r.createdAt ? new Date(r.createdAt).toLocaleDateString('es-ES') : '-') %></div>
+                  </div>
+                  <div style="display:flex;gap:0.5rem;align-items:center;">
+                    <a class="btn btn-soft btn-sm" href="/recipes/<%= r._id %>/edit">Editar</a>
+                    <button class="btn btn-danger btn-sm" data-delete-recipe="<%= r._id %>">Eliminar</button>
+                  </div>
+                </li>
+              <% }); %>
+            </ul>
+          <% } else { %>
+            <p class="muted" style="margin:0">No tienes recetas aún. Crea tu primera receta.</p>
+          <% } %>
+        </div>
+
         <% if (errorMessage) { %>
           <section class="alert alert-error"><%= errorMessage %></section>
         <% } %>
