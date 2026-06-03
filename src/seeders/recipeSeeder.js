@@ -134,14 +134,54 @@ const RECIPES_BY_REGION = {
     }
   ],
   "occidente": [
-    { title: "Birria tapatía", tags: ["birria","carnes"], difficulty: "dificil" },
-    { title: "Pozole Jalisco", tags: ["pozole","tradicional"], difficulty: "media" },
-    { title: "Torta ahogada", tags: ["antojitos","pan"], difficulty: "media" },
-    { title: "Carne en su jugo", tags: ["carnes","tradicional"], difficulty: "media" },
-    { title: "Tejuino con nieve de limón", tags: ["bebidas","postre"], difficulty: "facil" },
-    { title: "Arroz a la tumbada (versión occidental)", tags: ["mariscos","arroz"], difficulty: "media" },
-    { title: "Caldillo de pescado estilo occidente", tags: ["mariscos","sopa"], difficulty: "media" },
-    { title: "Tamales de dulce de la región", tags: ["postres","tamales"], difficulty: "media" }
+    {
+      title: "Birria tapatía",
+      tags: ["birria","carnes"],
+      difficulty: "dificil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQuL62ZCg8nxkM0AjvpATvnO6IyP_fdVlQfzC5g_2vxAg&s=10"
+    },
+    {
+      title: "Pozole Jalisco",
+      tags: ["pozole","tradicional"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR84-8eZWNva9cP0jBXI49ui0dsp95KrbhlVHAfT9VVeQ&s=10"
+    },
+    {
+      title: "Torta ahogada",
+      tags: ["antojitos","pan"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRVCDp_q--qevQwK2RA9VxJxQIh7WP6gIovSltkKH44cQ&s=10"
+    },
+    {
+      title: "Carne en su jugo",
+      tags: ["carnes","tradicional"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSbhNQRC-_aVy4PoNaLGbuy7vbLZZO60CfxlRSYLhmiNg&s=10"
+    },
+    {
+      title: "Tejuino con nieve de limón",
+      tags: ["bebidas","postre"],
+      difficulty: "facil",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRk9L3f4bfX2a2d_SccA6ToUKagvBqrNOI1xB1IL4ghDQ&s=10"
+    },
+    {
+      title: "Arroz a la tumbada (versión occidental)",
+      tags: ["mariscos","arroz"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSNGOhAqHf-L-oGNgqOWTOb1GrpiF0UV2xx4SjtJhSigw&s=10"
+    },
+    {
+      title: "Caldillo de pescado estilo occidente",
+      tags: ["mariscos","sopa"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcROhSt8IPreydvDjYCb2WKAIxqXuMUXvYhR7LxBvCBKmw&s=10"
+    },
+    {
+      title: "Tamales de dulce de la región",
+      tags: ["postres","tamales"],
+      difficulty: "media",
+      image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS4OfnBFxZS7PvmMl1B0wYXtYQxy413IXOSX3Vct1PT-A&s=10"
+    }
   ],
   "centro-sur": [
     { title: "Mole poblano clásico", tags: ["mole","puebla"], difficulty: "dificil" },
