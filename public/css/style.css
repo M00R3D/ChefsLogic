@@ -215,10 +215,61 @@ a {
   font-family: var(--font-serif);
   font-size: clamp(1.5rem, 4vw, 2.15rem);
 }
-.grid { display: grid; gap: 1.25rem; } .grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); } .grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); } .grid.cols-4 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); } /* ========================= CARDS ========================= */ .card { background: rgba(255,255,255,.78); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,.2); border-radius: 22px; padding: 1.4rem; box-shadow: 0 4px 10px rgba(0,0,0,.04), 0 12px 28px rgba(0,0,0,.06); transition: transform .2s ease, box-shadow .2s ease; } .card:hover { transform: translateY(-5px); box-shadow: 0 10px 22px rgba(0,0,0,.08), 0 18px 40px rgba(0,0,0,.12); } .card h3 { margin: 0 0 .9rem; font-family: var(--font-serif); font-size: 1.2rem; position: relative; padding-bottom: .5rem; } .card h3::after { content: ""; width: 42px; height: 3px; border-radius: 999px; background: var(--brand); position: absolute; left: 0; bottom: 0; } /* ========================= CHARTS ========================= */ .dashboard-chart-card { min-height: 340px; display: flex; flex-direction: column; justify-content: space-between; } .dashboard-chart-card canvas { width: 100% !important; height: 320px !important; max-height: 320px; padding-top: 1rem; } /* ========================= SUMMARY GRID ========================= */ .dashboard-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; } .dashboard-event-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1rem; } /* ========================= SMALL STATS CARDS ========================= */ .dashboard-small-card { text-align: center; background: linear-gradient(135deg,#7d3f17,#b7652a); color: white; border: none; } .dashboard-small-card h3, .dashboard-small-card h4 { margin-bottom: .7rem; font-size: .95rem; color: rgba(255,255,255,.8); font-weight: 500; } .dashboard-small-card .big-number { font-size: 2.8rem; font-weight: 700; letter-spacing: -1px; margin: 0; color: white; } /* ========================= LIST CARDS ========================= */ .dashboard-list-card { min-height: 290px; } .dashboard-list-card ol { margin: .8rem 0 0; padding-left: 0; list-style: none; } .dashboard-list-card ol li { padding: .9rem 1rem; border-radius: 12px; background: rgba(255,255,255,.65); margin-bottom: .75rem; color: var(--text-soft); transition: transform .15s ease, background .15s ease; } .dashboard-list-card ol li:hover { transform: translateX(5px); background: #fff5ee; } /* ========================= TABLES ========================= */ .dashboard-table-wrapper { overflow-x: auto; } .dashboard-table { width: 100%; border-collapse: collapse; min-width: 620px; } .dashboard-table th, .dashboard-table td { padding: 1rem; text-align: left; font-size: .95rem; border-bottom: 1px solid var(--border-light); } .dashboard-table th { background: #faf7f5; color: var(--text-soft); position: sticky; top: 0; z-index: 2; } .dashboard-table td { background: rgba(255,255,255,.72); } .dashboard-table tbody tr { transition: background .15s ease; } .dashboard-table tbody tr:hover td { background: #fff4ec; } .dashboard-table tbody tr:nth-child(even) td { background: rgba(250,247,245,.9); } /* ========================= ALERTS ========================= */ .alert { border-radius: 14px; padding: 1rem 1.1rem; margin-bottom: 1rem; border-left: 5px solid var(--brand); background: #fff7f1; } /* ========================= FILTER PILLS ========================= */ .filter-pills { display: flex; gap: .75rem; flex-wrap: wrap; } .pill { padding: .6rem 1rem; border-radius: 999px; background: rgba(255,255,255,.75); color: var(--text-soft); text-decoration: none; transition: all .15s ease; } .pill:hover { background: white; transform: translateY(-2px); } .pill.active { background: var(--brand); color: white; } /* ========================= RESPONSIVE ========================= */ @media (max-width: 768px) { .dashboard-small-card .big-number { font-size: 2.2rem; } .card { padding: 1.1rem; } .dashboard-chart-card { min-height: 280px; } }
+.grid { display: grid; gap: 1.25rem; } .grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); } .grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); } .grid.cols-4 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); } /* ========================= CARDS ========================= */ .card { background: rgba(255,255,255,.78); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,.2); border-radius: 22px; padding: 1.4rem; box-shadow: 0 4px 10px rgba(0,0,0,.04), 0 12px 28px rgba(0,0,0,.06); transition: transform .2s ease, box-shadow .2s ease; } .card:hover { transform: translateY(-5px); box-shadow: 0 10px 22px rgba(0,0,0,.08), 0 18px 40px rgba(0,0,0,.12); } .card h3 { margin: 0 0 .9rem; font-family: var(--font-serif); font-size: 1.2rem; position: relative; padding-bottom: .5rem; } .card h3::after { content: ""; width: 42px; height: 3px; border-radius: 999px; background: var(--brand); position: absolute; left: 0; bottom: 0; } /* ========================= CHARTS ========================= */ .dashboard-chart-card { min-height: 340px; display: flex; flex-direction: column; justify-content: space-between; } .dashboard-chart-card canvas { width: 100% !important; height: 320px !important; max-height: 320px; padding-top: 1rem; } /* ========================= SUMMARY GRID ========================= */ .dashboard-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+.dashboard-event-grid {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  grid-auto-rows: minmax(120px, auto);
+  gap: 1rem;
+  align-items: stretch;
+  justify-items: stretch;
+}
+.dashboard-event-grid .dashboard-small-card {
+  min-height: 120px;
+  padding: 1rem;
+}
+.dashboard-event-grid .dashboard-small-card h4 {
+  font-size: 1rem;
+}
+.dashboard-event-grid .dashboard-small-card .big-number {
+  font-size: clamp(1.85rem, 3vw, 2.4rem);
+}
+.dashboard-event-grid .dashboard-small-card .metric-description {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+  line-height: 1.3;
+  font-weight: 400;
+}
+.dashboard-event-grid .dashboard-small-card .metric-label {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.dashboard-event-grid {
+  max-width: 100%;
+}
+.dashboard-event-grid .dashboard-small-card {
+  word-break: break-word;
+}
+/* ========================= SMALL STATS CARDS ========================= */ .dashboard-small-card { text-align: center; background: linear-gradient(135deg,#7d3f17,#b7652a); color: white; border: none; } .dashboard-small-card h3, .dashboard-small-card h4 { margin-bottom: .7rem; font-size: .95rem; color: rgba(255,255,255,.8); font-weight: 500; } .dashboard-small-card .big-number { font-size: 2.8rem; font-weight: 700; letter-spacing: -1px; margin: 0; color: white; } /* ========================= LIST CARDS ========================= */ .dashboard-list-card { min-height: 290px; } .dashboard-list-card ol { margin: .8rem 0 0; padding-left: 0; list-style: none; } .dashboard-list-card ol li { padding: .9rem 1rem; border-radius: 12px; background: rgba(255,255,255,.65); margin-bottom: .75rem; color: var(--text-soft); transition: transform .15s ease, background .15s ease; } .dashboard-list-card ol li:hover { transform: translateX(5px); background: #fff5ee; } /* ========================= TABLES ========================= */ .dashboard-table-wrapper { overflow-x: auto; } .dashboard-table { width: 100%; border-collapse: collapse; min-width: 620px; } .dashboard-table th, .dashboard-table td { padding: 1rem; text-align: left; font-size: .95rem; border-bottom: 1px solid var(--border-light); } .dashboard-table th { background: #faf7f5; color: var(--text-soft); position: sticky; top: 0; z-index: 2; } .dashboard-table td { background: rgba(255,255,255,.72); } .dashboard-table tbody tr { transition: background .15s ease; } .dashboard-table tbody tr:hover td { background: #fff4ec; } .dashboard-table tbody tr:nth-child(even) td { background: rgba(250,247,245,.9); } /* ========================= ALERTS ========================= */ .alert { border-radius: 14px; padding: 1rem 1.1rem; margin-bottom: 1rem; border-left: 5px solid var(--brand); background: #fff7f1; } /* ========================= FILTER PILLS ========================= */ .filter-pills { display: flex; gap: .75rem; flex-wrap: wrap; } .pill { padding: .6rem 1rem; border-radius: 999px; background: rgba(255,255,255,.75); color: var(--text-soft); text-decoration: none; transition: all .15s ease; } .pill:hover { background: white; transform: translateY(-2px); } .pill.active { background: var(--brand); color: white; } /* ========================= RESPONSIVE ========================= */ @media (max-width: 768px) { .dashboard-small-card .big-number { font-size: 2.2rem; } .card { padding: 1.1rem; } .dashboard-chart-card { min-height: 280px; } }
 .users-card {
   position: relative;
   overflow: visible !important;
+  max-width: 280px;
+  margin: 0 auto 1rem;
+}
+
+@media (max-width: 768px) {
+  .users-card {
+    max-width: 100%;
+  }
 }
 
 .users-hover-preview {
@@ -402,6 +453,14 @@ a {
   }
 }
 
+@media (max-width: 640px) {
+  .dashboard-event-grid .dashboard-small-card {
+    padding: 0.95rem;
+  }
+
+  .dashboard-event-grid .dashboard-small-card .big-number {
+    font-size: 2rem;
+  }
 }
 
 .card h4 {
