@@ -1,6 +1,7 @@
 const Cookbook = require("../models/Cookbook");
 const Recipe = require("../models/Recipe");
 const User = require("../models/User");
+const Evento = require("../models/Evento");
 const mongoose = require("mongoose");
 const { sendSuccess, sendError } = require("../utils/apiResponse");
 
@@ -126,7 +127,12 @@ async function renderCookbooksPage(req, res) {
     const page = Math.max(1, parseInt(req.query.page || "1", 10));
     const themeFilter = String(req.query.theme || "").trim().toLowerCase();
     const search = String(req.query.q || "").trim();
-
+    if (search) {
+      await Evento.create({
+        tipo: "buscar_receta",
+        fecha: new Date()
+      }).catch(() => {});
+    }
     const conditions = [];
     if (search) conditions.push({ $or: [{ title: { $regex: search, $options: "i" } }, { nombre: { $regex: search, $options: "i" } }] });
     if (themeFilter && themeFilter !== "all") conditions.push({ theme: themeFilter });
@@ -242,7 +248,14 @@ async function createCookbook(req, res) {
     }
 
     const cookbook = await Cookbook.create(payload);
-
+    try {
+      await Evento.create({
+        tipo: 'crear_recetario',
+        usuario_id: req.session && req.session.userId ? req.session.userId : null,
+        fecha: new Date(),
+        dispositivo: 'web'
+      });
+    } catch (e) { /* ignore */ }
     if (req.accepts("html") && !req.path.startsWith("/api")) {
       return res.redirect("/cookbooks");
     }

@@ -304,7 +304,10 @@ async function renderDashboardPage(req, res) {
       like: eventTotalsMap.like || 0,
       guardar_receta: eventTotalsMap.guardar_receta || 0,
       buscar_receta: eventTotalsMap.buscar_receta || 0,
-      crear_receta: eventTotalsMap.crear_receta || 0
+      crear_receta:
+      (eventTotalsMap.crear_receta || 0) +
+      (eventTotalsMap.crear_ingrediente || 0) +
+      (eventTotalsMap.crear_recetario || 0)
     };
 
     const topRecipesByLikes = topLikedRecipes.map((item) => ({
