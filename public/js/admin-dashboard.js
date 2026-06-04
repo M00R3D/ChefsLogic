@@ -89,6 +89,26 @@
 
   function updateCountsFrom(data){
     if (!data) return;
+    // Update users card big-number to reflect range-specific new users
+    try {
+      const usersCard = document.querySelector('.users-card');
+      if (usersCard) {
+        const usersBig = usersCard.querySelector('.big-number');
+        if (usersBig) usersBig.textContent = String(typeof data.newUsersInRange !== 'undefined' ? data.newUsersInRange : (data.totalUsers || 0));
+        const badge = usersCard.querySelector('.metric-badge');
+        if (badge && typeof data.newUsersInRange !== 'undefined') {
+          // keep badge as rendered server-side; update count inside if present
+          // badge content typically includes "+N" and range label; we only update the +N
+          const txt = badge.textContent || '';
+          const parts = String(txt).trim().split(/\s+/);
+          if (parts && parts.length) {
+            // Replace first numeric token with newUsersInRange
+            parts[0] = (String((data.newUsersInRange || 0) >= 0 ? `+${data.newUsersInRange}` : `+0`));
+            badge.textContent = parts.join(' ');
+          }
+        }
+      }
+    } catch (e) { /* ignore UI update errors */ }
     if (typeof data.totalRecipes !== 'undefined'){
       // Update summary cards more robustly: recipes and ingredients
       const nodes = Array.from(document.querySelectorAll('.dashboard-summary-grid .dashboard-small-card'));
