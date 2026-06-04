@@ -123,6 +123,9 @@ async function renderUserDashboard(req, res) {
       ]).catch(() => [])
     ]);
 
+    // Count of my recipes created within the selected range
+    const newMyRecipesInRange = await Recipe.countDocuments({ author: uid, createdAt: { $gte: startDate, $lte: now } }).catch(() => 0);
+
     // Total likes on my recipes
     const totalLikes = myRecipes.reduce((s, r) => s + (r.likeCount || r.likes || 0), 0);
 
@@ -181,6 +184,7 @@ async function renderUserDashboard(req, res) {
       rangeLabel,
       lastUpdated: now.toISOString(),
       totalMyRecipes,
+      newMyRecipesInRange,
       myRecipes,
       totalLikes,
       avgPrepTime,

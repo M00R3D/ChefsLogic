@@ -58,27 +58,31 @@
         <div class="dashboard-summary-grid" style="margin-bottom:1rem;">
           <div class="card dashboard-small-card">
             <h3>Mis recetas</h3>
-            <p class="big-number"><%= totalMyRecipes %></p>
+            <p class="big-number"><%= typeof newMyRecipesInRange !== 'undefined' ? newMyRecipesInRange : totalMyRecipes %></p>
           </div>
           <div class="card dashboard-small-card">
+            <div class="metric-top">
+              <span class="metric-icon">👁️</span>
+              <span class="metric-badge">+<%= eventSummary.ver_receta || 0 %> <%= rangeKey === 'today' ? 'hoy' : rangeKey === '7' ? '7d' : rangeKey === '30' ? '30d' : 'año' %></span>
+            </div>
             <h3>Visitas totales</h3>
             <p class="big-number"><%= eventSummary.ver_receta %></p>
           </div>
           <div class="card dashboard-small-card">
+            <div class="metric-top">
+              <span class="metric-icon">❤</span>
+              <span class="metric-badge">+<%= eventSummary.like || 0 %> <%= rangeKey === 'today' ? 'hoy' : rangeKey === '7' ? '7d' : rangeKey === '30' ? '30d' : 'año' %></span>
+            </div>
             <h3>Likes recibidos</h3>
             <p class="big-number"><%= totalLikes %></p>
           </div>
           <div class="card dashboard-small-card">
+            <div class="metric-top">
+              <span class="metric-icon">🔖</span>
+              <span class="metric-badge">+<%= eventSummary.guardar_receta || 0 %> <%= rangeKey === 'today' ? 'hoy' : rangeKey === '7' ? '7d' : rangeKey === '30' ? '30d' : 'año' %></span>
+            </div>
             <h3>Guardados</h3>
             <p class="big-number"><%= eventSummary.guardar_receta %></p>
-          </div>
-          <div class="card dashboard-small-card">
-            <h3>Tiempo promedio</h3>
-            <p class="big-number" id="ud-avg-prep"><%= (avgPrepTime !== null && avgPrepTime !== undefined) ? avgPrepTime : '-' %> min</p>
-          </div>
-          <div class="card dashboard-small-card">
-            <h3>Likes <%= rangeLabel %></h3>
-            <p class="big-number"><%= eventSummary.like %></p>
           </div>
         </div>
 
@@ -247,5 +251,6 @@
       });
     })();
     </script>
+    <script src="/js/user-dashboard.js"></script>
   </body>
 </html>
