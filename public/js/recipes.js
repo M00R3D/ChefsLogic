@@ -121,7 +121,12 @@ function bindRecipesFilters() {
     });
   }
 
-  if (searchInput) searchInput.addEventListener("input", applyFilters);
+  // By default do not apply live filtering while the user types when a server
+  // search form is present. Enable live filtering only if the input explicitly
+  // opts in via `data-live-search`.
+  if (searchInput && searchInput.hasAttribute('data-live-search')) {
+    searchInput.addEventListener("input", applyFilters);
+  }
   if (difficultySelect) difficultySelect.addEventListener("change", applyFilters);
   if (regionSelect) regionSelect.addEventListener("change", applyFilters);
   if (categorySelect) categorySelect.addEventListener("change", applyFilters);

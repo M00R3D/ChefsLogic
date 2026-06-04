@@ -69,8 +69,11 @@
 
         <section class="rb-toolbar card" data-recipe-filters>
           <div class="rb-toolbar-field rb-toolbar-search">
-            <label for="recipes-search-input">Buscar</label>
-            <input id="recipes-search-input" type="search" placeholder="Título, autor o región..." data-filter-search />
+            <form action="/recipes" method="GET" style="display:flex;gap:.5rem;align-items:center;">
+              <label for="recipes-search-input">Buscar</label>
+              <input id="recipes-search-input" name="q" type="search" placeholder="Título, autor o región..." data-filter-search value="<%= typeof q !== 'undefined' && q ? q : '' %>" />
+              <button class="btn btn-soft btn-sm" type="submit">Buscar</button>
+            </form>
           </div>
           <div class="rb-toolbar-field">
             <label for="recipes-difficulty-filter">Dificultad</label>

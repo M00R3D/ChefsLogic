@@ -14,7 +14,7 @@ const eventoSchema = new mongoose.Schema(
     },
     tipo: {
       type: String,
-      enum: ['ver_receta', 'like', 'guardar_receta', 'buscar_receta', 'crear_receta'],
+      enum: ['ver_receta', 'like', 'guardar_receta', 'buscar_receta', 'crear_receta', 'crear_ingrediente', 'crear_recetario'],
       required: [true, 'El tipo de evento es obligatorio.']
     },
     fecha: {

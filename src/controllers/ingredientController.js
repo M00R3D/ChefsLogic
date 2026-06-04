@@ -1,4 +1,6 @@
 const Ingredient = require("../models/Ingredient");
+const Interaction = require('../models/Interaction');
+const Evento = require('../models/Evento');
 const { sendSuccess, sendError } = require("../utils/apiResponse");
 
 const VALID_MONTHS = [
@@ -176,6 +178,13 @@ async function renderIngredientsPage(req, res) {
         { name: { $regex: search, $options: "i" } },
         { nombre: { $regex: search, $options: "i" } }
       ]});
+      // record a search event so admin dashboard counts searches across resources
+      Evento.create({
+        tipo: 'buscar_receta',
+        usuario_id: req.session && req.session.userId ? req.session.userId : null,
+        fecha: new Date(),
+        dispositivo: 'web'
+      }).catch(() => {});
     }
     if (categoryFilter && categoryFilter !== "all") {
       conditions.push({ category: categoryFilter });
@@ -422,7 +431,23 @@ async function createIngredient(req, res) {
     payload.approvedAt = new Date();
 
     const ingredient = await Ingredient.create(payload);
-
+    await Interaction.create({
+      tipo: 'crear_ingrediente',
+      usuario_id: currentUserId || null,
+      fecha: new Date(),
+      metadata: {
+        ingrediente_id: ingredient._id,
+        nombre: ingredient.name
+      }
+    }).catch(() => null);
+    try {
+      await Evento.create({
+        tipo: 'crear_ingrediente',
+        usuario_id: req.session && req.session.userId ? req.session.userId : null,
+        fecha: new Date(),
+        dispositivo: 'web'
+      });
+    } catch (e) { /* ignore */ }
     if (req.accepts("html") && !req.path.startsWith("/api")) {
       return res.redirect(`/ingredients?submitted=approved`);
     }

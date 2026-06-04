@@ -344,13 +344,29 @@ async function renderRecipesPage(req, res) {
       .sort({ createdAt: -1 })
       .lean();
 
-    if (req.query && String(req.query.q || '').trim()) {
+    const rawQuery = String((req.query && req.query.q) || '').trim();
+    if (rawQuery) {
       await recordEvento({
         usuario_id: req.session && req.session.userId ? toObjectId(req.session.userId) : null,
         tipo: 'buscar_receta',
         dispositivo: 'web'
       });
     }
+
+    // If a query is provided, perform server-side filtering so results persist
+    // after submitting the search form. This mirrors the client-side text matching.
+    function matchesText(r, text) {
+      if (!text) return true;
+      const t = String((r.title || r.titulo || '')).toLowerCase();
+      const author = (r.author && (r.author.name || r.author.nombre)) || (r.usuario_id && (r.usuario_id.name || r.usuario_id.nombre)) || '';
+      const a = String(author).toLowerCase();
+      const region = String((r.region && (r.region.name || r.region.nombre)) || '').toLowerCase();
+      const tags = String((Array.isArray(r.tags) && r.tags.length ? r.tags : (Array.isArray(r.etiquetas) ? r.etiquetas : [])).join(',')).toLowerCase();
+      return t.includes(text) || a.includes(text) || region.includes(text) || tags.includes(text);
+    }
+
+    const queryText = rawQuery.toLowerCase();
+    const filteredAll = rawQuery ? (allRecipes || []).filter((r) => matchesText(r, queryText)) : allRecipes;
 
     function isRecipeOwnedByUser(r, userId) {
       if (!r) return false;
@@ -362,12 +378,12 @@ async function renderRecipesPage(req, res) {
     }
 
     const myRecipes = currentUserId
-      ? allRecipes.filter((r) => isRecipeOwnedByUser(r, currentUserId))
+      ? filteredAll.filter((r) => isRecipeOwnedByUser(r, currentUserId))
       : [];
 
     const otherRecipes = currentUserId
-      ? allRecipes.filter((r) => !isRecipeOwnedByUser(r, currentUserId))
-      : allRecipes;
+      ? filteredAll.filter((r) => !isRecipeOwnedByUser(r, currentUserId))
+      : filteredAll;
 
     let savedRecipes = [];
     if (currentUser) {
@@ -390,6 +406,8 @@ async function renderRecipesPage(req, res) {
     res.locals.myRecipes    = myRecipes;
     res.locals.otherRecipes = otherRecipes;
     res.locals.savedRecipes = savedRecipes;
+    // expose original query to the view so the input value can be preserved
+    res.locals.q = rawQuery;
     // gather all unique tags/categories from recipes for filtering UI
     try {
       const tagSet = new Set();
