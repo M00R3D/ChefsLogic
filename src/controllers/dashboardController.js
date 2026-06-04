@@ -68,15 +68,15 @@ async function renderDashboardPage(req, res) {
 
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const firstDayOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-
     const [
-      totalUsers,
-      totalRecipes,
-      totalIngredients,
-      totalEvents,
-      usersThisMonth,
-      activeUsers
-    ] = await Promise.all([
+        totalUsers,
+        totalRecipes,
+        totalIngredients,
+        totalEvents,
+        usersThisMonth,
+        activeUsers,
+        newUsersInRange
+      ] = await Promise.all([
       User.countDocuments(),
       Recipe.countDocuments(),
       Ingredient.countDocuments(),
@@ -87,7 +87,13 @@ async function renderDashboardPage(req, res) {
           $lt: firstDayOfNextMonth
         }
       }),
-      User.countDocuments({ isActive: true })
+      User.countDocuments({ isActive: true }),
+      User.countDocuments({
+        fecha_registro: {
+          $gte: startDate,
+          $lte: now
+        }
+      })
     ]);
 
     const [
@@ -356,7 +362,16 @@ async function renderDashboardPage(req, res) {
       const index = Math.max(0, Math.min(6, dayOfWeek - 1));
       weekdayCounts[index] = entry.total;
     });
-
+    const latestUsers = await User.find({
+      fecha_registro: {
+        $gte: startDate,
+        $lte: now
+      }
+    })
+    .sort({ fecha_registro: -1 })
+    .limit(6)
+    .select('name nombre avatar')
+    .lean();
     const payload = {
       pageTitle: "Chef's Logic | Dashboard",
       activeTab: 'dashboard',
@@ -366,6 +381,10 @@ async function renderDashboardPage(req, res) {
       totalRecipes,
       totalIngredients,
       totalEvents,
+      newUsersInRange,
+      latestUsers,
+      // legacy template variable: some templates expect `recentUsersInRange`
+      recentUsersInRange: latestUsers,
       eventsInRange: Object.values(eventSummary).reduce((sum, value) => sum + value, 0),
       usersThisMonth,
       activeUsers,
@@ -424,6 +443,7 @@ async function renderDashboardPage(req, res) {
       weekdayLabels: buildWeekdayLabels(),
       weekdayCounts: Array(7).fill(0),
       recentEvents: [],
+      recentUsersInRange: [],
       errorMessage: 'No fue posible cargar el dashboard. Revisa la consola del servidor.'
     });
   }
