@@ -602,16 +602,17 @@ async function checkRecipeSlugAvailability(req, res) {
 
 async function renderEditRecipePage(req, res) {
   try {
-    const [recipe, regions] = await Promise.all([
+    const [recipe, regions, allIngredients] = await Promise.all([
       Recipe.findById(req.params.id).lean(),
-      Region.find().sort({ name: 1 }).lean()
+      Region.find().sort({ name: 1 }).lean(),
+      Ingredient.find(ingredientCatalogQueryForUser(res.locals.currentUser)).sort({ name: 1 }).lean()
     ]);
-
     if (!recipe) {
       return res.status(404).render("recipes/edit", {
         pageTitle: "Chef's Logic | Editar receta",
         activeTab: "recetas",
         regions,
+        allIngredients: [],
         recipe: null,
         errorMessage: "La receta no existe."
       });
@@ -622,6 +623,7 @@ async function renderEditRecipePage(req, res) {
         pageTitle: "Chef's Logic | Editar receta",
         activeTab: "recetas",
         regions,
+        allIngredients: [],
         recipe: null,
         errorMessage: "No tienes permiso para editar esta receta."
       });
@@ -631,6 +633,7 @@ async function renderEditRecipePage(req, res) {
       pageTitle: `Chef's Logic | Editar ${recipe.title}`,
       activeTab: "recetas",
       regions,
+      allIngredients,
       recipe,
       errorMessage: ""
     });
@@ -639,6 +642,7 @@ async function renderEditRecipePage(req, res) {
       pageTitle: "Chef's Logic | Editar receta",
       activeTab: "recetas",
       regions: [],
+      allIngredients: [],
       recipe: null,
       errorMessage: "No fue posible cargar la receta."
     });
