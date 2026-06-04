@@ -393,7 +393,18 @@ function buildStepsBuilder() {
     newInput.focus();
   });
 
-  createStepRow();
+  // INICIO DE LA PRECARGA DE PASOS
+  var initialStepsData = hiddenTextarea.value.trim();
+  if (initialStepsData) {
+    var stepsArray = initialStepsData.split("\n");
+    stepsArray.forEach(function (stepText) {
+      createStepRow(stepText);
+    });
+  } else {
+    createStepRow(); // Si está vacío (crear nueva), pon uno en blanco
+  }
+  updateStepNodes(); // Actualiza el gráfico visual de la derecha
+  // FIN DE LA PRECARGA DE PASOS
 }
 
 // ──────────────────────────────────────────
@@ -435,6 +446,26 @@ function buildIngredientPicker() {
   var selected = new Map();
   var activeCategory = "all";
   var searchQuery = "";
+
+  // INICIO DE LA PRECARGA DE INGREDIENTES
+  var initialIngData = hiddenTextarea.value.trim();
+  if (initialIngData) {
+    var lines = initialIngData.split("\n");
+    lines.forEach(function(line) {
+      var parts = line.split("|");
+      if (parts.length >= 2) {
+        var name = parts[0];
+        var qty = parts[1] || "1";
+        var unit = parts[2] || "g";
+        var notes = parts[3] || "";
+        // Si la receta es muy antigua y no tiene ID ligado, le creamos uno temporal para la UI
+        var id = parts[4] || ("legacy-" + Date.now() + Math.random()); 
+        
+        selected.set(id, { id: id, name: name, qty: qty, unit: unit, notes: notes });
+      }
+    });
+  }
+  // FIN DE LA PRECARGA DE INGREDIENTES
 
   // Build category filter pills from actual DB ingredients
   if (catPillsEl && allIngredients.length) {
