@@ -24,22 +24,6 @@
           <% }); %>
         </div>
 
-        <div class="dashboard-controls" style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
-          <div style="display:flex;align-items:center;gap:.5rem;">
-            <label style="font-weight:600">Actualizado:</label>
-            <span id="dashboard-last-updated"><%= (typeof lastUpdated !== 'undefined' && lastUpdated) ? new Date(lastUpdated).toLocaleString('es-ES') : new Date().toLocaleString('es-ES') %></span>
-          </div>
-          <div style="display:flex;align-items:center;gap:.5rem;">
-            <label for="alert-threshold">Alerta interacciones &gt;</label>
-            <input id="alert-threshold" type="number" min="1" value="100" style="width:6rem;padding:.25rem;border-radius:4px;border:1px solid #ddd" />
-          </div>
-          <div style="display:flex;align-items:center;gap:.5rem;">
-            <button id="dashboard-refresh" class="btn btn-soft">Actualizar ahora</button>
-            <button id="dashboard-toggle-live" class="btn btn-outline">Live: Off</button>
-          </div>
-          <div style="margin-left:auto;font-size:.9rem;color:var(--text-soft)">Responsable: <strong>Administrador del sistema</strong></div>
-        </div>
-
         <div id="dashboard-notifications" style="margin-bottom:1rem;"></div>
 
         <% if (errorMessage) { %>
