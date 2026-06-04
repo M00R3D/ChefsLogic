@@ -190,6 +190,14 @@
           </div>
         </div>
 
+        <div class="card" style="margin-bottom:1rem;">
+          <h3>Interacciones del periodo</h3>
+          <p class="chart-note">Distribución de acciones que muestran cómo interactúan los usuarios con la plataforma: visitas, likes, guardados, búsquedas y creaciones.</p>
+          <div style="position:relative;width:100%;height:320px;">
+            <canvas id="interactionChart" aria-label="Gráfico de interacciones del periodo"></canvas>
+          </div>
+        </div>
+
         <div class="grid cols-3" style="gap:1rem; margin-bottom:1rem;">
           <div class="card dashboard-list-card">
             <h3>Top recetas vistas</h3>
@@ -402,13 +410,82 @@
           });
         }
 
+        function renderInteractionChart(canvasId, labels, data, colors) {
+          const ctx = document.getElementById(canvasId);
+          if (!ctx || typeof Chart === 'undefined') return;
+          new Chart(ctx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+              labels,
+              datasets: [{
+                data,
+                backgroundColor: colors,
+                borderColor: '#fff',
+                borderWidth: 2
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              cutout: '45%',
+              plugins: {
+                legend: {
+                  position: 'bottom',
+                  labels: { boxWidth: 12, padding: 12 }
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      const value = Number(context.parsed || 0);
+                      const total = context.dataset.data.reduce((sum, v) => sum + Number(v || 0), 0) || 1;
+                      const pct = Math.round((value / total) * 100);
+                      return `${context.label}: ${value} (${pct}%)`;
+                    }
+                  }
+                },
+                datalabels: {
+                  color: '#fff',
+                  formatter: function(value, ctx) {
+                    const total = ctx.dataset.data.reduce((sum, v) => sum + Number(v || 0), 0) || 1;
+                    const pct = Math.round((Number(value) / total) * 100);
+                    return pct > 5 ? `${value} (${pct}%)` : '';
+                  },
+                  anchor: 'center',
+                  align: 'center',
+                  font: { weight: '600', size: 12 }
+                }
+              }
+            }
+          });
+        }
+
         renderChart('usersByMonthChart', monthlyLabels, monthlyCounts, 'Usuarios nuevos', '#b7652a');
         renderChart('dailyActivityChart', weekdayLabels, weekdayCounts, 'Eventos', '#7d3f17');
+
+        const eventSummary = (window.__DASHBOARD_INIT && window.__DASHBOARD_INIT.eventSummary) || {};
+        renderInteractionChart(
+          'interactionChart',
+          ['Visitas', 'Likes', 'Guardados', 'Búsquedas', 'Creaciones'],
+          [
+            Number(eventSummary.ver_receta || 0),
+            Number(eventSummary.like || 0),
+            Number(eventSummary.guardar_receta || 0),
+            Number(eventSummary.buscar_receta || 0),
+            Number(eventSummary.crear_receta || 0)
+          ],
+          ['#f6b26b', '#ea9999', '#93c47d', '#6fa8dc', '#b4a7d6']
+        );
       })();
     </script>
   </body>
 </html>
 <style>
+.chart-note {
+  margin: 0.6rem 0 0 0;
+  color: #5a452f;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
 .users-card {
   position: relative;
   overflow: visible;
