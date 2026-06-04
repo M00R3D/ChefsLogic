@@ -90,10 +90,17 @@
   function updateCountsFrom(data){
     if (!data) return;
     if (typeof data.totalRecipes !== 'undefined'){
-      const elTR = document.querySelector('.dashboard-summary-grid .big-number');
-      // keep simple: update totalRecipes card
-      const nodes = document.querySelectorAll('.dashboard-summary-grid .dashboard-small-card .big-number');
-      if (nodes && nodes[1]) nodes[1].textContent = String(data.totalRecipes);
+      // Update summary cards more robustly: recipes and ingredients
+      const nodes = Array.from(document.querySelectorAll('.dashboard-summary-grid .dashboard-small-card'));
+      // nodes[0] => Total recetas, nodes[1] => Total ingredientes
+      if (nodes && nodes[0]) {
+        const elNum = nodes[0].querySelector('.big-number');
+        if (elNum) elNum.textContent = String(typeof data.newRecipesInRange !== 'undefined' ? data.newRecipesInRange : (data.totalRecipes || 0));
+      }
+      if (nodes && nodes[1]) {
+        const elNum = nodes[1].querySelector('.big-number');
+        if (elNum) elNum.textContent = String(typeof data.newIngredientsInRange !== 'undefined' ? data.newIngredientsInRange : (data.totalIngredients || 0));
+      }
     }
     if (typeof data.avgPrepTime !== 'undefined'){
       const avg = el('avg-prep-time'); if (avg) avg.textContent = String(data.avgPrepTime) + ' min';

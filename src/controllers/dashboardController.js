@@ -75,7 +75,9 @@ async function renderDashboardPage(req, res) {
         totalEvents,
         usersThisMonth,
         activeUsers,
-        newUsersInRange
+        newUsersInRange,
+        newRecipesInRange,
+        newIngredientsInRange
       ] = await Promise.all([
       User.countDocuments(),
       Recipe.countDocuments(),
@@ -93,7 +95,9 @@ async function renderDashboardPage(req, res) {
           $gte: startDate,
           $lte: now
         }
-      })
+      }),
+      Recipe.countDocuments({ createdAt: { $gte: startDate, $lte: now } }),
+      Ingredient.countDocuments({ createdAt: { $gte: startDate, $lte: now } })
     ]);
 
     const [
@@ -383,6 +387,8 @@ async function renderDashboardPage(req, res) {
       totalUsers,
       totalRecipes,
       totalIngredients,
+      newRecipesInRange,
+      newIngredientsInRange,
       totalEvents,
       newUsersInRange,
       latestUsers,

@@ -106,12 +106,44 @@
         <div class="dashboard-summary-grid" style="margin-bottom:1rem;">
 
           <div class="card dashboard-small-card">
+            <div class="metric-top">
+              <span class="metric-icon">📚</span>
+              <span class="metric-badge">
+                +<%= typeof newRecipesInRange !== 'undefined' ? newRecipesInRange : 0 %>
+
+                <%= rangeKey === 'today'
+                  ? 'hoy'
+                  : rangeKey === '7'
+                  ? '7d'
+                  : rangeKey === '30'
+                  ? '30d'
+                  : 'año'
+                %>
+
+              </span>
+            </div>
             <h3>Total recetas</h3>
-            <p class="big-number"><%= totalRecipes %></p>
+            <p class="big-number"><%= typeof newRecipesInRange !== 'undefined' ? newRecipesInRange : totalRecipes %></p>
           </div>
           <div class="card dashboard-small-card">
+            <div class="metric-top">
+              <span class="metric-icon">🥕</span>
+              <span class="metric-badge">
+                +<%= typeof newIngredientsInRange !== 'undefined' ? newIngredientsInRange : 0 %>
+
+                <%= rangeKey === 'today'
+                  ? 'hoy'
+                  : rangeKey === '7'
+                  ? '7d'
+                  : rangeKey === '30'
+                  ? '30d'
+                  : 'año'
+                %>
+
+              </span>
+            </div>
             <h3>Total ingredientes</h3>
-            <p class="big-number"><%= totalIngredients %></p>
+            <p class="big-number"><%= typeof newIngredientsInRange !== 'undefined' ? newIngredientsInRange : totalIngredients %></p>
           </div>
           <div class="card dashboard-small-card">
             <h3>Total eventos</h3>
