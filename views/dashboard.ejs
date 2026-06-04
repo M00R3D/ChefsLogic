@@ -121,14 +121,6 @@
             <h3>Eventos <%= rangeLabel %></h3>
             <p class="big-number"><%= eventsInRange %></p>
           </div>
-          <div class="card dashboard-small-card">
-            <h3>Usuarios activos</h3>
-            <p class="big-number"><%= activeUsers %></p>
-          </div>
-          <div class="card dashboard-small-card">
-            <h3>Tiempo promedio preparación</h3>
-            <p class="big-number" id="avg-prep-time"><%= (typeof avgPrepTime !== 'undefined' && avgPrepTime) ? avgPrepTime : '-' %> min</p>
-          </div>
         </div>
 
         <div class="dashboard-event-grid" style="margin-bottom:1rem;">
