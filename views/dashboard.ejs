@@ -31,95 +31,40 @@
         <% } %>
 
         <div class="card dashboard-small-card users-card" style="margin-bottom:1rem;position:relative;z-index:10;">
+          <div class="metric-top">
+            <span class="metric-icon">👥</span>
+            <span class="metric-badge">
+              +<%= newUsersInRange || 0 %>
+              <%= rangeKey === 'today' ? 'hoy' : rangeKey === '7' ? '7d' : rangeKey === '30' ? '30d' : 'año' %>
+            </span>
+          </div>
+          <h3>Total usuarios</h3>
+          <p class="big-number"><%= totalUsers %></p>
 
-  <div class="metric-top">
-
-    <span class="metric-icon">
-      👥
-    </span>
-
-    <span class="metric-badge">
-
-      +<%= newUsersInRange || 0 %>
-
-      <%= rangeKey === 'today'
-        ? 'hoy'
-        : rangeKey === '7'
-        ? '7d'
-        : rangeKey === '30'
-        ? '30d'
-        : 'año'
-      %>
-
-    </span>
-
-  </div>
-
-  <h3>Total usuarios</h3>
-
-  <p class="big-number">
-    <%= totalUsers %>
-  </p>
-
-  <div class="users-hover-preview">
-
-    <div class="hover-preview-title">
-      Nuevos registros
-    </div>
-
-    <ul>
-
-      <%
-        const shuffledUsers = (recentUsersInRange || [])
-          .sort(() => 0.5 - Math.random())
-          .slice(0, 5);
-      %>
-
-      <% shuffledUsers.forEach(function(user) { %>
-
-        <li>
-
-          <span class="user-dot"></span>
-
-          <span>
-            <%= user.name || user.nombre || 'Usuario' %>
-          </span>
-
-        </li>
-
-      <% }) %>
-
-      <% if (!shuffledUsers.length) { %>
-
-        <li class="empty-preview">
-          No hay usuarios recientes
-        </li>
-
-      <% } %>
-
-    </ul>
-
-  </div>
-
-</div>
+          <div class="users-hover-preview">
+            <div class="hover-preview-title">Nuevos registros</div>
+            <ul>
+              <% const shuffledUsers = (recentUsersInRange || []).sort(() => 0.5 - Math.random()).slice(0, 5); %>
+              <% shuffledUsers.forEach(function(user) { %>
+                <li>
+                  <span class="user-dot"></span>
+                  <span><%= user.name || user.nombre || 'Usuario' %></span>
+                </li>
+              <% }) %>
+              <% if (!shuffledUsers.length) { %>
+                <li class="empty-preview">No hay usuarios recientes</li>
+              <% } %>
+            </ul>
+          </div>
+        </div>
 
         <div class="dashboard-summary-grid" style="margin-bottom:1rem;">
-
           <div class="card dashboard-small-card">
             <div class="metric-top">
               <span class="metric-icon">📚</span>
               <span class="metric-badge">
                 +<%= typeof newRecipesInRange !== 'undefined' ? newRecipesInRange : 0 %>
-
-                <%= rangeKey === 'today'
-                  ? 'hoy'
-                  : rangeKey === '7'
-                  ? '7d'
-                  : rangeKey === '30'
-                  ? '30d'
-                  : 'año'
-                %>
-
+                <%= rangeKey === 'today' ? 'hoy' : rangeKey === '7' ? '7d' : rangeKey === '30' ? '30d' : 'año' %>
               </span>
             </div>
             <h3>Total recetas</h3>
@@ -130,16 +75,7 @@
               <span class="metric-icon">🥕</span>
               <span class="metric-badge">
                 +<%= typeof newIngredientsInRange !== 'undefined' ? newIngredientsInRange : 0 %>
-
-                <%= rangeKey === 'today'
-                  ? 'hoy'
-                  : rangeKey === '7'
-                  ? '7d'
-                  : rangeKey === '30'
-                  ? '30d'
-                  : 'año'
-                %>
-
+                <%= rangeKey === 'today' ? 'hoy' : rangeKey === '7' ? '7d' : rangeKey === '30' ? '30d' : 'año' %>
               </span>
             </div>
             <h3>Total ingredientes</h3>
@@ -201,92 +137,57 @@
         <div class="grid cols-3" style="gap:1rem; margin-bottom:1rem;">
           <div class="card dashboard-list-card">
             <h3>Top recetas vistas</h3>
-            <ol>
-              <% (typeof topRecipes !== 'undefined' ? topRecipes : []).forEach(function(item) { %>
-                <li><strong><%= item.title %></strong> — <%= item.total %> visitas</li>
-              <% }); %>
-            </ol>
+            <div style="position:relative;width:100%;height:220px;">
+              <canvas id="topRecipesChart"></canvas>
+            </div>
           </div>
           <div class="card dashboard-list-card">
             <h3>Top recetas por likes</h3>
-            <ol>
-              <% (typeof topRecipesByLikes !== 'undefined' ? topRecipesByLikes : []).forEach(function(item) { %>
-                <li><%= item.title %> — <%= item.total %> likes</li>
-              <% }); %>
-            </ol>
+            <div style="position:relative;width:100%;height:220px;">
+              <canvas id="topLikesChart"></canvas>
+            </div>
           </div>
           <div class="card dashboard-list-card">
             <h3>Usuarios más activos</h3>
-            <ol>
-              <% (typeof topUsers !== 'undefined' ? topUsers : []).forEach(function(item) { %>
-                <li><%= item.name %> — <%= item.total %> interacciones</li>
-              <% }); %>
-            </ol>
+            <div style="position:relative;width:100%;height:220px;">
+              <canvas id="topUsersChart"></canvas>
+            </div>
           </div>
         </div>
 
         <div class="grid cols-3" style="gap:1rem; margin-bottom:1rem;">
           <div class="card dashboard-list-card">
             <h3>Ingredientes más usados</h3>
-            <ol>
-              <% (typeof topIngredients !== 'undefined' ? topIngredients : []).forEach(function(item) { %>
-                <li><%= item.name || 'Desconocido' %> — <%= item.total %> usos</li>
-              <% }); %>
-            </ol>
+            <div style="position:relative;width:100%;height:220px;">
+              <canvas id="topIngredientsChart"></canvas>
+            </div>
           </div>
           <div class="card dashboard-list-card">
             <h3>Regiones más visitadas</h3>
-            <ol>
-              <% (typeof regionViews !== 'undefined' ? regionViews : []).forEach(function(item) { %>
-                <li><%= item.name || 'Sin región' %> — <%= item.total %> visitas</li>
-              <% }); %>
-            </ol>
+            <div style="position:relative;width:100%;height:220px;">
+              <canvas id="regionViewsChart"></canvas>
+            </div>
           </div>
           <div class="card dashboard-list-card">
             <h3>Recetas por usuario</h3>
-            <ol>
-              <% (typeof recipesByUser !== 'undefined' ? recipesByUser : []).forEach(function(item) { %>
-                <li><%= item.name %> — <%= item.total %> recetas</li>
-              <% }); %>
-            </ol>
+            <div style="position:relative;width:100%;height:220px;">
+              <canvas id="recipesByUserChart"></canvas>
+            </div>
           </div>
         </div>
 
-        <div class="grid cols-9" style="gap:1rem; margin-bottom:1rem;">
+        <div class="grid cols-2" style="gap:1rem; margin-bottom:1rem;">
           <div class="card dashboard-list-card">
             <h3>Recetas más guardadas</h3>
-            <ol id="top-saved-recipes">
-              <% (typeof topSavedRecipes !== 'undefined' ? topSavedRecipes : []).forEach(function(item) { %>
-                <li><%= item.title || item.name %> — <%= item.total %> guardados</li>
-              <% }); %>
-            </ol>
-          </div>
-          <div class="card dashboard-list-card">
-            <h3>Categorías más populares</h3>
-            <ol id="top-categories">
-              <% (typeof topCategories !== 'undefined' ? topCategories : []).forEach(function(item) { %>
-                <li><%= item.name %> — <%= item.total %> recetas</li>
-              <% }); %>
-            </ol>
+            <div style="position:relative;width:100%;height:220px;">
+              <canvas id="topSavedChart"></canvas>
+            </div>
           </div>
           <div class="card dashboard-list-card">
             <h3>Recetarios más populares</h3>
-            <ol id="top-cookbooks">
-              <% (typeof topCookbooks !== 'undefined' ? topCookbooks : []).forEach(function(item) { %>
-                <% const followers = item.followersCount || item.followers || item.followers_count; %>
-                <% const recipesCount = item.recipesCount || item.recipes || item.recipes_count; %>
-                <li>
-                  <%= item.title || item.name %> —
-                  <% if (typeof followers !== 'undefined' && followers !== null) { %>
-                    <%= followers %> seguidores
-                  <% } else if (typeof recipesCount !== 'undefined' && recipesCount !== null) { %>
-                    <%= recipesCount %> recetas
-                  <% } else { %>
-                    <%= item.total || '—' %>
-                  <% } %>
-                </li>
-              <% }); %>
-            </ol>
+            <div style="position:relative;width:100%;height:220px;">
+              <canvas id="topCookbooksChart"></canvas>
+            </div>
           </div>
         </div>
 
@@ -333,8 +234,6 @@
           </div>
         </div>
 
-
-
         <%- include("partials/footer") %>
       </main>
     </div>
@@ -373,6 +272,10 @@
     <script src="/js/admin-dashboard.js"></script>
     <script>
       (function() {
+        if (typeof ChartDataLabels !== 'undefined') {
+          Chart.register(ChartDataLabels);
+        }
+
         const init = window.__DASHBOARD_INIT || {};
         const monthlyLabels = init.monthlyLabels || [];
         const monthlyCounts = init.monthlyCounts || [];
@@ -405,6 +308,76 @@
               },
               plugins: {
                 legend: { display: false }
+              }
+            }
+          });
+        }
+
+        // Nueva función para graficar los Leaderboards (Gráficos horizontales)
+        function renderHorizontalBarChart(canvasId, labels, data, labelText, color) {
+          const ctx = document.getElementById(canvasId);
+          if (!ctx || typeof Chart === 'undefined') return;
+          
+          if (!data || data.length === 0) {
+            ctx.parentNode.innerHTML = '<p class="muted" style="font-size:0.85rem; padding-top: 1rem;">No hay datos suficientes.</p>';
+            return;
+          }
+
+          // Convertimos el hex a rgba para el fondo de la barra
+          let bgColor = color;
+          if(color.startsWith('#')) {
+            const r = parseInt(color.slice(1, 3), 16);
+            const g = parseInt(color.slice(3, 5), 16);
+            const b = parseInt(color.slice(5, 7), 16);
+            bgColor = `rgba(${r}, ${g}, ${b}, 0.2)`;
+          }
+
+          new Chart(ctx.getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: labelText,
+                data: data,
+                backgroundColor: bgColor,
+                borderColor: color,
+                borderWidth: 1,
+                borderRadius: 4
+              }]
+            },
+            options: {
+              indexAxis: 'y', // Fuerza la gráfica horizontal
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                x: {
+                  beginAtZero: true,
+                  ticks: { precision: 0 }
+                },
+                y: {
+                  ticks: {
+                    autoSkip: false,
+                    callback: function(value) {
+                      const lbl = this.getLabelForValue(value);
+                      return lbl.length > 22 ? lbl.substring(0, 22) + '...' : lbl;
+                    }
+                  }
+                }
+              },
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    title: function(context) { return context[0].label; }
+                  }
+                },
+                datalabels: {
+                  anchor: 'end',
+                  align: 'right',
+                  color: color,
+                  font: { weight: 'bold', size: 11 },
+                  formatter: Math.round
+                }
               }
             }
           });
@@ -475,6 +448,39 @@
           ],
           ['#f6b26b', '#ea9999', '#93c47d', '#6fa8dc', '#b4a7d6']
         );
+
+        // --- RENDERIZADO DE LOS LEADERBOARDS HORIZONTALES ---
+        
+        const _topRecipes = init.topRecipes || [];
+        renderHorizontalBarChart('topRecipesChart', _topRecipes.map(i => i.title), _topRecipes.map(i => i.total), 'Visitas', '#b7652a');
+        
+        const _topLikes = init.topRecipesByLikes || [];
+        renderHorizontalBarChart('topLikesChart', _topLikes.map(i => i.title), _topLikes.map(i => i.total), 'Likes', '#e67e22');
+        
+        const _topUsers = init.topUsers || [];
+        renderHorizontalBarChart('topUsersChart', _topUsers.map(i => i.name), _topUsers.map(i => i.total), 'Interacciones', '#2980b9');
+        
+        const _topIngredients = init.topIngredients || [];
+        renderHorizontalBarChart('topIngredientsChart', _topIngredients.map(i => i.name || 'Desconocido'), _topIngredients.map(i => i.total), 'Usos', '#27ae60');
+        
+        const _regionViews = init.regionViews || [];
+        renderHorizontalBarChart('regionViewsChart', _regionViews.map(i => i.name || 'Sin región'), _regionViews.map(i => i.total), 'Visitas', '#8e44ad');
+        
+        const _recipesByUser = init.recipesByUser || [];
+        renderHorizontalBarChart('recipesByUserChart', _recipesByUser.map(i => i.name), _recipesByUser.map(i => i.total), 'Recetas', '#16a085');
+        
+        const _topSaved = init.topSavedRecipes || [];
+        renderHorizontalBarChart('topSavedChart', _topSaved.map(i => i.title || i.name), _topSaved.map(i => i.total), 'Guardados', '#f39c12');
+        
+        const _topCookbooks = init.topCookbooks || [];
+        renderHorizontalBarChart(
+          'topCookbooksChart', 
+          _topCookbooks.map(i => i.title || i.name), 
+          _topCookbooks.map(i => i.followersCount || i.followers || i.recipesCount || i.recipes || i.total || 0), 
+          'Total', 
+          '#c0392b'
+        );
+
       })();
     </script>
   </body>
@@ -496,73 +502,35 @@
 }
 
 .users-hover-preview {
-
   position: absolute;
-
   top: 50%;
   left: 105%;
-
   width: 260px;
-
   opacity: 0;
   visibility: hidden;
-
-  transform:
-    translateY(-50%)
-    translateX(-12px)
-    scale(.96);
-
-  transition:
-    opacity .25s ease,
-    transform .25s ease,
-    visibility .25s ease;
-
+  transform: translateY(-50%) translateX(-12px) scale(.96);
+  transition: opacity .25s ease, transform .25s ease, visibility .25s ease;
   z-index: 50;
-
   padding: 1rem;
-
   border-radius: 22px;
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255,255,255,.92),
-      rgba(255,255,255,.82)
-    );
-
+  background: linear-gradient(135deg, rgba(255,255,255,.92), rgba(255,255,255,.82));
   backdrop-filter: blur(18px);
-
-  border:
-    1px solid rgba(255,255,255,.25);
-
-  box-shadow:
-    0 20px 50px rgba(0,0,0,.18),
-    0 0 40px rgba(183,101,42,.12);
+  border: 1px solid rgba(255,255,255,.25);
+  box-shadow: 0 20px 50px rgba(0,0,0,.18), 0 0 40px rgba(183,101,42,.12);
 }
 
 .users-card:hover .users-hover-preview {
-
   opacity: 1;
   visibility: visible;
-
-  transform:
-    translateY(-50%)
-    translateX(0)
-    scale(1);
+  transform: translateY(-50%) translateX(0) scale(1);
 }
 
 .hover-preview-header {
-
   font-size: .82rem;
-
   font-weight: 700;
-
   letter-spacing: .08em;
-
   text-transform: uppercase;
-
   color: var(--text-soft);
-
   margin-bottom: 1rem;
 }
 
@@ -570,59 +538,35 @@
   display: flex;
   flex-direction: column;
   gap: .75rem;
-
   margin: 0;
   padding: 0;
-
   list-style: none;
 }
 
 .hover-user-item {
-
   display: flex;
   align-items: center;
   gap: .8rem;
-
   padding: .7rem;
-
   border-radius: 14px;
-
-  transition:
-    background .2s ease,
-    transform .2s ease;
+  transition: background .2s ease, transform .2s ease;
 }
 
 .hover-user-item:hover {
-
-  background:
-    rgba(183,101,42,.08);
-
+  background: rgba(183,101,42,.08);
   transform: translateX(4px);
 }
 
 .hover-user-avatar {
-
   width: 42px;
   height: 42px;
-
   border-radius: 50%;
-
   display: grid;
   place-items: center;
-
   font-weight: 700;
-
   color: white;
-
-  background:
-    linear-gradient(
-      135deg,
-      #7d3f17,
-      #b7652a
-    );
-
-  box-shadow:
-    0 8px 20px rgba(183,101,42,.25);
+  background: linear-gradient(135deg, #7d3f17, #b7652a);
+  box-shadow: 0 8px 20px rgba(183,101,42,.25);
 }
 
 .hover-user-info {
@@ -635,9 +579,7 @@
 }
 
 .hover-user-info small {
-
   color: var(--text-soft);
-
   font-size: .8rem;
 }
 </style>
